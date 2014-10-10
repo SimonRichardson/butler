@@ -36,6 +36,15 @@ func (x Nil) FoldLeft(v Any, f func(Any, Any) Any) Any {
 	return v
 }
 
+func FromStringToList(s string, f func(string) Any) List {
+	num := len(s)
+	res := make([]Any, num, num)
+	for i := 0; i < num; i++ {
+		res[i] = f(string(s[i]))
+	}
+	return SliceToList(res)
+}
+
 func SliceToList(s []Any) List {
 	var rec func(List, []Any) List
 	rec = func(l List, v []Any) List {

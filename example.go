@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/SimonRichardson/butler/butler"
+	. "github.com/SimonRichardson/butler/butler"
 )
 
 func main() {
-	fmt.Println(butler.ContentType("application/json"))
+	fmt.Println(ContentType("application/json"))
 	/*
 		request := GET().
 			Path("/name/:id").

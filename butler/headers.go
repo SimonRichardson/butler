@@ -6,10 +6,9 @@ type Header struct {
 }
 
 func NewHeader(name, value string) Header {
-	// TODO (Simon) : Replace Identity with Char, which checks the range.
 	return Header{
-		Name:  NewString(name, Identity()),
-		Value: NewString(value, Identity()),
+		Name:  NewString(name),
+		Value: NewString(value),
 	}
 }
 

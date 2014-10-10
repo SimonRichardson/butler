@@ -1,29 +1,35 @@
 package butler
 
 var (
-	emptyString      = String("")
+	emptyString      = String{Nil{}}
 	constEmptyString = Constant(emptyString)
 )
 
-type String string
-
-func NewString(value string, f func(Any) Any) String {
-	chars := String(value).ToList()
-	worth := chars.Head().Map(
-		func(head Any) Any {
-			return chars.FoldLeft(emptyString, func(acc, c Any) Any {
-				return f(c).(String) + acc.(String)
-			}).(String)
-		},
-	).GetOrElse(constEmptyString)
-	return worth.(String)
+type String struct {
+	List
 }
 
-func (s String) ToList() List {
-	num := len(string(s))
-	res := make([]Any, num, num)
-	for i := 0; i < num; i++ {
-		res[i] = String(s[i])
-	}
-	return SliceToList(res)
+func NewString(value string) String {
+	chars := FromStringToList(value, func(s string) Any {
+		return Char(s)
+	})
+	worth := chars.Head().Map(Constant1(chars)).GetOrElse(constEmptyString)
+	return String{worth.(List)}
+}
+
+func (s String) String() string {
+	return s.FoldLeft("", func(a, b Any) Any {
+		return b.(Char).String() + a.(string)
+	}).(string)
+}
+
+// Note : this should be a rune.
+type Char string
+
+func NewChar(value string) Char {
+	return Char(value)
+}
+
+func (c Char) String() string {
+	return string(c)
 }
