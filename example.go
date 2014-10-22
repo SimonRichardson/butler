@@ -1,19 +1,15 @@
 package main
 
-import (
-	"fmt"
-
-	. "github.com/SimonRichardson/butler/butler"
-)
+import . "github.com/SimonRichardson/butler/butler"
 
 func main() {
-	fmt.Println(ContentType("application/json"))
-	/*
-		request := GET().
-			Path("/name/:id").
-			ContentType("application/json").
-			QueryInt("limit")
 
+	request := Get().
+		Path("/name/:id").
+		ContentType("application/json").
+		QueryInt("limit")
+
+	/*
 		response := ContentType("application/json").
 			Content(JsonMarshall)
 
