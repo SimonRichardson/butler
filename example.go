@@ -11,10 +11,10 @@ func main() {
 
 	/*
 		response := ContentType("application/json").
-			Content(JsonMarshall)
+			Content(JsonEncoder{})
 
 		listEmployees := Service(request, response).Then(func(limit int) Result {
-			return loadAllEmployees(limit).ToJson()
+			return loadAllEmployees(limit)
 		})
 
 		server := Compile(listEmployees)
