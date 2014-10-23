@@ -7,7 +7,7 @@ type Route struct {
 func NewRoute(path string) Api {
 	return NewApi(
 		Route{
-			path: NewString(value),
+			path: NewString(path),
 		},
 		NewDocTypes(
 			NewInlineText("Expected route %s"),

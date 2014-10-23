@@ -3,14 +3,14 @@ package butler
 type MethodType string
 
 const (
-	DELETE  MethodType = "DELETE"
-	GET     MethodType = "GET"
-	HEAD    MethodType = "HEAD"
-	OPTIONS MethodType = "OPTIONS"
-	PATCH   MethodType = "PATCH"
-	POST    MethodType = "POST"
-	PUT     MethodType = "PUT"
-	TRACE   MethodType = "TRACE"
+	MDelete  MethodType = "delete"
+	MGet     MethodType = "get"
+	MHead    MethodType = "head"
+	MOptions MethodType = "options"
+	MPatch   MethodType = "patch"
+	MPost    MethodType = "post"
+	MPut     MethodType = "put"
+	MTrace   MethodType = "trace"
 )
 
 type Method struct {
@@ -30,33 +30,33 @@ func NewMethod(method MethodType) Api {
 }
 
 func Delete() Api {
-	return NewMethod(DELETE)
+	return NewMethod(MDelete)
 }
 
 func Get() Api {
-	return NewMethod(GET)
+	return NewMethod(MGet)
 }
 
 func Head() Api {
-	return NewMethod(HEAD)
+	return NewMethod(MHead)
 }
 
 func Options() Api {
-	return NewMethod(OPTIONS)
+	return NewMethod(MOptions)
 }
 
 func Patch() Api {
-	return NewMethod(PATCH)
+	return NewMethod(MPatch)
 }
 
 func Post() Api {
-	return NewMethod(POST)
+	return NewMethod(MPost)
 }
 
 func Put() Api {
-	return NewMethod(PUT)
+	return NewMethod(MPut)
 }
 
 func Trace() Api {
-	return NewMethod(TRACE)
+	return NewMethod(MTrace)
 }
