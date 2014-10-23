@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	html "html/template"
 	"reflect"
 	"strings"
+	text "text/template"
 )
 
 type Encoder interface {
@@ -65,6 +67,39 @@ type JsonEncoder struct{}
 
 func (e JsonEncoder) Encode(a Any) ([]byte, error) {
 	return json.Marshal(a)
+}
+
+type TextEncoder struct {
+	Template string
+}
+
+func (e TextEncoder) Encode(a Any) ([]byte, error) {
+	var (
+		buffer *bytes.Buffer
+	)
+	tmpl := text.Must(text.New("text-encoder").Parse(e.Template))
+	if err := tmpl.Execute(buffer, a); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+}
+
+type HtmlEncoder struct {
+	Template string
+}
+
+func (e HtmlEncoder) Encode(a Any) ([]byte, error) {
+	var (
+		buffer *bytes.Buffer
+	)
+	tmpl, err := html.New("html-encoder").Parse(e.Template)
+	if err != nil {
+		return nil, err
+	}
+	if err := tmpl.Execute(buffer, a); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
 }
 
 type XmlEncoder struct{}
