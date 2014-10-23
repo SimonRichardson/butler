@@ -11,7 +11,7 @@ func main() {
 
 	/*
 		response := ContentType("application/json").
-			Content(TextTemplateEncoder{})
+			Content(HtmlEncoder{})
 
 		listEmployees := Service(request, response).Then(func(limit int) Result {
 			return loadAllEmployees(limit)
