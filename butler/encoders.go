@@ -7,6 +7,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 type Encoder interface {
@@ -33,10 +34,16 @@ func (e CsvEncoder) Encode(a Any) ([]byte, error) {
 		typeField := val.Type().Field(i)
 
 		tag := typeField.Tag
-		tagName := tag.Get(DefaultCsvEncoderNamespace)
+		tagNames := tag.Get(DefaultCsvEncoderNamespace)
 
-		if tagName != "" {
+		if tagNames != "" {
+			parts := strings.Split(tagNames, ",")
+			tagName := parts[0]
+
 			value := fmt.Sprintf("%v", valueField.Interface())
+			if len(parts) > 0 && parts[1] == "omitempty" && value == "" {
+				continue
+			}
 
 			headers = append(headers, tagName)
 			values = append(values, value)
