@@ -1,13 +1,15 @@
 package butler
 
 type Api struct {
-	input Any
 	types DocTypes
 }
 
-func NewApi(input Any, types DocTypes) Api {
+func NewApi(types DocTypes) Api {
 	return Api{
-		input: input,
 		types: types,
 	}
+}
+
+func (a Api) Doc() DocTypes {
+	return a.types
 }

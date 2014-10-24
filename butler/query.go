@@ -8,27 +8,26 @@ const (
 )
 
 type Query struct {
+	Api
 	name  QueryType
-	value Api
+	value String
 }
 
-func NewQuery(name QueryType, value string) Api {
-	return NewApi(
-		Query{
-			name:  name,
-			value: NewString(value),
-		},
-		NewDocTypes(
+func NewQuery(name QueryType, value string) Query {
+	return Query{
+		Api: NewApi(NewDocTypes(
 			NewInlineText("Expected query %s"),
 			NewInlineText("Unexpected query %s"),
-		),
-	)
+		)),
+		name:  name,
+		value: NewString(value),
+	}
 }
 
-func QueryInt(name string) Api {
+func QueryInt(name string) Query {
 	return NewQuery(QInt, name)
 }
 
-func QueryString(name string) Api {
+func QueryString(name string) Query {
 	return NewQuery(QString, name)
 }

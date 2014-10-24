@@ -14,49 +14,48 @@ const (
 )
 
 type Method struct {
+	Api
 	method MethodType
 }
 
-func NewMethod(method MethodType) Api {
-	return NewApi(
-		Method{
-			method: method,
-		},
-		NewDocTypes(
+func NewMethod(method MethodType) Method {
+	return Method{
+		Api: NewApi(NewDocTypes(
 			NewInlineText("Expected method %s"),
 			NewInlineText("Unexpected method %s"),
-		),
-	)
+		)),
+		method: method,
+	}
 }
 
-func Delete() Api {
+func Delete() Method {
 	return NewMethod(MDelete)
 }
 
-func Get() Api {
+func Get() Method {
 	return NewMethod(MGet)
 }
 
-func Head() Api {
+func Head() Method {
 	return NewMethod(MHead)
 }
 
-func Options() Api {
+func Options() Method {
 	return NewMethod(MOptions)
 }
 
-func Patch() Api {
+func Patch() Method {
 	return NewMethod(MPatch)
 }
 
-func Post() Api {
+func Post() Method {
 	return NewMethod(MPost)
 }
 
-func Put() Api {
+func Put() Method {
 	return NewMethod(MPut)
 }
 
-func Trace() Api {
+func Trace() Method {
 	return NewMethod(MTrace)
 }
