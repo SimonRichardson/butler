@@ -8,7 +8,11 @@ import (
 
 func Butler() builder {
 	return builder{
-		State: State{}.Of([]generic.Any{}),
+		State: State{
+			Run: func(z generic.Any) (generic.Any, generic.Any) {
+				return nil, nil
+			},
+		},
 	}
 }
 
@@ -19,7 +23,10 @@ type builder struct {
 func add(b builder, x generic.Any) builder {
 	return builder{
 		b.Map(func(c generic.Any) generic.Any {
-			return append(c.([]generic.Any), x)
+			return Cofree{
+				x,
+				ToOption(c),
+			}
 		}),
 	}
 }

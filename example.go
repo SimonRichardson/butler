@@ -19,8 +19,12 @@ func main() {
 		ContentType("application/json").
 		Content(output.HtmlEncoder{})
 
-	fmt.Println(request.EvalState(generic.Empty{}))
-	fmt.Println(response.EvalState(generic.Empty{}))
+	f := func(x generic.Any) Option {
+		return NewSome(x)
+	}
+
+	fmt.Println(request.EvalState(generic.Empty{}).(Cofree).Traverse(f))
+	fmt.Println(response.EvalState(generic.Empty{}).(Cofree).Traverse(f))
 
 	/*
 		listEmployees := Service(request, response).Then(func(limit int) Result {
