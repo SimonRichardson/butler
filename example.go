@@ -3,21 +3,26 @@ package main
 import (
 	"fmt"
 	. "github.com/SimonRichardson/butler/butler"
+	"github.com/SimonRichardson/butler/generic"
+	"github.com/SimonRichardson/butler/output"
 )
 
 func main() {
 
-	request := Butler().Get().
+	request := Butler().
+		Get().
 		Path("/name/:id").
 		ContentType("application/json").
 		QueryInt("limit")
 
-	fmt.Println(request.Run.Run())
+	response := Butler().
+		ContentType("application/json").
+		Content(output.HtmlEncoder{})
+
+	fmt.Println(request.EvalState(generic.Empty{}))
+	fmt.Println(response.EvalState(generic.Empty{}))
 
 	/*
-		response := ContentType("application/json").
-			Content(HtmlEncoder{})
-
 		listEmployees := Service(request, response).Then(func(limit int) Result {
 			return loadAllEmployees(limit)
 		})

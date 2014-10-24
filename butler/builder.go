@@ -7,37 +7,21 @@ import (
 )
 
 func Butler() builder {
-	return builder{}.Of(http.Http())
+	return builder{
+		State: State{}.Of([]generic.Any{}),
+	}
 }
 
 type builder struct {
-	Run Writer
-}
-
-func (x builder) Of(v generic.Any) builder {
-	return builder{
-		Run: Writer{}.Of(v),
-	}
-}
-
-func (x builder) Chain(f func(v generic.Any) builder) builder {
-	return builder{
-		Run: x.Run.Chain(func(y generic.Any) Writer {
-			return f(y).Run
-		}),
-	}
-}
-
-func (x builder) Map(f func(v generic.Any) generic.Any) builder {
-	return x.Chain(func(y generic.Any) builder {
-		return builder{}.Of(f(y))
-	})
+	State
 }
 
 func add(b builder, x generic.Any) builder {
-	return b.Map(func(c generic.Any) generic.Any {
-		return x
-	})
+	return builder{
+		b.Map(func(c generic.Any) generic.Any {
+			return append(c.([]generic.Any), x)
+		}),
+	}
 }
 
 // Content

@@ -15,7 +15,7 @@ import (
 )
 
 type Encoder interface {
-	Encode(a generic.Any) []byte
+	Encode(a generic.Any) ([]byte, error)
 }
 
 const (
