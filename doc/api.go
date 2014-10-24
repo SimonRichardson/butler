@@ -1,4 +1,4 @@
-package butler
+package doc
 
 type Api struct {
 	types DocTypes

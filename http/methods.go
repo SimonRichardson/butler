@@ -1,4 +1,6 @@
-package butler
+package http
+
+import "github.com/SimonRichardson/butler/doc"
 
 type MethodType string
 
@@ -14,15 +16,15 @@ const (
 )
 
 type Method struct {
-	Api
+	doc.Api
 	method MethodType
 }
 
 func NewMethod(method MethodType) Method {
 	return Method{
-		Api: NewApi(NewDocTypes(
-			NewInlineText("Expected method %s"),
-			NewInlineText("Unexpected method %s"),
+		Api: doc.NewApi(doc.NewDocTypes(
+			doc.NewInlineText("Expected method %s"),
+			doc.NewInlineText("Unexpected method %s"),
 		)),
 		method: method,
 	}

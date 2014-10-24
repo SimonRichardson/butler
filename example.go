@@ -1,13 +1,18 @@
 package main
 
-import . "github.com/SimonRichardson/butler/butler"
+import (
+	"fmt"
+	. "github.com/SimonRichardson/butler/butler"
+)
 
 func main() {
 
-	request := Get().
+	request := Butler().Get().
 		Path("/name/:id").
 		ContentType("application/json").
 		QueryInt("limit")
+
+	fmt.Println(request.Run.Run())
 
 	/*
 		response := ContentType("application/json").

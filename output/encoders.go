@@ -1,4 +1,4 @@
-package butler
+package output
 
 import (
 	"bytes"
@@ -10,10 +10,12 @@ import (
 	"reflect"
 	"strings"
 	text "text/template"
+
+	"github.com/SimonRichardson/butler/generic"
 )
 
 type Encoder interface {
-	Encode(a Any) []byte
+	Encode(a generic.Any) []byte
 }
 
 const (
@@ -22,7 +24,7 @@ const (
 
 type CsvEncoder struct{}
 
-func (e CsvEncoder) Encode(a Any) ([]byte, error) {
+func (e CsvEncoder) Encode(a generic.Any) ([]byte, error) {
 	var (
 		buffer  *bytes.Buffer
 		headers []string
@@ -67,7 +69,7 @@ type HtmlEncoder struct {
 	Template string
 }
 
-func (e HtmlEncoder) Encode(a Any) ([]byte, error) {
+func (e HtmlEncoder) Encode(a generic.Any) ([]byte, error) {
 	var (
 		buffer *bytes.Buffer
 	)
@@ -83,7 +85,7 @@ func (e HtmlEncoder) Encode(a Any) ([]byte, error) {
 
 type JsonEncoder struct{}
 
-func (e JsonEncoder) Encode(a Any) ([]byte, error) {
+func (e JsonEncoder) Encode(a generic.Any) ([]byte, error) {
 	return json.Marshal(a)
 }
 
@@ -91,7 +93,7 @@ type TextEncoder struct {
 	Template string
 }
 
-func (e TextEncoder) Encode(a Any) ([]byte, error) {
+func (e TextEncoder) Encode(a generic.Any) ([]byte, error) {
 	var (
 		buffer *bytes.Buffer
 	)
@@ -104,6 +106,6 @@ func (e TextEncoder) Encode(a Any) ([]byte, error) {
 
 type XmlEncoder struct{}
 
-func (e XmlEncoder) Encode(a Any) ([]byte, error) {
+func (e XmlEncoder) Encode(a generic.Any) ([]byte, error) {
 	return xml.Marshal(a)
 }

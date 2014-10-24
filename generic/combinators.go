@@ -1,4 +1,4 @@
-package butler
+package generic
 
 func Identity() func(Any) Any {
 	return func(x Any) Any {

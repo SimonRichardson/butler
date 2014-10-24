@@ -1,16 +1,18 @@
-package butler
+package http
+
+import "github.com/SimonRichardson/butler/doc"
 
 type Header struct {
-	Api
+	doc.Api
 	name  String
 	value String
 }
 
 func NewHeader(name, value string) Header {
 	return Header{
-		Api: NewApi(NewDocTypes(
-			NewInlineText("Expected header %s"),
-			NewInlineText("Unexpected header %s"),
+		Api: doc.NewApi(doc.NewDocTypes(
+			doc.NewInlineText("Expected header %s"),
+			doc.NewInlineText("Unexpected header %s"),
 		)),
 		name:  NewString(name),
 		value: NewString(value),

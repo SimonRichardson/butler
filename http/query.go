@@ -1,4 +1,6 @@
-package butler
+package http
+
+import "github.com/SimonRichardson/butler/doc"
 
 type QueryType string
 
@@ -8,16 +10,16 @@ const (
 )
 
 type Query struct {
-	Api
+	doc.Api
 	name  QueryType
 	value String
 }
 
 func NewQuery(name QueryType, value string) Query {
 	return Query{
-		Api: NewApi(NewDocTypes(
-			NewInlineText("Expected query %s"),
-			NewInlineText("Unexpected query %s"),
+		Api: doc.NewApi(doc.NewDocTypes(
+			doc.NewInlineText("Expected query %s"),
+			doc.NewInlineText("Unexpected query %s"),
 		)),
 		name:  name,
 		value: NewString(value),

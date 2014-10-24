@@ -1,3 +1,3 @@
-package butler
+package generic
 
 type Any interface{}
