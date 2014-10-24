@@ -3,20 +3,12 @@ package output
 import (
 	"bytes"
 	"encoding/csv"
-	"encoding/json"
-	"encoding/xml"
 	"fmt"
-	html "html/template"
 	"reflect"
 	"strings"
-	text "text/template"
 
 	"github.com/SimonRichardson/butler/generic"
 )
-
-type Encoder interface {
-	Encode(a generic.Any) ([]byte, error)
-}
 
 const (
 	DefaultCsvEncoderNamespace string = "csv"
@@ -63,49 +55,4 @@ func (e CsvEncoder) Encode(a generic.Any) ([]byte, error) {
 
 	writer.Flush()
 	return buffer.Bytes(), nil
-}
-
-type HtmlEncoder struct {
-	Template string
-}
-
-func (e HtmlEncoder) Encode(a generic.Any) ([]byte, error) {
-	var (
-		buffer *bytes.Buffer
-	)
-	tmpl, err := html.New("html-encoder").Parse(e.Template)
-	if err != nil {
-		return nil, err
-	}
-	if err := tmpl.Execute(buffer, a); err != nil {
-		return nil, err
-	}
-	return buffer.Bytes(), nil
-}
-
-type JsonEncoder struct{}
-
-func (e JsonEncoder) Encode(a generic.Any) ([]byte, error) {
-	return json.Marshal(a)
-}
-
-type TextEncoder struct {
-	Template string
-}
-
-func (e TextEncoder) Encode(a generic.Any) ([]byte, error) {
-	var (
-		buffer *bytes.Buffer
-	)
-	tmpl := text.Must(text.New("text-encoder").Parse(e.Template))
-	if err := tmpl.Execute(buffer, a); err != nil {
-		return nil, err
-	}
-	return buffer.Bytes(), nil
-}
-
-type XmlEncoder struct{}
-
-func (e XmlEncoder) Encode(a generic.Any) ([]byte, error) {
-	return xml.Marshal(a)
 }
