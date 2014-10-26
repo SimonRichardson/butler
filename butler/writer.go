@@ -3,23 +3,23 @@ package butler
 import "github.com/SimonRichardson/butler/generic"
 
 type Writer struct {
-	Run func() Tuple
+	Run func() (generic.Any, []generic.Any)
 }
 
 func (w Writer) Of(x generic.Any) Writer {
 	return Writer{
-		Run: func() Tuple {
-			return NewTuple(x, []generic.Any{})
+		Run: func() (generic.Any, []generic.Any) {
+			return x, []generic.Any{}
 		},
 	}
 }
 
 func (w Writer) Chain(f func(generic.Any) Writer) Writer {
 	return Writer{
-		Run: func() Tuple {
-			res := w.Run()
-			t := f(res._1).Run()
-			return NewTuple(t._1, append(res._2, res._1))
+		Run: func() (generic.Any, []generic.Any) {
+			a, b := w.Run()
+			x, _ := f(a).Run()
+			return x, append(b, a)
 		},
 	}
 }
@@ -27,8 +27,8 @@ func (w Writer) Chain(f func(generic.Any) Writer) Writer {
 func (w Writer) Map(f func(generic.Any) generic.Any) Writer {
 	return w.Chain(func(x generic.Any) Writer {
 		return Writer{
-			Run: func() Tuple {
-				return NewTuple(f(x), []generic.Any{})
+			Run: func() (generic.Any, []generic.Any) {
+				return f(x), []generic.Any{}
 			},
 		}
 	})
