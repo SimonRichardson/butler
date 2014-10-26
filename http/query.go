@@ -1,6 +1,9 @@
 package http
 
-import "github.com/SimonRichardson/butler/doc"
+import (
+	"github.com/SimonRichardson/butler/doc"
+	"github.com/SimonRichardson/butler/generic"
+)
 
 type QueryType string
 
@@ -24,6 +27,10 @@ func NewQuery(name QueryType, value string) Query {
 		name:  name,
 		value: NewString(value),
 	}
+}
+
+func (q Query) Build() generic.State {
+	return generic.State{}
 }
 
 func QueryInt(name string) Query {

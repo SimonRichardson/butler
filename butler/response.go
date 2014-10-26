@@ -1,7 +1,19 @@
 package butler
 
-type response struct{}
+import "github.com/SimonRichardson/butler/generic"
 
-func Response(list List) response {
-	return response{}
+type response struct {
+	list generic.List
+}
+
+func Response(list generic.List) response {
+	return response{
+		list: list,
+	}
+}
+
+func (r response) Build() generic.Any {
+	return r.list.Map(func(x generic.Any) generic.Any {
+		return x.(Build).Build()
+	})
 }

@@ -8,17 +8,17 @@ import (
 
 func Butler() builder {
 	return builder{
-		list: NewNil(),
+		list: generic.NewNil(),
 	}
 }
 
 type builder struct {
-	list List
+	list generic.List
 }
 
 func add(b builder, x generic.Any) builder {
 	return builder{
-		list: NewCons(x, b.list),
+		list: generic.NewCons(x, b.list),
 	}
 }
 

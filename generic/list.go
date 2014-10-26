@@ -1,21 +1,19 @@
-package butler
-
-import "github.com/SimonRichardson/butler/generic"
+package generic
 
 type List interface {
 	Head() Option
-	Of(generic.Any) List
+	Of(Any) List
 	Empty() List
-	Map(func(generic.Any) generic.Any) List
-	FoldLeft(generic.Any, func(generic.Any, generic.Any) generic.Any) generic.Any
+	Map(func(Any) Any) List
+	FoldLeft(Any, func(Any, Any) Any) Any
 }
 
 type Cons struct {
-	head generic.Any
+	head Any
 	tail List
 }
 
-func NewCons(x generic.Any, y List) Cons {
+func NewCons(x Any, y List) Cons {
 	return Cons{
 		head: x,
 		tail: y,
@@ -26,7 +24,7 @@ func (x Cons) Head() Option {
 	return NewSome(x.head)
 }
 
-func (x Cons) Of(v generic.Any) List {
+func (x Cons) Of(v Any) List {
 	return NewCons(v, NewNil())
 }
 
@@ -34,7 +32,7 @@ func (x Cons) Empty() List {
 	return NewNil()
 }
 
-func (x Cons) Map(f func(generic.Any) generic.Any) List {
+func (x Cons) Map(f func(Any) Any) List {
 	var rec func(List, List) List
 	rec = func(a List, b List) List {
 		if _, ok := a.(Nil); ok {
@@ -46,9 +44,9 @@ func (x Cons) Map(f func(generic.Any) generic.Any) List {
 	return rec(x, NewNil())
 }
 
-func (x Cons) FoldLeft(v generic.Any, f func(generic.Any, generic.Any) generic.Any) generic.Any {
-	var rec func(List, generic.Any) generic.Any
-	rec = func(a List, b generic.Any) generic.Any {
+func (x Cons) FoldLeft(v Any, f func(Any, Any) Any) Any {
+	var rec func(List, Any) Any
+	rec = func(a List, b Any) Any {
 		if _, ok := a.(Nil); ok {
 			return b
 		}
@@ -68,7 +66,7 @@ func (x Nil) Head() Option {
 	return NewNone()
 }
 
-func (x Nil) Of(v generic.Any) List {
+func (x Nil) Of(v Any) List {
 	return NewCons(v, NewNil())
 }
 
@@ -76,26 +74,26 @@ func (x Nil) Empty() List {
 	return NewNil()
 }
 
-func (x Nil) Map(f func(generic.Any) generic.Any) List {
+func (x Nil) Map(f func(Any) Any) List {
 	return x
 }
 
-func (x Nil) FoldLeft(v generic.Any, f func(generic.Any, generic.Any) generic.Any) generic.Any {
+func (x Nil) FoldLeft(v Any, f func(Any, Any) Any) Any {
 	return v
 }
 
-func FromStringToList(s string, f func(string) generic.Any) List {
+func FromStringToList(s string, f func(string) Any) List {
 	num := len(s)
-	res := make([]generic.Any, num, num)
+	res := make([]Any, num, num)
 	for i := 0; i < num; i++ {
 		res[i] = f(string(s[i]))
 	}
 	return SliceToList(res)
 }
 
-func SliceToList(s []generic.Any) List {
-	var rec func(List, []generic.Any) List
-	rec = func(l List, v []generic.Any) List {
+func SliceToList(s []Any) List {
+	var rec func(List, []Any) List
+	rec = func(l List, v []Any) List {
 		if len(v) < 1 {
 			return l
 		}

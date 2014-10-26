@@ -1,6 +1,9 @@
 package http
 
-import "github.com/SimonRichardson/butler/doc"
+import (
+	"github.com/SimonRichardson/butler/doc"
+	"github.com/SimonRichardson/butler/generic"
+)
 
 type String struct {
 	doc.Api
@@ -15,4 +18,8 @@ func NewString(value string) String {
 		)),
 		value: value,
 	}
+}
+
+func (s String) Build() generic.State {
+	return generic.State{}
 }

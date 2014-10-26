@@ -1,6 +1,9 @@
 package http
 
-import "github.com/SimonRichardson/butler/doc"
+import (
+	"github.com/SimonRichardson/butler/doc"
+	"github.com/SimonRichardson/butler/generic"
+)
 
 type Header struct {
 	doc.Api
@@ -17,6 +20,10 @@ func NewHeader(name, value string) Header {
 		name:  NewString(name),
 		value: NewString(value),
 	}
+}
+
+func (h Header) Build() generic.State {
+	return generic.State{}
 }
 
 func Accept(value string) Header {

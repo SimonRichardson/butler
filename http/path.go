@@ -1,6 +1,9 @@
 package http
 
-import "github.com/SimonRichardson/butler/doc"
+import (
+	"github.com/SimonRichardson/butler/doc"
+	"github.com/SimonRichardson/butler/generic"
+)
 
 type Route struct {
 	doc.Api
@@ -15,6 +18,10 @@ func NewRoute(path string) Route {
 		)),
 		path: NewString(path),
 	}
+}
+
+func (r Route) Build() generic.State {
+	return generic.State{}
 }
 
 func Path(path string) Route {

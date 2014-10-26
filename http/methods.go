@@ -1,6 +1,9 @@
 package http
 
-import "github.com/SimonRichardson/butler/doc"
+import (
+	"github.com/SimonRichardson/butler/doc"
+	"github.com/SimonRichardson/butler/generic"
+)
 
 type MethodType string
 
@@ -28,6 +31,10 @@ func NewMethod(method MethodType) Method {
 		)),
 		method: method,
 	}
+}
+
+func (m Method) Build() generic.State {
+	return generic.State{}
 }
 
 func Delete() Method {

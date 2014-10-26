@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/SimonRichardson/butler/doc"
+	"github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/output"
 )
 
@@ -18,4 +19,8 @@ func Content(encoder output.Encoder) ContentEncoder {
 		)),
 		encoder: encoder,
 	}
+}
+
+func (c ContentEncoder) Build() generic.State {
+	return generic.State{}
 }
