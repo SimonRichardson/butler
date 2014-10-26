@@ -8,26 +8,17 @@ import (
 
 func Butler() builder {
 	return builder{
-		State: State{
-			Run: func(z generic.Any) (generic.Any, generic.Any) {
-				return nil, nil
-			},
-		},
+		list: NewNil(),
 	}
 }
 
 type builder struct {
-	State
+	list List
 }
 
 func add(b builder, x generic.Any) builder {
 	return builder{
-		b.Map(func(c generic.Any) generic.Any {
-			return Cofree{
-				x,
-				ToOption(c),
-			}
-		}),
+		list: NewCons(x, b.list),
 	}
 }
 

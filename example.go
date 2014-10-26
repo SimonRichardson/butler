@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	. "github.com/SimonRichardson/butler/butler"
-	"github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/output"
 )
 
@@ -19,12 +18,9 @@ func main() {
 		ContentType("application/json").
 		Content(output.HtmlEncoder{})
 
-	f := func(x generic.Any) Option {
-		return NewSome(x)
-	}
+	service := Service(request, response)
 
-	fmt.Println(request.EvalState(generic.Empty{}).(Cofree).Traverse(f))
-	fmt.Println(response.EvalState(generic.Empty{}).(Cofree).Traverse(f))
+	fmt.Println(service)
 
 	/*
 		listEmployees := Service(request, response).Then(func(limit int) Result {
