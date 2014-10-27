@@ -1,7 +1,5 @@
 package butler
 
-import "github.com/SimonRichardson/butler/generic"
-
 type service struct {
 	request  request
 	response response
@@ -14,6 +12,6 @@ func Service(request, response builder) service {
 	}
 }
 
-func (s service) Then(f func(...generic.Any) Result) service {
-	return s
+func (s service) Build() {
+	s.request.Build()
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	. "github.com/SimonRichardson/butler/butler"
 	"github.com/SimonRichardson/butler/output"
 )
@@ -19,16 +18,21 @@ func main() {
 		Content(output.HtmlEncoder{})
 
 	service := Service(request, response)
-
-	fmt.Println(service)
+	service.Build()
 
 	/*
-		listEmployees := Service(request, response).Then(func(limit int) Result {
-			return loadAllEmployees(limit)
+		listEmployees := Service(request, response).Then(func(args []generic.Any) Result {
+			return loadAllEmployees(args[0].(int))
 		})
 
 		server := Compile(listEmployees)
-		service := Remotely(listEmployees)("localhost", 80)
-		service.Run(server)
+
+		// You can also render the server to markdown, for up to
+		// date documentation
+		fmt.Println(markdown.Output(server))
+
+		// Run the documentation
+		service := Remotely(server)("localhost", 80)
+		service.Run()
 	*/
 }

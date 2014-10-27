@@ -82,11 +82,11 @@ func (x Nil) FoldLeft(v Any, f func(Any, Any) Any) Any {
 	return v
 }
 
-func FromStringToList(s string, f func(string) Any) List {
+func FromStringToList(s string) List {
 	num := len(s)
 	res := make([]Any, num, num)
 	for i := 0; i < num; i++ {
-		res[i] = f(string(s[i]))
+		res[i] = s[i]
 	}
 	return SliceToList(res)
 }

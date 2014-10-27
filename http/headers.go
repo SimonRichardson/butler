@@ -22,8 +22,15 @@ func NewHeader(name, value string) Header {
 	}
 }
 
+// Build up the state, so it runs this when required.
+// 1) Make sure the name is valid
+// 2) Make sure the value is valid
 func (h Header) Build() generic.State {
-	return generic.State{}
+	state := generic.State{}.Of(h)
+	return state.Map(func(x generic.Any) generic.Any {
+		header := x.(Header)
+		return header.name.Build()
+	})
 }
 
 func Accept(value string) Header {
