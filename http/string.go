@@ -22,6 +22,7 @@ func NewString(value string, validator func(rune) bool) String {
 	}
 }
 
+// Series of predicates, could give more info via a Option or Either
 func AnyString() func(rune) bool {
 	return func(r rune) bool {
 		return true
