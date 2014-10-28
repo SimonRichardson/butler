@@ -25,7 +25,7 @@ func NewQuery(name QueryType, value string) Query {
 			doc.NewInlineText("Unexpected query %s"),
 		)),
 		name:  name,
-		value: NewString(value),
+		value: NewString(value, UrlString()),
 	}
 }
 

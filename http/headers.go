@@ -17,8 +17,8 @@ func NewHeader(name, value string) Header {
 			doc.NewInlineText("Expected header %s"),
 			doc.NewInlineText("Unexpected header %s"),
 		)),
-		name:  NewString(name),
-		value: NewString(value),
+		name:  NewString(name, HeaderString()),
+		value: NewString(value, HeaderString()),
 	}
 }
 
