@@ -86,7 +86,7 @@ func FromStringToList(s string) List {
 	num := len(s)
 	res := make([]Any, num, num)
 	for i := 0; i < num; i++ {
-		res[i] = s[i]
+		res[i] = string(s[i])
 	}
 	return SliceToList(res)
 }

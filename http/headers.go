@@ -26,7 +26,7 @@ func NewHeader(name, value string) Header {
 // 1) Make sure the name is valid
 // 2) Make sure the value is valid
 func (h Header) Build() generic.State {
-	return generic.State{}
+	return generic.State{}.Of(h)
 }
 
 func Accept(value string) Header {

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	. "github.com/SimonRichardson/butler/butler"
+	"github.com/SimonRichardson/butler/http"
 	"github.com/SimonRichardson/butler/output"
 )
 
@@ -19,6 +21,9 @@ func main() {
 
 	service := Service(request, response)
 	service.Build()
+
+	s := http.Accept("hello")
+	fmt.Println(">>", s.Build().EvalState(""))
 
 	/*
 		listEmployees := Service(request, response).Then(func(args []generic.Any) Result {
