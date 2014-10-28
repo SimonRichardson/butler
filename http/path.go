@@ -16,7 +16,7 @@ func NewRoute(path string) Route {
 			doc.NewInlineText("Expected route %s"),
 			doc.NewInlineText("Unexpected route %s"),
 		)),
-		path: NewString(path, PathString()),
+		path: NewString(path, pathChar()),
 	}
 }
 

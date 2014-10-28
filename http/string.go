@@ -23,13 +23,13 @@ func NewString(value string, validator func(rune) bool) String {
 }
 
 // Series of predicates, could give more info via a Option or Either
-func AnyString() func(rune) bool {
+func anyChar() func(rune) bool {
 	return func(r rune) bool {
 		return true
 	}
 }
 
-func HeaderString() func(rune) bool {
+func headerChar() func(rune) bool {
 	return func(r rune) bool {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
@@ -43,7 +43,7 @@ func HeaderString() func(rune) bool {
 	}
 }
 
-func PathString() func(rune) bool {
+func pathChar() func(rune) bool {
 	return func(r rune) bool {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
@@ -55,7 +55,7 @@ func PathString() func(rune) bool {
 	}
 }
 
-func UrlString() func(rune) bool {
+func urlChar() func(rune) bool {
 	return func(r rune) bool {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
