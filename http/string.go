@@ -1,8 +1,6 @@
 package http
 
 import (
-	"fmt"
-
 	"github.com/SimonRichardson/butler/doc"
 	"github.com/SimonRichardson/butler/generic"
 )
@@ -29,27 +27,5 @@ func NewString(value string) String {
 // 4) Return either (expected/unexpected)
 // State<Writer<Either<String>, []Doc>>
 func (s String) Build() generic.State {
-	program := generic.State{}.Of(s.value)
-	return program.
-		Map(stringToChars).
-		Map(charsToInt).
-		Map(validStringValue).
-		Map(returnEither)
-}
-
-func stringToChars(x generic.Any) generic.Any {
-	return generic.FromStringToList(x.(string))
-}
-
-func charsToInt(x generic.Any) generic.Any {
-	fmt.Println(">>", x)
-	return x.(string)
-}
-
-func validStringValue(x generic.Any) generic.Any {
-	return x
-}
-
-func returnEither(x generic.Any) generic.Any {
-	return x
+	return generic.State{}
 }
