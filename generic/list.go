@@ -104,3 +104,7 @@ func SliceToList(s []Any) List {
 	}
 	return rec(Nil{}, s)
 }
+
+func ToList(args ...Any) List {
+	return SliceToList(args)
+}

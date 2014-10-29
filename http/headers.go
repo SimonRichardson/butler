@@ -1,6 +1,8 @@
 package http
 
 import (
+	"fmt"
+
 	"github.com/SimonRichardson/butler/doc"
 	"github.com/SimonRichardson/butler/generic"
 )
@@ -26,7 +28,44 @@ func NewHeader(name, value string) Header {
 // 1) Make sure the name is valid
 // 2) Make sure the value is valid
 func (h Header) Build() generic.State {
-	return generic.State{}.Of(h)
+	var (
+		extract = func(x generic.Any) func(func(Header, generic.State) generic.Tuple2) generic.Tuple2 {
+			return func(f func(Header, generic.State) generic.Tuple2) generic.Tuple2 {
+				tuple := x.(generic.Tuple2)
+				header := tuple.Fst().(Header)
+				state := tuple.Snd().(generic.State)
+
+				return f(header, state)
+			}
+		}
+		setup = func(x generic.Any) generic.Any {
+			return generic.NewTuple2(h, generic.State{})
+		}
+		use = func(f func(header Header) generic.State) func(x generic.Any) generic.Any {
+			return func(x generic.Any) generic.Any {
+				return extract(x)(func(header Header, state generic.State) generic.Tuple2 {
+					return generic.NewTuple2(
+						header,
+						state.Chain(func(a generic.Any) generic.State {
+							fmt.Println(">>", a)
+							return f(header)
+						}),
+					)
+				})
+			}
+		}
+		name = func(header Header) generic.State {
+			return header.name.Build()
+		}
+		value = func(header Header) generic.State {
+			return header.value.Build()
+		}
+	)
+
+	return generic.State{}.Of(h).
+		Map(setup).
+		Map(use(name)).
+		Map(use(value))
 }
 
 func Accept(value string) Header {

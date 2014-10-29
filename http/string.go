@@ -55,7 +55,7 @@ func pathChar() func(byte) generic.Either {
 	}
 }
 
-func urlChar() func(byte) generic.Either {
+func UrlChar() func(byte) generic.Either {
 	return func(r byte) generic.Either {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
@@ -72,48 +72,71 @@ func urlChar() func(byte) generic.Either {
 // 4) Return either (expected/unexpected)
 // State<List<Tuple2<String, []Doc>>>
 func (s String) Build() generic.State {
+	var (
+		extract = func(x generic.Any) func(func(String, generic.List) generic.Tuple2) generic.Tuple2 {
+			return func(f func(String, generic.List) generic.Tuple2) generic.Tuple2 {
+				tuple := x.(generic.Tuple2)
+				str := tuple.Fst().(String)
+				list := tuple.Snd().(generic.List)
+
+				return f(str, list)
+			}
+		}
+		split = func(x generic.Any) generic.Any {
+			s := x.(String)
+			return generic.NewTuple2(s, generic.FromStringToList(s.value))
+		}
+		run = func(x generic.Any) generic.Any {
+			return extract(x)(func(str String, list generic.List) generic.Tuple2 {
+				return generic.NewTuple2(
+					str,
+					list.Map(func(a generic.Any) generic.Any {
+						return []byte(a.(string))[0]
+					}),
+				)
+			})
+		}
+		validate = func(x generic.Any) generic.Any {
+			return extract(x)(func(str String, list generic.List) generic.Tuple2 {
+				f := str.validator
+
+				return generic.NewTuple2(
+					str,
+					list.Map(func(a generic.Any) generic.Any {
+						return f(a.(byte))
+					}),
+				)
+			})
+		}
+		fold = func(x generic.Any) generic.Any {
+			return extract(x)(func(str String, list generic.List) generic.Tuple2 {
+				folded := list.FoldLeft(generic.Right{}.Of(""), func(a, b generic.Any) generic.Any {
+					return a.(generic.Either).Bimap(
+						generic.Identity(),
+						func(x generic.Any) generic.Any {
+							return b.(generic.Either).Fold(
+								generic.Identity(),
+								func(y generic.Any) generic.Any {
+									aa := y.(byte)
+									bb := []byte(x.(string))
+									return string(append(bb, aa))
+								},
+							)
+						},
+					)
+				})
+
+				return generic.NewTuple2(
+					str,
+					str.Api.Run(folded.(generic.Either)),
+				)
+			})
+		}
+	)
+
 	return generic.State{}.Of(s).
 		Map(split).
-		Map(runify).
-		Map(validate)
-}
-
-func split(x generic.Any) generic.Any {
-	s := x.(String)
-	return generic.NewTuple2(s, generic.FromStringToList(s.value))
-}
-
-func runify(x generic.Any) generic.Any {
-	return extract(x)(func(str String, list generic.List) generic.Tuple2 {
-		return generic.NewTuple2(
-			str,
-			list.Map(func(a generic.Any) generic.Any {
-				return []byte(a.(string))[0]
-			}),
-		)
-	})
-}
-
-func validate(x generic.Any) generic.Any {
-	return extract(x)(func(str String, list generic.List) generic.Tuple2 {
-		f := str.validator
-
-		return generic.NewTuple2(
-			str,
-			list.Map(func(a generic.Any) generic.Any {
-				r := a.(byte)
-				return str.Api.Run(f(r))
-			}),
-		)
-	})
-}
-
-func extract(x generic.Any) func(func(String, generic.List) generic.Tuple2) generic.Tuple2 {
-	return func(f func(String, generic.List) generic.Tuple2) generic.Tuple2 {
-		tuple := x.(generic.Tuple2)
-		str := tuple.Fst().(String)
-		list := tuple.Snd().(generic.List)
-
-		return f(str, list)
-	}
+		Map(run).
+		Map(validate).
+		Map(fold)
 }
