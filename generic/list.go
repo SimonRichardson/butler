@@ -30,7 +30,7 @@ func (x Cons) Chain(f func(Any) List) List {
 			return b
 		}
 		cons := a.(Cons)
-		list := b.FoldLeft(f(cons.head), func(x Any, y Any) Any {
+		list := f(cons.head).FoldLeft(b, func(x Any, y Any) Any {
 			return NewCons(y, x.(List))
 		})
 		return rec(cons.tail, list.(List))

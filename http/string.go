@@ -126,11 +126,15 @@ func (s String) Build() generic.State {
 					)
 				})
 
-				return generic.NewTuple2(
-					str,
-					str.Api.Run(folded.(generic.Either)),
-				)
+				return generic.NewTuple2(str, folded)
 			})
+		}
+		api = func(x generic.Any) generic.Any {
+			tuple := x.(generic.Tuple2)
+			str := tuple.Fst().(String)
+			folded := tuple.Snd().(generic.Either)
+
+			return generic.NewTuple2(str, str.Api.Run(folded))
 		}
 	)
 
@@ -138,5 +142,6 @@ func (s String) Build() generic.State {
 		Map(split).
 		Map(run).
 		Map(validate).
-		Map(fold)
+		Map(fold).
+		Map(api)
 }

@@ -44,10 +44,7 @@ func (h Header) Build() generic.State {
 				return extract(x)(func(header Header, list generic.List) generic.Tuple2 {
 					return generic.NewTuple2(
 						header,
-						list.Map(func(a generic.Any) generic.Any {
-							// Tuple2<String, Either<string>>
-							return f(header)
-						}),
+						generic.NewCons(f(header), list),
 					)
 				})
 			}
@@ -58,13 +55,36 @@ func (h Header) Build() generic.State {
 		value = func(header Header) generic.State {
 			return header.value.Build()
 		}
-		run = func(x generic.Any) generic.Any {
+		fold = func(x generic.Any) generic.Any {
 			return extract(x)(func(header Header, list generic.List) generic.Tuple2 {
+				folded := list.FoldLeft(generic.Either_.Of(generic.List_.Empty()), func(a, b generic.Any) generic.Any {
+					return a.(generic.Either).Fold(
+						func(x generic.Any) generic.Any {
+							return generic.NewLeft(x)
+						},
+						func(x generic.Any) generic.Any {
+							sum := func(y generic.Any) generic.Any {
+								bb := x.(generic.List)
+								return generic.NewCons(y, bb)
+							}
+							c := b.(generic.State).EvalState("")
+							tuple := c.(generic.Tuple2)
+							return tuple.Snd().(generic.Either).Bimap(sum, sum)
+						},
+					)
+				})
 				return generic.NewTuple2(
 					header,
-					list,
+					folded,
 				)
 			})
+		}
+		api = func(x generic.Any) generic.Any {
+			tuple := x.(generic.Tuple2)
+			header := tuple.Fst().(Header)
+			folded := tuple.Snd().(generic.Either)
+
+			return generic.NewTuple2(header, header.Api.Run(folded))
 		}
 	)
 
@@ -72,7 +92,8 @@ func (h Header) Build() generic.State {
 		Map(setup).
 		Map(use(name)).
 		Map(use(value)).
-		Map(run)
+		Map(fold).
+		Map(api)
 }
 
 func Accept(value string) Header {
