@@ -76,13 +76,14 @@ func FromStringToList(s string) List {
 func SliceToList(s []Any) List {
 	var rec func(List, []Any) List
 	rec = func(l List, v []Any) List {
-		if len(v) < 1 {
+		num := len(v)
+		if num < 1 {
 			return l
 		}
 		return rec(Cons{
-			head: v[0],
+			head: v[num-1],
 			tail: l,
-		}, v[1:])
+		}, v[:num-1])
 	}
 	return rec(Nil{}, s)
 }

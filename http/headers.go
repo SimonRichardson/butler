@@ -1,8 +1,6 @@
 package http
 
 import (
-	"fmt"
-
 	"github.com/SimonRichardson/butler/doc"
 	"github.com/SimonRichardson/butler/generic"
 )
@@ -39,7 +37,7 @@ func (h Header) Build() generic.State {
 			}
 		}
 		setup = func(x generic.Any) generic.Any {
-			return generic.NewTuple2(h, generic.State{})
+			return generic.NewTuple2(h, generic.State_.Of(""))
 		}
 		use = func(f func(header Header) generic.State) func(x generic.Any) generic.Any {
 			return func(x generic.Any) generic.Any {
@@ -47,7 +45,6 @@ func (h Header) Build() generic.State {
 					return generic.NewTuple2(
 						header,
 						state.Chain(func(a generic.Any) generic.State {
-							fmt.Println(">>", a)
 							return f(header)
 						}),
 					)
@@ -60,12 +57,23 @@ func (h Header) Build() generic.State {
 		value = func(header Header) generic.State {
 			return header.value.Build()
 		}
+		run = func(x generic.Any) generic.Any {
+			return extract(x)(func(header Header, state generic.State) generic.Tuple2 {
+				tuple := state.EvalState("").(generic.Tuple2)
+				either := tuple.Snd().(generic.Either)
+				return generic.NewTuple2(
+					header,
+					either,
+				)
+			})
+		}
 	)
 
 	return generic.State_.Of(h).
 		Map(setup).
 		Map(use(name)).
-		Map(use(value))
+		Map(use(value)).
+		Map(run)
 }
 
 func Accept(value string) Header {

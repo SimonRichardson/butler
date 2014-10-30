@@ -55,7 +55,7 @@ func pathChar() func(byte) generic.Either {
 	}
 }
 
-func UrlChar() func(byte) generic.Either {
+func urlChar() func(byte) generic.Either {
 	return func(r byte) generic.Either {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
@@ -117,9 +117,9 @@ func (s String) Build() generic.State {
 						},
 						func(x generic.Any) generic.Any {
 							sum := func(y generic.Any) generic.Any {
-								aa := []byte{y.(byte)}
+								aa := y.(byte)
 								bb := []byte(x.(string))
-								return string(append(aa, bb...))
+								return string(append(bb, aa))
 							}
 							return b.(generic.Either).Bimap(sum, sum)
 						},
