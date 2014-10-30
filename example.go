@@ -22,7 +22,7 @@ func main() {
 	service := Service(request, response)
 	service.Build()
 
-	s := http.Accept("he¢llo")
+	s := http.Accept("hello")
 	fmt.Println(">>", s.Build().EvalState(""))
 
 	/*

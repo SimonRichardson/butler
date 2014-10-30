@@ -2,6 +2,7 @@ package generic
 
 type List interface {
 	Head() Option
+	Chain(func(Any) List) List
 	Map(func(Any) Any) List
 	FoldLeft(Any, func(Any, Any) Any) Any
 }
@@ -22,16 +23,25 @@ func (x Cons) Head() Option {
 	return NewSome(x.head)
 }
 
-func (x Cons) Map(f func(Any) Any) List {
+func (x Cons) Chain(f func(Any) List) List {
 	var rec func(List, List) List
 	rec = func(a List, b List) List {
 		if _, ok := a.(Nil); ok {
 			return b
 		}
 		cons := a.(Cons)
-		return rec(cons.tail, NewCons(f(cons.head), b))
+		list := b.FoldLeft(f(cons.head), func(x Any, y Any) Any {
+			return NewCons(y, x.(List))
+		})
+		return rec(cons.tail, list.(List))
 	}
 	return rec(x, NewNil())
+}
+
+func (x Cons) Map(f func(Any) Any) List {
+	return x.Chain(func(a Any) List {
+		return NewCons(f(a), NewNil())
+	})
 }
 
 func (x Cons) FoldLeft(v Any, f func(Any, Any) Any) Any {
@@ -54,6 +64,10 @@ func NewNil() Nil {
 
 func (x Nil) Head() Option {
 	return NewNone()
+}
+
+func (x Nil) Chain(f func(Any) List) List {
+	return x
 }
 
 func (x Nil) Map(f func(Any) Any) List {

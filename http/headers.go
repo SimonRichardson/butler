@@ -14,7 +14,7 @@ type Header struct {
 func NewHeader(name, value string) Header {
 	return Header{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected header %s"),
+			doc.NewInlineText("Expected header `%s` with value `%s`"),
 			doc.NewInlineText("Unexpected header %s"),
 		)),
 		name:  NewString(name, headerChar()),
@@ -27,24 +27,25 @@ func NewHeader(name, value string) Header {
 // 2) Make sure the value is valid
 func (h Header) Build() generic.State {
 	var (
-		extract = func(x generic.Any) func(func(Header, generic.State) generic.Tuple2) generic.Tuple2 {
-			return func(f func(Header, generic.State) generic.Tuple2) generic.Tuple2 {
+		extract = func(x generic.Any) func(func(Header, generic.List) generic.Tuple2) generic.Tuple2 {
+			return func(f func(Header, generic.List) generic.Tuple2) generic.Tuple2 {
 				tuple := x.(generic.Tuple2)
 				header := tuple.Fst().(Header)
-				state := tuple.Snd().(generic.State)
+				list := tuple.Snd().(generic.List)
 
-				return f(header, state)
+				return f(header, list)
 			}
 		}
 		setup = func(x generic.Any) generic.Any {
-			return generic.NewTuple2(h, generic.State_.Of(""))
+			return generic.NewTuple2(h, generic.List_.Empty())
 		}
 		use = func(f func(header Header) generic.State) func(x generic.Any) generic.Any {
 			return func(x generic.Any) generic.Any {
-				return extract(x)(func(header Header, state generic.State) generic.Tuple2 {
+				return extract(x)(func(header Header, list generic.List) generic.Tuple2 {
 					return generic.NewTuple2(
 						header,
-						state.Chain(func(a generic.Any) generic.State {
+						list.Map(func(a generic.Any) generic.Any {
+							// Tuple2<String, Either<string>>
 							return f(header)
 						}),
 					)
@@ -58,12 +59,10 @@ func (h Header) Build() generic.State {
 			return header.value.Build()
 		}
 		run = func(x generic.Any) generic.Any {
-			return extract(x)(func(header Header, state generic.State) generic.Tuple2 {
-				tuple := state.EvalState("").(generic.Tuple2)
-				either := tuple.Snd().(generic.Either)
+			return extract(x)(func(header Header, list generic.List) generic.Tuple2 {
 				return generic.NewTuple2(
 					header,
-					either,
+					list,
 				)
 			})
 		}
