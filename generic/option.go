@@ -1,7 +1,6 @@
 package generic
 
 type Option interface {
-	Of(Any) Option
 	Chain(func(Any) Option) Option
 	Map(func(Any) Any) Option
 	Fold(func(Any) Option, func() Option) Option
@@ -27,17 +26,13 @@ func NewSome(x Any) Some {
 	}
 }
 
-func (x Some) Of(v Any) Option {
-	return NewSome(v)
-}
-
 func (x Some) Chain(f func(v Any) Option) Option {
 	return f(x.x)
 }
 
 func (x Some) Map(f func(v Any) Any) Option {
 	return x.Chain(func(v Any) Option {
-		return x.Of(f(v))
+		return Option_.Of(f(v))
 	})
 }
 
@@ -65,10 +60,6 @@ func NewNone() None {
 	return None{}
 }
 
-func (x None) Of(v Any) Option {
-	return NewSome(v)
-}
-
 func (x None) Chain(f func(v Any) Option) Option {
 	return x
 }
@@ -91,4 +82,20 @@ func (x None) Traverse(f func(Any) Any) Option {
 
 func (x None) GetOrElse(v func() Any) Any {
 	return v()
+}
+
+// Static methods
+
+var (
+	Option_ = option{}
+)
+
+type option struct{}
+
+func (x option) Of(v Any) Option {
+	return NewSome(v)
+}
+
+func (x option) Empty() Option {
+	return NewNone()
 }

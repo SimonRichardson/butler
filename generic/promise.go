@@ -10,14 +10,6 @@ func NewPromise(f func(func(Any) Any) Any) Promise {
 	}
 }
 
-func (x Promise) Of(v Any) Promise {
-	return Promise{
-		Fork: func(resolve func(Any) Any) Any {
-			return resolve(v)
-		},
-	}
-}
-
 func (x Promise) Chain(f func(v Any) Promise) Promise {
 	return Promise{
 		Fork: func(resolve func(x Any) Any) Any {
@@ -42,6 +34,22 @@ func (x Promise) Extract() Any {
 
 func (x Promise) Extend(f func(Promise) Any) Promise {
 	return x.Map(func(y Any) Any {
-		return f(x.Of(y))
+		return f(Promise_.Of(y))
 	})
+}
+
+// Static methods
+
+var (
+	Promise_ = promise{}
+)
+
+type promise struct{}
+
+func (x promise) Of(v Any) Promise {
+	return Promise{
+		Fork: func(resolve func(Any) Any) Any {
+			return resolve(v)
+		},
+	}
 }

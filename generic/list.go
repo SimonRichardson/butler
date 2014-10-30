@@ -2,8 +2,6 @@ package generic
 
 type List interface {
 	Head() Option
-	Of(Any) List
-	Empty() List
 	Map(func(Any) Any) List
 	FoldLeft(Any, func(Any, Any) Any) Any
 }
@@ -22,14 +20,6 @@ func NewCons(x Any, y List) Cons {
 
 func (x Cons) Head() Option {
 	return NewSome(x.head)
-}
-
-func (x Cons) Of(v Any) List {
-	return NewCons(v, NewNil())
-}
-
-func (x Cons) Empty() List {
-	return NewNil()
 }
 
 func (x Cons) Map(f func(Any) Any) List {
@@ -66,14 +56,6 @@ func (x Nil) Head() Option {
 	return NewNone()
 }
 
-func (x Nil) Of(v Any) List {
-	return NewCons(v, NewNil())
-}
-
-func (x Nil) Empty() List {
-	return NewNil()
-}
-
 func (x Nil) Map(f func(Any) Any) List {
 	return x
 }
@@ -107,4 +89,20 @@ func SliceToList(s []Any) List {
 
 func ToList(args ...Any) List {
 	return SliceToList(args)
+}
+
+// Static methods
+
+var (
+	List_ = list{}
+)
+
+type list struct{}
+
+func (x list) Of(v Any) List {
+	return NewCons(v, NewNil())
+}
+
+func (x list) Empty() List {
+	return NewNil()
 }

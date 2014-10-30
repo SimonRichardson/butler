@@ -110,18 +110,18 @@ func (s String) Build() generic.State {
 		}
 		fold = func(x generic.Any) generic.Any {
 			return extract(x)(func(str String, list generic.List) generic.Tuple2 {
-				folded := list.FoldLeft(generic.Right{}.Of(""), func(a, b generic.Any) generic.Any {
-					return a.(generic.Either).Bimap(
-						generic.Identity(),
+				folded := list.FoldLeft(generic.Either_.Of(""), func(a, b generic.Any) generic.Any {
+					return a.(generic.Either).Fold(
 						func(x generic.Any) generic.Any {
-							return b.(generic.Either).Fold(
-								generic.Identity(),
-								func(y generic.Any) generic.Any {
-									aa := y.(byte)
-									bb := []byte(x.(string))
-									return string(append(bb, aa))
-								},
-							)
+							return generic.NewLeft(x)
+						},
+						func(x generic.Any) generic.Any {
+							sum := func(y generic.Any) generic.Any {
+								aa := []byte{y.(byte)}
+								bb := []byte(x.(string))
+								return string(append(aa, bb...))
+							}
+							return b.(generic.Either).Bimap(sum, sum)
 						},
 					)
 				})
@@ -134,7 +134,7 @@ func (s String) Build() generic.State {
 		}
 	)
 
-	return generic.State{}.Of(s).
+	return generic.State_.Of(s).
 		Map(split).
 		Map(run).
 		Map(validate).

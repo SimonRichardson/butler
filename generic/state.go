@@ -4,14 +4,6 @@ type State struct {
 	Run func(Any) (Any, Any)
 }
 
-func (x State) Of(y Any) State {
-	return State{
-		Run: func(z Any) (Any, Any) {
-			return y, z
-		},
-	}
-}
-
 func (x State) Chain(f func(Any) State) State {
 	return State{
 		Run: func(s Any) (Any, Any) {
@@ -23,7 +15,7 @@ func (x State) Chain(f func(Any) State) State {
 
 func (x State) Map(f func(Any) Any) State {
 	return x.Chain(func(y Any) State {
-		return x.Of(f(y))
+		return State_.Of(f(y))
 	})
 }
 
@@ -39,7 +31,23 @@ func (x State) ExecState(y Any) Any {
 	return b
 }
 
-func (x State) Get() State {
+// Static methods
+
+var (
+	State_ = state{}
+)
+
+type state struct{}
+
+func (x state) Of(y Any) State {
+	return State{
+		Run: func(z Any) (Any, Any) {
+			return y, z
+		},
+	}
+}
+
+func (x state) Get() State {
 	return State{
 		Run: func(z Any) (Any, Any) {
 			return z, z
@@ -47,7 +55,7 @@ func (x State) Get() State {
 	}
 }
 
-func (x State) Modify(f func(Any) Any) State {
+func (x state) Modify(f func(Any) Any) State {
 	return State{
 		Run: func(z Any) (Any, Any) {
 			return nil, f(z)
@@ -55,7 +63,7 @@ func (x State) Modify(f func(Any) Any) State {
 	}
 }
 
-func (x State) Put(a Any, b Any) State {
+func (x state) Put(a Any, b Any) State {
 	return State{
 		Run: func(z Any) (Any, Any) {
 			return a, b

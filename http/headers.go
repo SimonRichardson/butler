@@ -62,7 +62,7 @@ func (h Header) Build() generic.State {
 		}
 	)
 
-	return generic.State{}.Of(h).
+	return generic.State_.Of(h).
 		Map(setup).
 		Map(use(name)).
 		Map(use(value))

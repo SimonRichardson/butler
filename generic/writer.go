@@ -4,14 +4,6 @@ type Writer struct {
 	Run func() (Any, []Any)
 }
 
-func (w Writer) Of(x Any) Writer {
-	return Writer{
-		Run: func() (Any, []Any) {
-			return x, []Any{}
-		},
-	}
-}
-
 func (w Writer) Chain(f func(Any) Writer) Writer {
 	return Writer{
 		Run: func() (Any, []Any) {
@@ -30,4 +22,20 @@ func (w Writer) Map(f func(Any) Any) Writer {
 			},
 		}
 	})
+}
+
+// Static methods
+
+var (
+	Writer_ = writer{}
+)
+
+type writer struct{}
+
+func (w writer) Of(x Any) Writer {
+	return Writer{
+		Run: func() (Any, []Any) {
+			return x, []Any{}
+		},
+	}
 }

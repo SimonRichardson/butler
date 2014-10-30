@@ -1,10 +1,8 @@
 package generic
 
 type Either interface {
-	Of(v Any) Either
 	Chain(f func(v Any) Either) Either
 	Map(f func(v Any) Any) Either
-
 	Bimap(f func(v Any) Any, g func(v Any) Any) Either
 	Fold(f func(v Any) Any, g func(v Any) Any) Any
 }
@@ -19,16 +17,12 @@ func NewRight(x Any) Right {
 	}
 }
 
-func (x Right) Of(v Any) Either {
-	return NewRight(v)
-}
-
 func (x Right) Chain(f func(v Any) Either) Either {
 	return f(x.x)
 }
 
 func (x Right) Map(f func(v Any) Any) Either {
-	return x.Of(f(x.x))
+	return Either_.Of(f(x.x))
 }
 
 func (x Right) Fold(f func(v Any) Any, g func(v Any) Any) Any {
@@ -47,10 +41,6 @@ func NewLeft(x Any) Left {
 	return Left{
 		x: x,
 	}
-}
-
-func (x Left) Of(v Any) Either {
-	return NewRight(v)
 }
 
 func (x Left) Chain(f func(v Any) Either) Either {
@@ -74,4 +64,16 @@ func EitherFromBool(b bool, val Any) Either {
 		return NewRight(val)
 	}
 	return NewLeft(val)
+}
+
+// Static methods
+
+var (
+	Either_ = either{}
+)
+
+type either struct{}
+
+func (x either) Of(v Any) Either {
+	return NewRight(v)
 }
