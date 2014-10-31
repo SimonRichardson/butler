@@ -22,7 +22,7 @@ func main() {
 	service := Service(request, response)
 	service.Build()
 
-	s := http.Get()
+	s := http.Content(output.HtmlEncoder{})
 	fmt.Println(">>", s.Build().EvalState(""))
 
 	/*
