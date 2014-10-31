@@ -14,11 +14,11 @@ type Header struct {
 func NewHeader(name, value string) Header {
 	return Header{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected header `%s` with value `%s`"),
-			doc.NewInlineText("Unexpected header %s"),
+			doc.NewInlineText("Expected header %s with value %s"),
+			doc.NewInlineText("Unexpected header with %s"),
 		)),
-		name:  NewString(name, headerChar()),
-		value: NewString(value, headerChar()),
+		name:  NewString(name, headerNameChar()),
+		value: NewString(value, headerValueChar()),
 	}
 }
 
@@ -82,7 +82,11 @@ func (h Header) Build() generic.State {
 		api = func(x generic.Any) generic.Any {
 			tuple := x.(generic.Tuple2)
 			header := tuple.Fst().(Header)
-			folded := tuple.Snd().(generic.Either)
+
+			sum := func(a generic.Any) generic.Any {
+				return generic.List_.ToSlice(a.(generic.List))
+			}
+			folded := tuple.Snd().(generic.Either).Bimap(sum, sum)
 
 			return generic.NewTuple2(header, header.Api.Run(folded))
 		}

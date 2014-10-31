@@ -78,34 +78,6 @@ func (x Nil) FoldLeft(v Any, f func(Any, Any) Any) Any {
 	return v
 }
 
-func FromStringToList(s string) List {
-	num := len(s)
-	res := make([]Any, num, num)
-	for i := 0; i < num; i++ {
-		res[i] = string(s[i])
-	}
-	return SliceToList(res)
-}
-
-func SliceToList(s []Any) List {
-	var rec func(List, []Any) List
-	rec = func(l List, v []Any) List {
-		num := len(v)
-		if num < 1 {
-			return l
-		}
-		return rec(Cons{
-			head: v[num-1],
-			tail: l,
-		}, v[:num-1])
-	}
-	return rec(Nil{}, s)
-}
-
-func ToList(args ...Any) List {
-	return SliceToList(args)
-}
-
 // Static methods
 
 var (
@@ -120,4 +92,38 @@ func (x list) Of(v Any) List {
 
 func (x list) Empty() List {
 	return NewNil()
+}
+
+func (x list) To(args ...Any) List {
+	return x.FromSlice(args)
+}
+
+func (x list) ToSlice(l List) []Any {
+	return l.FoldLeft(make([]Any, 0, 0), func(a, b Any) Any {
+		return append(a.([]Any), b)
+	}).([]Any)
+}
+
+func (x list) FromSlice(s []Any) List {
+	var rec func(List, []Any) List
+	rec = func(l List, v []Any) List {
+		num := len(v)
+		if num < 1 {
+			return l
+		}
+		return rec(Cons{
+			head: v[num-1],
+			tail: l,
+		}, v[:num-1])
+	}
+	return rec(Nil{}, s)
+}
+
+func (x list) FromString(s string) List {
+	num := len(s)
+	res := make([]Any, num, num)
+	for i := 0; i < num; i++ {
+		res[i] = string(s[i])
+	}
+	return x.FromSlice(res)
 }

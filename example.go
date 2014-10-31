@@ -22,7 +22,7 @@ func main() {
 	service := Service(request, response)
 	service.Build()
 
-	s := http.Accept("hello")
+	s := http.ContentType("application/json")
 	fmt.Println(">>", s.Build().EvalState(""))
 
 	/*

@@ -59,13 +59,6 @@ func (x Left) Bimap(f func(v Any) Any, g func(v Any) Any) Either {
 	return NewLeft(f(x.x))
 }
 
-func EitherFromBool(b bool, val Any) Either {
-	if b {
-		return NewRight(val)
-	}
-	return NewLeft(val)
-}
-
 // Static methods
 
 var (
@@ -76,4 +69,11 @@ type either struct{}
 
 func (x either) Of(v Any) Either {
 	return NewRight(v)
+}
+
+func (x either) FromBool(b bool, val Any) Either {
+	if b {
+		return NewRight(val)
+	}
+	return NewLeft(val)
 }

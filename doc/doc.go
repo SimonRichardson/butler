@@ -48,7 +48,13 @@ func NewInlineText(message string) Doc {
 func (d Doc) Run(a generic.Any) string {
 	switch d.doc {
 	case InlineText:
-		return fmt.Sprintf(d.message, a)
+		x := a.([]generic.Any)
+		y := len(x)
+		z := make([]interface{}, y, y)
+		for k, v := range x {
+			z[k] = v
+		}
+		return fmt.Sprintf(d.message, z...)
 	}
 	return ""
 }

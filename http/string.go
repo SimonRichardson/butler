@@ -14,8 +14,8 @@ type String struct {
 func NewString(value string, validator func(byte) generic.Either) String {
 	return String{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected string `%q`"),
-			doc.NewInlineText("Unexpected string `%q`"),
+			doc.NewInlineText("%q"),
+			doc.NewInlineText("%q"),
 		)),
 		value:     value,
 		validator: validator,
@@ -29,7 +29,7 @@ func anyChar() func(byte) generic.Either {
 	}
 }
 
-func headerChar() func(byte) generic.Either {
+func headerNameChar() func(byte) generic.Either {
 	return func(r byte) generic.Either {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
@@ -37,6 +37,16 @@ func headerChar() func(byte) generic.Either {
 		case r >= 32 && r <= 39 || r >= 94 && r <= 96:
 			fallthrough
 		case r == 42 || r == 43 || r == 45 || r == 46 || r == 124:
+			return generic.NewRight(r)
+		}
+		return generic.NewLeft(r)
+	}
+}
+
+func headerValueChar() func(byte) generic.Either {
+	return func(r byte) generic.Either {
+		switch {
+		case r >= 32 && r <= 126:
 			return generic.NewRight(r)
 		}
 		return generic.NewLeft(r)
@@ -84,7 +94,7 @@ func (s String) Build() generic.State {
 		}
 		split = func(x generic.Any) generic.Any {
 			s := x.(String)
-			return generic.NewTuple2(s, generic.FromStringToList(s.value))
+			return generic.NewTuple2(s, generic.List_.FromString(s.value))
 		}
 		run = func(x generic.Any) generic.Any {
 			return extract(x)(func(str String, list generic.List) generic.Tuple2 {
@@ -132,7 +142,11 @@ func (s String) Build() generic.State {
 		api = func(x generic.Any) generic.Any {
 			tuple := x.(generic.Tuple2)
 			str := tuple.Fst().(String)
-			folded := tuple.Snd().(generic.Either)
+
+			sum := func(a generic.Any) generic.Any {
+				return []generic.Any{a}
+			}
+			folded := tuple.Snd().(generic.Either).Bimap(sum, sum)
 
 			return generic.NewTuple2(str, str.Api.Run(folded))
 		}
