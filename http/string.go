@@ -14,8 +14,8 @@ type String struct {
 func NewString(value string, validator func(byte) generic.Either) String {
 	return String{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("%q"),
-			doc.NewInlineText("%q"),
+			doc.NewInlineText("%s"),
+			doc.NewInlineText("%s"),
 		)),
 		value:     value,
 		validator: validator,

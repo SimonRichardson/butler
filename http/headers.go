@@ -14,8 +14,8 @@ type Header struct {
 func NewHeader(name, value string) Header {
 	return Header{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected header %s with value %s"),
-			doc.NewInlineText("Unexpected header with %s"),
+			doc.NewInlineText("Expected header `%s` with value `%s`"),
+			doc.NewInlineText("Unexpected header with `%s`"),
 		)),
 		name:  NewString(name, headerNameChar()),
 		value: NewString(value, headerValueChar()),
@@ -39,7 +39,7 @@ func (h Header) Build() generic.State {
 		setup = func(x generic.Any) generic.Any {
 			return generic.NewTuple2(h, generic.List_.Empty())
 		}
-		use = func(f func(header Header) generic.State) func(x generic.Any) generic.Any {
+		use = func(f func(header Header) generic.State) func(generic.Any) generic.Any {
 			return func(x generic.Any) generic.Any {
 				return extract(x)(func(header Header, list generic.List) generic.Tuple2 {
 					return generic.NewTuple2(
