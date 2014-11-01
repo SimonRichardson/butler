@@ -1,6 +1,8 @@
 package http
 
 import (
+	"strconv"
+
 	"github.com/SimonRichardson/butler/doc"
 	"github.com/SimonRichardson/butler/generic"
 )
@@ -12,13 +14,21 @@ const (
 	QString QueryType = "String"
 )
 
+var (
+	queries = []QueryType{
+		QInt,
+		QString,
+	}
+)
+
 type Query struct {
 	doc.Api
 	name  QueryType
 	value String
+	build func(generic.Any) generic.Any
 }
 
-func NewQuery(name QueryType, value string) Query {
+func NewQuery(name QueryType, value string, build func(generic.Any) generic.Any) Query {
 	return Query{
 		Api: doc.NewApi(doc.NewDocTypes(
 			doc.NewInlineText("Expected query %s"),
@@ -26,6 +36,7 @@ func NewQuery(name QueryType, value string) Query {
 		)),
 		name:  name,
 		value: NewString(value, urlChar()),
+		build: build,
 	}
 }
 
@@ -62,6 +73,31 @@ func (q Query) Build() generic.State {
 				)
 			})
 		}
+		valid = func(x generic.Any) generic.Any {
+			tuple := x.(generic.Tuple2)
+			query := tuple.Fst().(Query)
+			either := tuple.Snd().(generic.Either)
+
+			return generic.NewTuple2(
+				query,
+				either.Fold(
+					func(x generic.Any) generic.Any {
+						return generic.NewLeft(x)
+					},
+					func(x generic.Any) generic.Any {
+						contains := func(x []QueryType, y QueryType) bool {
+							for _, v := range x {
+								if v == y {
+									return true
+								}
+							}
+							return false
+						}
+						return generic.Either_.FromBool(contains(queries, query.name), x)
+					},
+				),
+			)
+		}
 		api = func(x generic.Any) generic.Any {
 			tuple := x.(generic.Tuple2)
 			query := tuple.Fst().(Query)
@@ -79,13 +115,17 @@ func (q Query) Build() generic.State {
 		Map(setup).
 		Map(use).
 		Map(execute).
+		Map(valid).
 		Map(api)
 }
 
 func QueryInt(name string) Query {
-	return NewQuery(QInt, name)
+	return NewQuery(QInt, name, func(x generic.Any) generic.Any {
+		y, _ := strconv.Atoi(x.(string))
+		return y
+	})
 }
 
 func QueryString(name string) Query {
-	return NewQuery(QString, name)
+	return NewQuery(QString, name, generic.Identity())
 }
