@@ -30,7 +30,56 @@ func NewQuery(name QueryType, value string) Query {
 }
 
 func (q Query) Build() generic.State {
-	return generic.State{}
+	var (
+		extract = func(x generic.Any) func(func(Query, generic.State) generic.Tuple2) generic.Tuple2 {
+			return func(f func(Query, generic.State) generic.Tuple2) generic.Tuple2 {
+				tuple := x.(generic.Tuple2)
+				query := tuple.Fst().(Query)
+				state := tuple.Snd().(generic.State)
+
+				return f(query, state)
+			}
+		}
+		setup = func(x generic.Any) generic.Any {
+			return generic.NewTuple2(q, generic.State{})
+		}
+		use = func(x generic.Any) generic.Any {
+			return extract(x)(func(query Query, state generic.State) generic.Tuple2 {
+				return generic.NewTuple2(
+					query,
+					query.value.Build(),
+				)
+			})
+		}
+		execute = func(x generic.Any) generic.Any {
+			return extract(x)(func(query Query, state generic.State) generic.Tuple2 {
+				x := state.EvalState("")
+				tuple := x.(generic.Tuple2)
+
+				return generic.NewTuple2(
+					query,
+					tuple.Snd().(generic.Either),
+				)
+			})
+		}
+		api = func(x generic.Any) generic.Any {
+			tuple := x.(generic.Tuple2)
+			query := tuple.Fst().(Query)
+
+			sum := func(a generic.Any) generic.Any {
+				return []generic.Any{a}
+			}
+			folded := tuple.Snd().(generic.Either).Bimap(sum, sum)
+
+			return generic.NewTuple2(query, query.Api.Run(folded))
+		}
+	)
+
+	return generic.State_.Of(q).
+		Map(setup).
+		Map(use).
+		Map(execute).
+		Map(api)
 }
 
 func QueryInt(name string) Query {
