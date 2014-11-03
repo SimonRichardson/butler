@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	. "github.com/SimonRichardson/butler/butler"
-	"github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/http"
 	"github.com/SimonRichardson/butler/output"
 )
@@ -23,7 +22,7 @@ func main() {
 	service := Service(request, response)
 	service.Build()
 
-	s := http.NewQuery("type", "hello", generic.Identity())
+	s := http.Path("/users/:id")
 	fmt.Println(">>", s.Build().EvalState(""))
 
 	/*

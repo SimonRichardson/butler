@@ -24,8 +24,8 @@ type Query struct {
 func NewQuery(name QueryType, value string, build func(generic.Any) generic.Any) Query {
 	return Query{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected query %s"),
-			doc.NewInlineText("Unexpected query %s"),
+			doc.NewInlineText("Expected query `%s`"),
+			doc.NewInlineText("Unexpected query `%s`"),
 		)),
 		name:  name,
 		value: NewString(value, urlChar()),
