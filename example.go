@@ -21,7 +21,7 @@ func main() {
 	service := Service(request, response)
 	service.Build()*/
 
-	s := http.NewString("hello", http.AnyChar())
+	s := http.Path("/name/:id")
 	fmt.Println(">>", s.Build().ExecState(""))
 
 	/*

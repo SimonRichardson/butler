@@ -80,7 +80,7 @@ func urlChar() func(byte) g.Either {
 // 2) Convert character to number
 // 3) Check number is in range
 // 4) Return either (expected/unexpected)
-// State<List<Tuple2<String, []Doc>>>
+// StateT<Either<Doc>>
 func (s String) Build() g.StateT {
 	var (
 		split = func(g.Any) func(g.Any) g.Any {
