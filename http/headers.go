@@ -1,9 +1,6 @@
 package http
 
-import (
-	"github.com/SimonRichardson/butler/doc"
-	"github.com/SimonRichardson/butler/generic"
-)
+import "github.com/SimonRichardson/butler/doc"
 
 type Header struct {
 	doc.Api
@@ -25,80 +22,6 @@ func NewHeader(name, value string) Header {
 // Build up the state, so it runs this when required.
 // 1) Make sure the name is valid
 // 2) Make sure the value is valid
-func (h Header) Build() generic.State {
-	var (
-		extract = func(x generic.Any) func(func(Header, generic.List) generic.Tuple2) generic.Tuple2 {
-			return func(f func(Header, generic.List) generic.Tuple2) generic.Tuple2 {
-				tuple := x.(generic.Tuple2)
-				header := tuple.Fst().(Header)
-				list := tuple.Snd().(generic.List)
-
-				return f(header, list)
-			}
-		}
-		setup = func(x generic.Any) generic.Any {
-			return generic.NewTuple2(h, generic.List_.Empty())
-		}
-		use = func(f func(header Header) generic.State) func(generic.Any) generic.Any {
-			return func(x generic.Any) generic.Any {
-				return extract(x)(func(header Header, list generic.List) generic.Tuple2 {
-					return generic.NewTuple2(
-						header,
-						generic.NewCons(f(header), list),
-					)
-				})
-			}
-		}
-		name = func(header Header) generic.State {
-			return header.name.Build()
-		}
-		value = func(header Header) generic.State {
-			return header.value.Build()
-		}
-		fold = func(x generic.Any) generic.Any {
-			return extract(x)(func(header Header, list generic.List) generic.Tuple2 {
-				folded := list.FoldLeft(generic.Either_.Of(generic.List_.Empty()), func(a, b generic.Any) generic.Any {
-					return a.(generic.Either).Fold(
-						func(x generic.Any) generic.Any {
-							return generic.NewLeft(x)
-						},
-						func(x generic.Any) generic.Any {
-							sum := func(y generic.Any) generic.Any {
-								bb := x.(generic.List)
-								return generic.NewCons(y, bb)
-							}
-							c := b.(generic.State).EvalState("")
-							tuple := c.(generic.Tuple2)
-							return tuple.Snd().(generic.Either).Bimap(sum, sum)
-						},
-					)
-				})
-				return generic.NewTuple2(
-					header,
-					folded,
-				)
-			})
-		}
-		api = func(x generic.Any) generic.Any {
-			tuple := x.(generic.Tuple2)
-			header := tuple.Fst().(Header)
-
-			sum := func(a generic.Any) generic.Any {
-				return generic.List_.ToSlice(a.(generic.List))
-			}
-			folded := tuple.Snd().(generic.Either).Bimap(sum, sum)
-
-			return generic.NewTuple2(header, header.Api.Run(folded))
-		}
-	)
-
-	return generic.State_.Of(h).
-		Map(setup).
-		Map(use(name)).
-		Map(use(value)).
-		Map(fold).
-		Map(api)
-}
 
 func Accept(value string) Header {
 	return NewHeader("Accept", value)

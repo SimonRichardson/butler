@@ -2,20 +2,20 @@ package http
 
 import (
 	"github.com/SimonRichardson/butler/doc"
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
 )
 
 type String struct {
 	doc.Api
 	value     string
-	validator func(byte) generic.Either
+	validator func(byte) g.Either
 }
 
-func NewString(value string, validator func(byte) generic.Either) String {
+func NewString(value string, validator func(byte) g.Either) String {
 	return String{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("%s"),
-			doc.NewInlineText("%s"),
+			doc.NewInlineText("Expected string `%s`"),
+			doc.NewInlineText("Unexpected string `%s`"),
 		)),
 		value:     value,
 		validator: validator,
@@ -23,55 +23,55 @@ func NewString(value string, validator func(byte) generic.Either) String {
 }
 
 // Series of predicates, could give more info via a Option or Either
-func anyChar() func(byte) generic.Either {
-	return func(r byte) generic.Either {
-		return generic.NewRight(r)
+func AnyChar() func(byte) g.Either {
+	return func(r byte) g.Either {
+		return g.NewRight(r)
 	}
 }
 
-func headerNameChar() func(byte) generic.Either {
-	return func(r byte) generic.Either {
+func headerNameChar() func(byte) g.Either {
+	return func(r byte) g.Either {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
 			fallthrough
 		case r >= 32 && r <= 39 || r >= 94 && r <= 96:
 			fallthrough
 		case r == 42 || r == 43 || r == 45 || r == 46 || r == 124:
-			return generic.NewRight(r)
+			return g.NewRight(r)
 		}
-		return generic.NewLeft(r)
+		return g.NewLeft(r)
 	}
 }
 
-func headerValueChar() func(byte) generic.Either {
-	return func(r byte) generic.Either {
+func headerValueChar() func(byte) g.Either {
+	return func(r byte) g.Either {
 		switch {
 		case r >= 32 && r <= 126:
-			return generic.NewRight(r)
+			return g.NewRight(r)
 		}
-		return generic.NewLeft(r)
+		return g.NewLeft(r)
 	}
 }
 
-func pathChar() func(byte) generic.Either {
-	return func(r byte) generic.Either {
+func pathChar() func(byte) g.Either {
+	return func(r byte) g.Either {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
 			fallthrough
 		case r == 47 || r == 58:
-			return generic.NewRight(r)
+			return g.NewRight(r)
 		}
-		return generic.NewLeft(r)
+		return g.NewLeft(r)
 	}
 }
 
-func urlChar() func(byte) generic.Either {
-	return func(r byte) generic.Either {
+func urlChar() func(byte) g.Either {
+	return func(r byte) g.Either {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
-			return generic.NewRight(r)
+			return g.NewRight(r)
 		}
-		return generic.NewLeft(r)
+		return g.NewLeft(r)
 	}
 }
 
@@ -81,81 +81,70 @@ func urlChar() func(byte) generic.Either {
 // 3) Check number is in range
 // 4) Return either (expected/unexpected)
 // State<List<Tuple2<String, []Doc>>>
-func (s String) Build() generic.State {
+func (s String) Build() g.StateT {
 	var (
-		extract = func(x generic.Any) func(func(String, generic.List) generic.Tuple2) generic.Tuple2 {
-			return func(f func(String, generic.List) generic.Tuple2) generic.Tuple2 {
-				tuple := x.(generic.Tuple2)
-				str := tuple.Fst().(String)
-				list := tuple.Snd().(generic.List)
-
-				return f(str, list)
+		split = func(g.Any) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.List_.FromString(b.(String).value)
 			}
 		}
-		split = func(x generic.Any) generic.Any {
-			s := x.(String)
-			return generic.NewTuple2(s, generic.List_.FromString(s.value))
+		first = func(a g.Any) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return b.(g.List).Map(func(a g.Any) g.Any {
+					return []byte(a.(string))[0]
+				})
+			}
 		}
-		run = func(x generic.Any) generic.Any {
-			return extract(x)(func(str String, list generic.List) generic.Tuple2 {
-				return generic.NewTuple2(
-					str,
-					list.Map(func(a generic.Any) generic.Any {
-						return []byte(a.(string))[0]
-					}),
-				)
-			})
-		}
-		validate = func(x generic.Any) generic.Any {
-			return extract(x)(func(str String, list generic.List) generic.Tuple2 {
-				f := str.validator
-
-				return generic.NewTuple2(
-					str,
-					list.Map(func(a generic.Any) generic.Any {
+		validate = func(f func(byte) g.Either) func(g.Any) func(g.Any) g.Any {
+			return func(x g.Any) func(g.Any) g.Any {
+				return func(b g.Any) g.Any {
+					return b.(g.List).Map(func(a g.Any) g.Any {
 						return f(a.(byte))
-					}),
-				)
-			})
+					})
+				}
+			}
 		}
-		fold = func(x generic.Any) generic.Any {
-			return extract(x)(func(str String, list generic.List) generic.Tuple2 {
-				folded := list.FoldLeft(generic.Either_.Of(""), func(a, b generic.Any) generic.Any {
-					return a.(generic.Either).Fold(
-						func(x generic.Any) generic.Any {
-							return generic.NewLeft(x)
+		fold = func(a g.Any) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return b.(g.List).FoldLeft(g.Either_.Of(""), func(a, b g.Any) g.Any {
+					return a.(g.Either).Fold(
+						func(x g.Any) g.Any {
+							return g.NewLeft(x)
 						},
-						func(x generic.Any) generic.Any {
-							sum := func(y generic.Any) generic.Any {
-								aa := y.(byte)
-								bb := []byte(x.(string))
+						func(x g.Any) g.Any {
+							sum := func(y g.Any) g.Any {
+								var (
+									aa = y.(byte)
+									bb = []byte(x.(string))
+								)
 								return string(append(bb, aa))
 							}
-							return b.(generic.Either).Bimap(sum, sum)
+							return b.(g.Either).Bimap(sum, sum)
 						},
 					)
 				})
-
-				return generic.NewTuple2(str, folded)
-			})
-		}
-		api = func(x generic.Any) generic.Any {
-			tuple := x.(generic.Tuple2)
-			str := tuple.Fst().(String)
-
-			sum := func(a generic.Any) generic.Any {
-				return []generic.Any{a}
 			}
-			folded := tuple.Snd().(generic.Either).Bimap(sum, sum)
-
-			return generic.NewTuple2(str, str.Api.Run(folded))
+		}
+		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
+			return func(a g.Any) func(g.Any) g.Any {
+				return func(b g.Any) g.Any {
+					var (
+						sum = func(a g.Any) g.Any {
+							return []g.Any{a}
+						}
+						folded = b.(g.Either).Bimap(sum, sum)
+					)
+					return api.Run(folded)
+				}
+			}
 		}
 	)
 
-	return generic.State_.Of(s).
-		Map(split).
-		Map(run).
-		Map(validate).
-		Map(fold).
-		Map(api)
+	return g.StateT_.Of(s).
+		Chain(modify(g.Constant1)).
+		Chain(modify(split)).
+		Chain(modify(first)).
+		Chain(modify(validate(s.validator))).
+		Chain(modify(fold)).
+		Chain(modify(api(s.Api)))
 }

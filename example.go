@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
-	. "github.com/SimonRichardson/butler/butler"
+
 	"github.com/SimonRichardson/butler/http"
-	"github.com/SimonRichardson/butler/output"
 )
 
 func main() {
 
-	request := Butler().
+	/*request := Butler().
 		Get().
 		Path("/name/:id").
 		ContentType("application/json").
@@ -20,10 +19,10 @@ func main() {
 		Content(output.HtmlEncoder{})
 
 	service := Service(request, response)
-	service.Build()
+	service.Build()*/
 
-	s := http.Path("/users/:id")
-	fmt.Println(">>", s.Build().EvalState(""))
+	s := http.NewString("hello", http.AnyChar())
+	fmt.Println(">>", s.Build().ExecState(""))
 
 	/*
 		listEmployees := Service(request, response).Then(func(args []generic.Any) Result {

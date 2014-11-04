@@ -3,7 +3,7 @@ package doc
 import (
 	"fmt"
 
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
 )
 
 type DocType string
@@ -24,12 +24,7 @@ func NewDocTypes(x, y Doc) DocTypes {
 	}
 }
 
-func (d DocTypes) Run(x generic.Either) generic.Either {
-	constant := func(doc Doc) func(generic.Any) generic.Any {
-		return func(a generic.Any) generic.Any {
-			return doc.Run(a)
-		}
-	}
+func (d DocTypes) Run(x g.Either) g.Either {
 	return x.Bimap(constant(d.unexpected), constant(d.expected))
 }
 
@@ -45,10 +40,10 @@ func NewInlineText(message string) Doc {
 	}
 }
 
-func (d Doc) Run(a generic.Any) string {
+func (d Doc) Run(a g.Any) string {
 	switch d.doc {
 	case InlineText:
-		x := a.([]generic.Any)
+		x := a.([]g.Any)
 		y := len(x)
 		z := make([]interface{}, y, y)
 		for k, v := range x {
