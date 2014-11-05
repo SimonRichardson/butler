@@ -134,7 +134,7 @@ func (s String) Build() g.StateT {
 						}
 						folded = b.(g.Either).Bimap(sum, sum)
 					)
-					return api.Run(folded)
+					return g.Writer_.Of(api.Run(folded))
 				}
 			}
 		}
