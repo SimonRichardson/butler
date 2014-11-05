@@ -1,6 +1,8 @@
 package http
 
 import (
+	"fmt"
+
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
 )
@@ -22,16 +24,20 @@ func NewRoute(path string) Route {
 
 func (r Route) Build() g.StateT {
 	var (
-		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
+		api = func(r Route) func(g.Any) func(g.Any) g.Any {
 			return func(a g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
-					var (
-						sum = func(a g.Any) g.Any {
-							return []g.Any{a}
-						}
-						folded = b.(g.Either).Bimap(sum, sum)
-					)
-					return api.Run(folded)
+					fmt.Println(a)
+					fmt.Println(b.(g.Writer).Run())
+					fmt.Println("-------")
+					return b.(g.Writer).Chain(func(a g.Any) g.Writer {
+
+						str := g.NewRight([]g.Any{a.(String).value})
+
+						writer := g.NewWriter(r, []g.Any{r.Api.Run(str)})
+						fmt.Println(writer.Run())
+						return writer
+					})
 				}
 			}
 		}
@@ -40,7 +46,7 @@ func (r Route) Build() g.StateT {
 	return r.path.Build().
 		Chain(get()).
 		Chain(constant(g.StateT_.Of(r))).
-		Chain(modify(api(r.Api)))
+		Chain(modify(api(r)))
 }
 
 func Path(path string) Route {

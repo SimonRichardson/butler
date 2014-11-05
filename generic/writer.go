@@ -4,6 +4,14 @@ type Writer struct {
 	Run func() (Any, []Any)
 }
 
+func NewWriter(x Any, y []Any) Writer {
+	return Writer{
+		Run: func() (Any, []Any) {
+			return x, y
+		},
+	}
+}
+
 func (w Writer) Chain(f func(Any) Writer) Writer {
 	return Writer{
 		Run: func() (Any, []Any) {
@@ -27,8 +35,8 @@ func (w Writer) Map(f func(Any) Any) Writer {
 func (w Writer) Tell(x Any) Writer {
 	return Writer{
 		Run: func() (Any, []Any) {
-			_, y := w.Run()
-			return Empty{}, append(y, x)
+			_, b := w.Run()
+			return Empty{}, append(b, x)
 		},
 	}
 }

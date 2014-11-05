@@ -22,12 +22,12 @@ func main() {
 	service := Service(request, response)
 	service.Build()*/
 
-	s := http.NewString("/name/:id", http.AnyChar())
-	fmt.Println(">>", s.Build().ExecState("").(generic.Right).Fold(generic.Identity(), func(a generic.Any) generic.Any {
-		x, y := a.(generic.Writer).Run()
-		fmt.Println(x, y)
+	s := http.NewString("/na£me/:id", http.UrlChar())
+	s.Build().ExecState("").(generic.Either).Fold(generic.Identity(), func(a generic.Any) generic.Any {
+		_, y := a.(generic.Writer).Run()
+		fmt.Println(y)
 		return y
-	}))
+	})
 
 	/*
 		listEmployees := Service(request, response).Then(func(args []generic.Any) Result {

@@ -65,7 +65,7 @@ func pathChar() func(byte) g.Either {
 	}
 }
 
-func urlChar() func(byte) g.Either {
+func UrlChar() func(byte) g.Either {
 	return func(r byte) g.Either {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
@@ -80,7 +80,7 @@ func urlChar() func(byte) g.Either {
 // 2) Convert character to number
 // 3) Check number is in range
 // 4) Return either (expected/unexpected)
-// StateT<Either<Doc>>
+// StateT<Either<Writer<String, Doc>>>
 func (s String) Build() g.StateT {
 	var (
 		split = func(g.Any) func(g.Any) g.Any {
@@ -125,16 +125,23 @@ func (s String) Build() g.StateT {
 				})
 			}
 		}
-		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
-			return func(a g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					var (
-						sum = func(a g.Any) g.Any {
-							return []g.Any{a}
-						}
-						folded = b.(g.Either).Bimap(sum, sum)
-					)
-					return g.Writer_.Of(api.Run(folded))
+		api = func(s String) func(g.Any) g.StateT {
+			return func(a g.Any) g.StateT {
+				return g.StateT{
+					Run: func(b g.Any) g.Either {
+						var (
+							either = b.(g.Either)
+							sum    = func(a g.Any) g.Any {
+								return []g.Any{a}
+							}
+							folded = either.Bimap(sum, sum)
+							as     = func(g.Any) g.Any {
+								return g.NewTuple2(g.Empty{}, g.NewWriter(s, []g.Any{s.Api.Run(folded)}))
+							}
+						)
+
+						return either.Bimap(as, as)
+					},
 				}
 			}
 		}
@@ -146,5 +153,5 @@ func (s String) Build() g.StateT {
 		Chain(modify(first)).
 		Chain(modify(validate(s.validator))).
 		Chain(modify(fold)).
-		Chain(modify(api(s.Api)))
+		Chain(api(s))
 }
