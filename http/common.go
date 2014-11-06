@@ -29,3 +29,7 @@ func get() func(g.Any) g.StateT {
 		return g.StateT_.Get()
 	}
 }
+
+func singleton(a g.Any) []g.Any {
+	return []g.Any{a}
+}

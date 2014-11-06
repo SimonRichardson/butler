@@ -18,7 +18,7 @@ func NewRoute(path string) Route {
 			doc.NewInlineText("Expected route `%s`"),
 			doc.NewInlineText("Unexpected route `%s`"),
 		)),
-		path: NewString(path, pathChar()),
+		path: NewString(path, PathChar()),
 	}
 }
 
@@ -32,9 +32,9 @@ func (r Route) Build() g.StateT {
 					fmt.Println("-------")
 					return b.(g.Writer).Chain(func(a g.Any) g.Writer {
 
-						str := g.NewRight([]g.Any{a.(String).value})
+						str := g.NewRight(singleton(a.(String).value))
 
-						writer := g.NewWriter(r, []g.Any{r.Api.Run(str)})
+						writer := g.NewWriter(r, singleton(r.Api.Run(str)))
 						fmt.Println(writer.Run())
 						return writer
 					})

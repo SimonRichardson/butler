@@ -29,7 +29,7 @@ func AnyChar() func(byte) g.Either {
 	}
 }
 
-func headerNameChar() func(byte) g.Either {
+func HeaderNameChar() func(byte) g.Either {
 	return func(r byte) g.Either {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
@@ -43,7 +43,7 @@ func headerNameChar() func(byte) g.Either {
 	}
 }
 
-func headerValueChar() func(byte) g.Either {
+func HeaderValueChar() func(byte) g.Either {
 	return func(r byte) g.Either {
 		switch {
 		case r >= 32 && r <= 126:
@@ -53,7 +53,7 @@ func headerValueChar() func(byte) g.Either {
 	}
 }
 
-func pathChar() func(byte) g.Either {
+func PathChar() func(byte) g.Either {
 	return func(r byte) g.Either {
 		switch {
 		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
@@ -125,22 +125,25 @@ func (s String) Build() g.StateT {
 				})
 			}
 		}
-		api = func(s String) func(g.Any) g.StateT {
-			return func(a g.Any) g.StateT {
+		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
+			return func(g.Any) func(g.Any) g.Any {
+				return func(a g.Any) g.Any {
+					sum := func(a g.Any) g.Any {
+						return singleton(a)
+					}
+					return api.Run(a.(g.Either).Bimap(sum, sum))
+				}
+			}
+		}
+		finalise = func(s String) func(g.Any) g.StateT {
+			return func(g.Any) g.StateT {
 				return g.StateT{
-					Run: func(b g.Any) g.Either {
-						var (
-							either = b.(g.Either)
-							sum    = func(a g.Any) g.Any {
-								return []g.Any{a}
-							}
-							folded = either.Bimap(sum, sum)
-							as     = func(g.Any) g.Any {
-								return g.NewTuple2(g.Empty{}, g.NewWriter(s, []g.Any{s.Api.Run(folded)}))
-							}
-						)
-
-						return either.Bimap(as, as)
+					Run: func(a g.Any) g.Either {
+						cast := func(b g.Any) g.Any {
+							x := g.NewWriter(s, singleton(b))
+							return g.NewTuple2(g.Empty{}, x)
+						}
+						return a.(g.Either).Bimap(cast, cast)
 					},
 				}
 			}
@@ -153,5 +156,6 @@ func (s String) Build() g.StateT {
 		Chain(modify(first)).
 		Chain(modify(validate(s.validator))).
 		Chain(modify(fold)).
-		Chain(api(s))
+		Chain(modify(api(s.Api))).
+		Chain(finalise(s))
 }

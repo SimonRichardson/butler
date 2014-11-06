@@ -4,6 +4,14 @@ type StateT struct {
 	Run func(Any) Either
 }
 
+func NewStateT(either Either) StateT {
+	return StateT{
+		Run: func(Any) Either {
+			return either
+		},
+	}
+}
+
 func (s StateT) Chain(f func(Any) StateT) StateT {
 	return StateT{
 		Run: func(a Any) Either {

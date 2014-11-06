@@ -22,7 +22,7 @@ func main() {
 	service := Service(request, response)
 	service.Build()*/
 
-	s := http.NewString("/na£me/:id", http.UrlChar())
+	s := http.NewString("/name/:id", http.PathChar())
 	s.Build().ExecState("").(generic.Either).Fold(generic.Identity(), func(a generic.Any) generic.Any {
 		_, y := a.(generic.Writer).Run()
 		fmt.Println(y)
