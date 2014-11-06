@@ -140,7 +140,7 @@ func (s String) Build() g.StateT {
 				return g.StateT{
 					Run: func(a g.Any) g.Either {
 						cast := func(b g.Any) g.Any {
-							x := g.NewWriter(s, singleton(b))
+							x := g.NewWriter(s, singleton(a))
 							return g.NewTuple2(g.Empty{}, x)
 						}
 						return a.(g.Either).Bimap(cast, cast)

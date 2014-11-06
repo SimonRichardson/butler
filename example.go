@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/http"
 )
 
@@ -22,15 +22,16 @@ func main() {
 	service := Service(request, response)
 	service.Build()*/
 
-	s := http.NewString("/name/:id", http.PathChar())
-	s.Build().ExecState("").(generic.Either).Fold(generic.Identity(), func(a generic.Any) generic.Any {
-		_, y := a.(generic.Writer).Run()
-		fmt.Println(y)
+	run := func(a g.Any) g.Any {
+		_, y := a.(g.Writer).Run()
 		return y
-	})
+	}
+
+	s := http.Path("/name/:id")
+	fmt.Println(s.Build().ExecState("").(g.Either).Fold(run, run))
 
 	/*
-		listEmployees := Service(request, response).Then(func(args []generic.Any) Result {
+		listEmployees := Service(request, response).Then(func(args []g.Any) Result {
 			return loadAllEmployees(args[0].(int))
 		})
 

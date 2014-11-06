@@ -29,16 +29,21 @@ func (s StateT) Map(f func(Any) Any) StateT {
 	})
 }
 
+// Note: This isn't official! Officially the eval and exec should both use map,
+// but I've hard coded StateT to Either and then this makes it possible.
+
 func (s StateT) EvalState(a Any) Any {
-	return s.Run(a).Map(func(b Any) Any {
+	fst := func(b Any) Any {
 		return b.(Tuple2).Fst()
-	})
+	}
+	return s.Run(a).Bimap(fst, fst)
 }
 
 func (s StateT) ExecState(a Any) Any {
-	return s.Run(a).Map(func(b Any) Any {
+	snd := func(b Any) Any {
 		return b.(Tuple2).Snd()
-	})
+	}
+	return s.Run(a).Bimap(snd, snd)
 }
 
 // Static methods
