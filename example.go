@@ -27,7 +27,7 @@ func main() {
 		return y
 	}
 
-	s := http.Path("/name/:id")
+	s := http.QueryInt("name")
 	fmt.Println(s.Build().ExecState("").(g.Either).Fold(run, run))
 
 	/*

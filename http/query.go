@@ -4,42 +4,53 @@ import (
 	"strconv"
 
 	"github.com/SimonRichardson/butler/doc"
-	"github.com/SimonRichardson/butler/generic"
-)
-
-type QueryType string
-
-const (
-	QInt    QueryType = "Int"
-	QString QueryType = "String"
+	g "github.com/SimonRichardson/butler/generic"
 )
 
 type Query struct {
 	doc.Api
-	name  QueryType
 	value String
-	build func(generic.Any) generic.Any
+	build func(g.Any) g.Any
 }
 
-func NewQuery(name QueryType, value string, build func(generic.Any) generic.Any) Query {
+func NewQuery(value string, build func(g.Any) g.Any) Query {
 	return Query{
 		Api: doc.NewApi(doc.NewDocTypes(
 			doc.NewInlineText("Expected query `%s`"),
 			doc.NewInlineText("Unexpected query `%s`"),
 		)),
-		name:  name,
 		value: NewString(value, UrlChar()),
 		build: build,
 	}
 }
 
+func (q Query) Build() g.StateT {
+	var (
+		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
+			return func(a g.Any) func(g.Any) g.Any {
+				return func(b g.Any) g.Any {
+					return b.(g.Writer).Chain(func(a g.Any) g.Writer {
+						str := g.Either_.Of(singleton(a.(String).value))
+						return g.NewWriter(q, singleton(api.Run(str)))
+					})
+				}
+			}
+		}
+	)
+
+	return q.value.Build().
+		Chain(get()).
+		Chain(constant(g.StateT_.Of(q))).
+		Chain(modify(api(q.Api)))
+}
+
 func QueryInt(name string) Query {
-	return NewQuery(QInt, name, func(x generic.Any) generic.Any {
+	return NewQuery(name, func(x g.Any) g.Any {
 		y, _ := strconv.Atoi(x.(string))
 		return y
 	})
 }
 
 func QueryString(name string) Query {
-	return NewQuery(QString, name, generic.Identity())
+	return NewQuery(name, g.Identity())
 }
