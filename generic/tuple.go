@@ -19,3 +19,7 @@ func (t Tuple2) Fst() Any {
 func (t Tuple2) Snd() Any {
 	return t._2
 }
+
+func (t Tuple2) Slice() []Any {
+	return []Any{t._1, t._2}
+}

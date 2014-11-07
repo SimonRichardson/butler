@@ -1,6 +1,9 @@
 package http
 
-import "github.com/SimonRichardson/butler/doc"
+import (
+	"github.com/SimonRichardson/butler/doc"
+	g "github.com/SimonRichardson/butler/generic"
+)
 
 type Header struct {
 	doc.Api
@@ -22,6 +25,31 @@ func NewHeader(name, value string) Header {
 // Build up the state, so it runs this when required.
 // 1) Make sure the name is valid
 // 2) Make sure the value is valid
+func (h Header) Build() g.StateT {
+	var (
+		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
+			return func(a g.Any) func(g.Any) g.Any {
+				return func(b g.Any) g.Any {
+					return writer(b).Chain(func(a g.Any) g.Writer {
+						var (
+							t = tuple2(a)
+							x = t.Fst().(String).value
+							y = t.Snd().(String).value
+						)
+						str := g.Either_.Of(append(singleton(x), y))
+						return g.NewWriter(h, singleton(api.Run(str)))
+					})
+				}
+			}
+		}
+	)
+
+	return h.name.Build().
+		Chain(get()).
+		Chain(merge(h.value.Build())).
+		Chain(constant(g.StateT_.Of(h))).
+		Chain(modify(api(h.Api)))
+}
 
 func Accept(value string) Header {
 	return NewHeader("Accept", value)

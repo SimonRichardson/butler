@@ -119,7 +119,7 @@ func (s String) Build() g.StateT {
 								)
 								return string(append(bb, aa))
 							}
-							return b.(g.Either).Bimap(sum, sum)
+							return either(b).Bimap(sum, sum)
 						},
 					)
 				})
@@ -131,7 +131,7 @@ func (s String) Build() g.StateT {
 					sum := func(a g.Any) g.Any {
 						return singleton(a)
 					}
-					return api.Run(a.(g.Either).Bimap(sum, sum))
+					return api.Run(either(a).Bimap(sum, sum))
 				}
 			}
 		}
@@ -143,7 +143,7 @@ func (s String) Build() g.StateT {
 							x := g.NewWriter(s, singleton(a))
 							return g.NewTuple2(g.Empty{}, x)
 						}
-						return a.(g.Either).Bimap(cast, cast)
+						return either(a).Bimap(cast, cast)
 					},
 				}
 			}

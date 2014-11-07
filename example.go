@@ -27,7 +27,7 @@ func main() {
 		return y
 	}
 
-	s := http.QueryInt("name")
+	s := http.ContentType("application/json")
 	fmt.Println(s.Build().ExecState("").(g.Either).Fold(run, run))
 
 	/*
