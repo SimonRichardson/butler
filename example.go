@@ -27,7 +27,7 @@ func main() {
 		return y
 	}
 
-	s := http.ContentType("application/json")
+	s := http.NewMethod(http.GET)
 	fmt.Println(s.Build().ExecState("").(g.Either).Fold(run, run))
 
 	/*

@@ -26,6 +26,10 @@ func asList(x g.Any) g.List {
 	return x.(g.List)
 }
 
+func asMethod(x g.Any) Method {
+	return x.(Method)
+}
+
 func asTuple2(x g.Any) g.Tuple2 {
 	return x.(g.Tuple2)
 }
