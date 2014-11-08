@@ -25,7 +25,7 @@ func (r Route) Build() g.StateT {
 		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
 			return func(a g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
-					return writer(b).Chain(func(a g.Any) g.Writer {
+					return asWriter(b).Chain(func(a g.Any) g.Writer {
 						str := g.Either_.Of(singleton(a.(String).value))
 						return g.NewWriter(r, singleton(api.Run(str)))
 					})

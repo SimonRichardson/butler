@@ -18,20 +18,24 @@ func constant(a g.StateT) func(g.Any) g.StateT {
 
 // Common aliases
 
-func either(x g.Any) g.Either {
+func asEither(x g.Any) g.Either {
 	return x.(g.Either)
 }
 
-func list(x g.Any) g.List {
+func asList(x g.Any) g.List {
 	return x.(g.List)
 }
 
-func tuple2(x g.Any) g.Tuple2 {
+func asTuple2(x g.Any) g.Tuple2 {
 	return x.(g.Tuple2)
 }
 
-func writer(x g.Any) g.Writer {
+func asWriter(x g.Any) g.Writer {
 	return x.(g.Writer)
+}
+
+func asString(x g.Any) String {
+	return x.(String)
 }
 
 func merge(a g.StateT) func(g.Any) g.StateT {
@@ -39,15 +43,15 @@ func merge(a g.StateT) func(g.Any) g.StateT {
 		run := func(c g.Any) g.Any {
 			return g.NewTuple2(
 				g.Empty{},
-				writer(b).Chain(
+				asWriter(b).Chain(
 					func(z g.Any) g.Writer {
-						x, y := writer(c).Run()
+						x, y := asWriter(c).Run()
 						return g.NewWriter(g.NewTuple2(z, x), y)
 					},
 				),
 			)
 		}
-		return g.NewStateT(either(a.ExecState("")).Bimap(run, run))
+		return g.NewStateT(asEither(a.ExecState("")).Bimap(run, run))
 	}
 }
 

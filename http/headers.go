@@ -30,9 +30,9 @@ func (h Header) Build() g.StateT {
 		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
 			return func(a g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
-					return writer(b).Chain(func(a g.Any) g.Writer {
+					return asWriter(b).Chain(func(a g.Any) g.Writer {
 						var (
-							t = tuple2(a)
+							t = asTuple2(a)
 							x = t.Fst().(String).value
 							y = t.Snd().(String).value
 						)
