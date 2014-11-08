@@ -18,6 +18,10 @@ func constant(a g.StateT) func(g.Any) g.StateT {
 
 // Common aliases
 
+func asContentEncoder(x g.Any) ContentEncoder {
+	return x.(ContentEncoder)
+}
+
 func asEither(x g.Any) g.Either {
 	return x.(g.Either)
 }

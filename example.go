@@ -5,6 +5,7 @@ import (
 
 	g "github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/http"
+	"github.com/SimonRichardson/butler/output"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 		return y
 	}
 
-	s := http.NewMethod(http.GET)
+	s := http.Content(output.JsonEncoder{})
 	fmt.Println(s.Build().ExecState("").(g.Either).Fold(run, run))
 
 	/*
