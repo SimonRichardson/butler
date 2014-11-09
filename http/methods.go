@@ -2,32 +2,32 @@ package http
 
 import (
 	"github.com/SimonRichardson/butler/doc"
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
 )
 
 type MethodType string
 
 const (
-	MDelete  MethodType = "delete"
-	MGet     MethodType = "get"
-	MHead    MethodType = "head"
-	MOptions MethodType = "options"
-	MPatch   MethodType = "patch"
-	MPost    MethodType = "post"
-	MPut     MethodType = "put"
-	MTrace   MethodType = "trace"
+	DELETE  MethodType = "delete"
+	GET     MethodType = "get"
+	HEAD    MethodType = "head"
+	OPTIONS MethodType = "options"
+	PATCH   MethodType = "patch"
+	POST    MethodType = "post"
+	PUT     MethodType = "put"
+	TRACE   MethodType = "trace"
 )
 
 var (
 	methodTypes = []MethodType{
-		MDelete,
-		MGet,
-		MHead,
-		MOptions,
-		MPatch,
-		MPost,
-		MPut,
-		MTrace,
+		DELETE,
+		GET,
+		HEAD,
+		OPTIONS,
+		PATCH,
+		POST,
+		PUT,
+		TRACE,
 	}
 )
 
@@ -46,84 +46,84 @@ func NewMethod(method MethodType) Method {
 	}
 }
 
-func (m Method) Build() generic.State {
+func (m Method) Build() g.StateT {
 	var (
-		extract = func(x generic.Any) func(func(Method, MethodType) generic.Tuple2) generic.Tuple2 {
-			return func(f func(Method, MethodType) generic.Tuple2) generic.Tuple2 {
-				tuple := x.(generic.Tuple2)
-				method := tuple.Fst().(Method)
-				methodType := tuple.Snd().(MethodType)
-
-				return f(method, methodType)
-			}
-		}
-		setup = func(x generic.Any) generic.Any {
-			return generic.NewTuple2(m, m.method)
-		}
-		validate = func(types []MethodType) func(generic.Any) generic.Any {
-			contains := func(x []MethodType, y MethodType) bool {
-				for _, v := range x {
-					if v == y {
-						return true
+		contains = func(types []MethodType) func(t MethodType) g.Either {
+			return func(t MethodType) g.Either {
+				for _, v := range types {
+					if t == v {
+						return g.NewRight(t)
 					}
 				}
-				return false
-			}
-			return func(x generic.Any) generic.Any {
-				return extract(x)(func(method Method, methodType MethodType) generic.Tuple2 {
-					return generic.NewTuple2(
-						method,
-						generic.Either_.FromBool(contains(types, methodType), methodType),
-					)
-				})
+				return g.NewLeft(t)
 			}
 		}
-		api = func(x generic.Any) generic.Any {
-			tuple := x.(generic.Tuple2)
-			method := tuple.Fst().(Method)
-
-			sum := func(a generic.Any) generic.Any {
-				return []generic.Any{a}
+		validate = func(f func(t MethodType) g.Either) func(g.Any) func(g.Any) g.Any {
+			return func(x g.Any) func(g.Any) g.Any {
+				return func(b g.Any) g.Any {
+					return f(asMethod(b).method)
+				}
 			}
-			folded := tuple.Snd().(generic.Either).Bimap(sum, sum)
-
-			return generic.NewTuple2(method, method.Api.Run(folded))
+		}
+		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
+			return func(g.Any) func(g.Any) g.Any {
+				return func(a g.Any) g.Any {
+					sum := func(a g.Any) g.Any {
+						return singleton(a)
+					}
+					return api.Run(g.AsEither(a).Bimap(sum, sum))
+				}
+			}
+		}
+		finalise = func(m Method) func(g.Any) g.StateT {
+			return func(g.Any) g.StateT {
+				return g.StateT{
+					Run: func(a g.Any) g.Either {
+						cast := func(b g.Any) g.Any {
+							x := g.NewWriter(m, singleton(a))
+							return g.NewTuple2(g.Empty{}, x)
+						}
+						return g.AsEither(a).Bimap(cast, cast)
+					},
+				}
+			}
 		}
 	)
-	return generic.State_.Of(m).
-		Map(setup).
-		Map(validate(methodTypes)).
-		Map(api)
+	return g.StateT_.Of(m).
+		Chain(modify(g.Constant1)).
+		Chain(modify(validate(contains(methodTypes)))).
+		Chain(modify(api(m.Api))).
+		Chain(finalise(m))
 }
 
 func Delete() Method {
-	return NewMethod(MDelete)
+	return NewMethod(DELETE)
 }
 
 func Get() Method {
-	return NewMethod(MGet)
+	return NewMethod(GET)
 }
 
 func Head() Method {
-	return NewMethod(MHead)
+	return NewMethod(HEAD)
 }
 
 func Options() Method {
-	return NewMethod(MOptions)
+	return NewMethod(OPTIONS)
 }
 
 func Patch() Method {
-	return NewMethod(MPatch)
+	return NewMethod(PATCH)
 }
 
 func Post() Method {
-	return NewMethod(MPost)
+	return NewMethod(POST)
 }
 
 func Put() Method {
-	return NewMethod(MPut)
+	return NewMethod(PUT)
 }
 
 func Trace() Method {
-	return NewMethod(MTrace)
+	return NewMethod(TRACE)
 }

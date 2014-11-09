@@ -1,19 +1,22 @@
 package butler
 
-import "github.com/SimonRichardson/butler/generic"
+import (
+	g "github.com/SimonRichardson/butler/generic"
+)
 
 type response struct {
-	list generic.List
+	list g.List
 }
 
-func Response(list generic.List) response {
+func Response(list g.List) response {
 	return response{
 		list: list,
 	}
 }
 
-func (r response) Build() generic.Any {
-	return r.list.Map(func(x generic.Any) generic.Any {
-		return x.(Build).Build()
-	})
+func (r response) Build() g.StateT {
+	return g.AsStateT(r.list.FoldLeft(g.StateT_.Of(""), func(x g.Any, y g.Any) g.Any {
+		return g.AsStateT(x).Chain(g.Get()).
+			Chain(g.Merge(asBuild(y).Build()))
+	}))
 }

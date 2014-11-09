@@ -1,6 +1,8 @@
 package doc
 
-import "github.com/SimonRichardson/butler/generic"
+import (
+	g "github.com/SimonRichardson/butler/generic"
+)
 
 type Api struct {
 	types DocTypes
@@ -16,6 +18,6 @@ func (a Api) Doc() DocTypes {
 	return a.types
 }
 
-func (a Api) Run(e generic.Either) generic.Either {
+func (a Api) Run(e g.Either) g.Either {
 	return a.types.Run(e)
 }

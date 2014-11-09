@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	. "github.com/SimonRichardson/butler/butler"
-	"github.com/SimonRichardson/butler/http"
 	"github.com/SimonRichardson/butler/output"
 )
 
@@ -20,16 +18,14 @@ func main() {
 		Content(output.HtmlEncoder{})
 
 	service := Service(request, response)
-	service.Build()
-
-	s := http.Path("/users/:id")
-	fmt.Println(">>", s.Build().EvalState(""))
 
 	/*
-		listEmployees := Service(request, response).Then(func(args []generic.Any) Result {
+		listEmployees := Service(request, response).Then(func(args []g.Any) Result {
 			return loadAllEmployees(args[0].(int))
 		})
+	*/
 
+	/*
 		server := Compile(listEmployees)
 
 		// You can also render the server to markdown, for up to
