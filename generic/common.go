@@ -39,6 +39,6 @@ func Merge(a StateT) func(Any) StateT {
 				),
 			)
 		}
-		return NewStateT(AsEither(a.ExecState("")).Bimap(run, run))
+		return NewStateT(AsEither(a.ExecState(Empty{})).Bimap(run, run))
 	}
 }

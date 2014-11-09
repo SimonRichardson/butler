@@ -1,9 +1,22 @@
 package butler
 
-import "github.com/SimonRichardson/butler/generic"
+import (
+	"fmt"
+
+	g "github.com/SimonRichardson/butler/generic"
+)
 
 type Server struct{}
 
-func (s Server) Run(request RemoteRequest) generic.Promise {
-	return generic.Promise_.Of(request)
+func (s Server) Run(request RemoteRequest) g.Promise {
+	return g.Promise_.Of(request)
+}
+
+func Compile(x service) Server {
+	run := func(a g.Any) g.Any {
+		_, y := a.(g.Writer).Run()
+		return y
+	}
+	fmt.Println(x.Build().ExecState("").(g.Either).Fold(run, run))
+	return Server{}
 }

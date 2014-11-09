@@ -7,6 +7,7 @@ import (
 type service struct {
 	request  request
 	response response
+	callable func(map[string]g.Any) g.Any
 }
 
 func Service(request, response builder) service {
@@ -16,8 +17,17 @@ func Service(request, response builder) service {
 	}
 }
 
+func (s service) Then(f func(map[string]g.Any) g.Any) service {
+	return service{
+		request:  s.request,
+		response: s.response,
+		callable: f,
+	}
+}
+
 func (s service) Build() g.StateT {
-	return s.request.Build().
-		Chain(g.Get()).
-		Chain(g.Merge(s.response.Build()))
+	return s.request.Build()
+	/*.
+	Chain(g.Get()).
+	Chain(g.Merge(s.response.Build()))*/
 }
