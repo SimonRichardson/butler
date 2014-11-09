@@ -25,7 +25,7 @@ func (r Route) Build() g.StateT {
 		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
 			return func(a g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
-					return asWriter(b).Chain(func(a g.Any) g.Writer {
+					return g.AsWriter(b).Chain(func(a g.Any) g.Writer {
 						str := g.Either_.Of(singleton(a.(String).value))
 						return g.NewWriter(r, singleton(api.Run(str)))
 					})
@@ -35,7 +35,7 @@ func (r Route) Build() g.StateT {
 	)
 
 	return r.path.Build().
-		Chain(get()).
+		Chain(g.Get()).
 		Chain(constant(g.StateT_.Of(r))).
 		Chain(modify(api(r.Api)))
 }

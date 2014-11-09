@@ -29,7 +29,7 @@ func (q Query) Build() g.StateT {
 		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
 			return func(a g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
-					return asWriter(b).Chain(func(a g.Any) g.Writer {
+					return g.AsWriter(b).Chain(func(a g.Any) g.Writer {
 						str := g.Either_.Of(singleton(a.(String).value))
 						return g.NewWriter(q, singleton(api.Run(str)))
 					})
@@ -39,7 +39,7 @@ func (q Query) Build() g.StateT {
 	)
 
 	return q.value.Build().
-		Chain(get()).
+		Chain(g.Get()).
 		Chain(constant(g.StateT_.Of(q))).
 		Chain(modify(api(q.Api)))
 }

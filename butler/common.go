@@ -4,6 +4,6 @@ import (
 	g "github.com/SimonRichardson/butler/generic"
 )
 
-type Build interface {
-	Build() g.StateT
+func asBuild(x g.Any) Build {
+	return x.(Build)
 }

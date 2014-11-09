@@ -90,7 +90,7 @@ func (s String) Build() g.StateT {
 		}
 		first = func(a g.Any) func(g.Any) g.Any {
 			return func(b g.Any) g.Any {
-				return asList(b).Map(func(a g.Any) g.Any {
+				return g.AsList(b).Map(func(a g.Any) g.Any {
 					return []byte(a.(string))[0]
 				})
 			}
@@ -98,7 +98,7 @@ func (s String) Build() g.StateT {
 		validate = func(f func(byte) g.Either) func(g.Any) func(g.Any) g.Any {
 			return func(x g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
-					return asList(b).Map(func(a g.Any) g.Any {
+					return g.AsList(b).Map(func(a g.Any) g.Any {
 						return f(a.(byte))
 					})
 				}
@@ -106,8 +106,8 @@ func (s String) Build() g.StateT {
 		}
 		fold = func(a g.Any) func(g.Any) g.Any {
 			return func(b g.Any) g.Any {
-				return asList(b).FoldLeft(g.Either_.Of(""), func(a, b g.Any) g.Any {
-					return asEither(a).Fold(
+				return g.AsList(b).FoldLeft(g.Either_.Of(""), func(a, b g.Any) g.Any {
+					return g.AsEither(a).Fold(
 						func(x g.Any) g.Any {
 							return g.NewLeft(x)
 						},
@@ -119,7 +119,7 @@ func (s String) Build() g.StateT {
 								)
 								return string(append(bb, aa))
 							}
-							return asEither(b).Bimap(sum, sum)
+							return g.AsEither(b).Bimap(sum, sum)
 						},
 					)
 				})
@@ -131,7 +131,7 @@ func (s String) Build() g.StateT {
 					sum := func(a g.Any) g.Any {
 						return singleton(a)
 					}
-					return api.Run(asEither(a).Bimap(sum, sum))
+					return api.Run(g.AsEither(a).Bimap(sum, sum))
 				}
 			}
 		}
@@ -143,7 +143,7 @@ func (s String) Build() g.StateT {
 							x := g.NewWriter(s, singleton(a))
 							return g.NewTuple2(g.Empty{}, x)
 						}
-						return asEither(a).Bimap(cast, cast)
+						return g.AsEither(a).Bimap(cast, cast)
 					},
 				}
 			}

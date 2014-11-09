@@ -71,7 +71,7 @@ func (m Method) Build() g.StateT {
 					sum := func(a g.Any) g.Any {
 						return singleton(a)
 					}
-					return api.Run(asEither(a).Bimap(sum, sum))
+					return api.Run(g.AsEither(a).Bimap(sum, sum))
 				}
 			}
 		}
@@ -83,7 +83,7 @@ func (m Method) Build() g.StateT {
 							x := g.NewWriter(m, singleton(a))
 							return g.NewTuple2(g.Empty{}, x)
 						}
-						return asEither(a).Bimap(cast, cast)
+						return g.AsEither(a).Bimap(cast, cast)
 					},
 				}
 			}

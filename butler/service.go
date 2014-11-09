@@ -1,5 +1,9 @@
 package butler
 
+import (
+	g "github.com/SimonRichardson/butler/generic"
+)
+
 type service struct {
 	request  request
 	response response
@@ -12,6 +16,8 @@ func Service(request, response builder) service {
 	}
 }
 
-func (s service) Build() {
-	s.request.Build()
+func (s service) Build() g.StateT {
+	return s.request.Build().
+		Chain(g.Get()).
+		Chain(g.Merge(s.response.Build()))
 }
