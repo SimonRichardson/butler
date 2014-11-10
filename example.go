@@ -19,32 +19,23 @@ func main() {
 		ContentType("application/json").
 		Content(output.HtmlEncoder{})
 
-	service := Service(request, response)
+	listEmployees := Service(request, response).Then(func(args map[string]g.Any) g.Any {
+		loadAllEmployees := func(x int) g.Any {
+			return []g.Any{}
+		}
+		return loadAllEmployees(args["limit"].(int))
+	})
 
-	run := func(a g.Any) g.Any {
-		_, y := a.(g.Writer).Run()
-		return y
-	}
-
-	fmt.Println(service.Build().ExecState(g.Empty{}).(g.Either).Fold(run, run))
+	server := Compile(listEmployees)
+	fmt.Println(server)
 
 	/*
-		listEmployees := Service(request, response).Then(func(args map[string]g.Any) g.Any {
-			loadAllEmployees := func(x int) g.Any {
-				return []g.Any{}
-			}
-			return loadAllEmployees(args["limit"].(int))
-		})
+		// You can also render the server to markdown, for up to
+		// date documentation
+		fmt.Println(markdown.Output(server))
 
-		server := Compile(listEmployees)
-		fmt.Println(server)
-
-			// You can also render the server to markdown, for up to
-			// date documentation
-			fmt.Println(markdown.Output(server))
-
-			// Run the documentation
-			service := Remotely(server)("localhost", 80)
-			service.Run()
+		// Run the documentation
+		service := Remotely(server)("localhost", 80)
+		service.Run()
 	*/
 }

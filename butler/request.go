@@ -13,8 +13,12 @@ func Request(list g.List) request {
 }
 
 func (r request) Build() g.StateT {
-	return g.AsStateT(r.list.FoldLeft(g.StateT_.Of(g.Empty{}), func(x g.Any, y g.Any) g.Any {
-		return g.AsStateT(x).Chain(g.Get()).
-			Chain(g.Merge(asBuild(y).Build()))
-	}))
+	var (
+		x = g.StateT_.Of(g.Writer_.Of(g.Empty{}))
+		y = r.list.FoldLeft(x, func(x g.Any, y g.Any) g.Any {
+			return g.AsStateT(x).Chain(g.Get()).
+				Chain(g.Merge(asBuild(y).Build()))
+		})
+	)
+	return g.AsStateT(y)
 }

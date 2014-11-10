@@ -17,6 +17,6 @@ func Compile(x service) Server {
 		_, y := a.(g.Writer).Run()
 		return y
 	}
-	fmt.Println(x.Build().ExecState("").(g.Either).Fold(run, run))
+	fmt.Println(x.Build().ExecState(g.Writer_.Of(g.Empty{})).(g.Either).Fold(run, run))
 	return Server{}
 }

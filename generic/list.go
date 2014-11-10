@@ -5,6 +5,7 @@ type List interface {
 	Chain(func(Any) List) List
 	Map(func(Any) Any) List
 	FoldLeft(Any, func(Any, Any) Any) Any
+	ReduceLeft(func(Any, Any) Any) Option
 }
 
 type Cons struct {
@@ -56,6 +57,10 @@ func (x Cons) FoldLeft(v Any, f func(Any, Any) Any) Any {
 	return rec(x, v)
 }
 
+func (x Cons) ReduceLeft(f func(Any, Any) Any) Option {
+	return Option_.Of(x.tail.FoldLeft(x.head, f))
+}
+
 type Nil struct{}
 
 func NewNil() Nil {
@@ -63,7 +68,7 @@ func NewNil() Nil {
 }
 
 func (x Nil) Head() Option {
-	return NewNone()
+	return Option_.Empty()
 }
 
 func (x Nil) Chain(f func(Any) List) List {
@@ -76,6 +81,10 @@ func (x Nil) Map(f func(Any) Any) List {
 
 func (x Nil) FoldLeft(v Any, f func(Any, Any) Any) Any {
 	return v
+}
+
+func (x Nil) ReduceLeft(f func(Any, Any) Any) Option {
+	return Option_.Empty()
 }
 
 // Static methods
