@@ -5,6 +5,7 @@ import (
 
 	"github.com/SimonRichardson/butler/butler"
 	g "github.com/SimonRichardson/butler/generic"
+	"github.com/SimonRichardson/butler/http"
 )
 
 type Markdown struct{}
@@ -20,10 +21,24 @@ func Output(server butler.Server) ([]byte, error) {
 		hr(),
 	)
 
+	request := server.Describe()
+
+	getRoute(request).Map(func(x g.Any) g.Any {
+		list = g.NewCons(h2(x.(http.Route).String()), list)
+		return x
+	})
+
 	document := list.FoldLeft("", func(a, b g.Any) g.Any {
 		return a.(string) + b.(marks).String()
 	})
 	return []byte(document.(string)), nil
+}
+
+func getRoute(x g.List) g.Option {
+	return x.Find(func(a g.Any) bool {
+		_, ok := a.(http.Route)
+		return ok
+	})
 }
 
 type marks interface {
@@ -65,7 +80,7 @@ func h1(value string) marks {
 
 func h2(value string) marks {
 	return header{
-		Type:  H1,
+		Type:  H2,
 		Value: value,
 	}
 }
@@ -89,7 +104,7 @@ type furniture struct {
 }
 
 func (f furniture) String() string {
-	return fmt.Sprintf("%s\n", f.Type.String())
+	return fmt.Sprintf("%s\n\n", f.Type.String())
 }
 
 func hr() marks {

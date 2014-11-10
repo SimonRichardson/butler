@@ -4,6 +4,7 @@ type List interface {
 	Head() Option
 	Chain(func(Any) List) List
 	Map(func(Any) Any) List
+	Find(func(Any) bool) Option
 	FoldLeft(Any, func(Any, Any) Any) Any
 	ReduceLeft(func(Any, Any) Any) Option
 }
@@ -45,6 +46,29 @@ func (x Cons) Map(f func(Any) Any) List {
 	})
 }
 
+func (x Cons) Find(f func(Any) bool) Option {
+	var rec func(List, Option) Option
+	rec = func(a List, b Option) Option {
+		if _, ok := a.(Nil); ok {
+			return b
+		}
+		return b.Fold(
+			func(x Any) Any {
+				return Option_.Of(x)
+			},
+			func() Any {
+				var (
+					cons = a.(Cons)
+					val  = cons.head
+					opt  = Option_.FromBool(f(val), val)
+				)
+				return rec(cons.tail, opt)
+			},
+		).(Option)
+	}
+	return rec(x, Option_.Empty())
+}
+
 func (x Cons) FoldLeft(v Any, f func(Any, Any) Any) Any {
 	var rec func(List, Any) Any
 	rec = func(a List, b Any) Any {
@@ -77,6 +101,10 @@ func (x Nil) Chain(f func(Any) List) List {
 
 func (x Nil) Map(f func(Any) Any) List {
 	return x
+}
+
+func (x Nil) Find(f func(Any) bool) Option {
+	return Option_.Empty()
 }
 
 func (x Nil) FoldLeft(v Any, f func(Any, Any) Any) Any {
