@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/SimonRichardson/butler/butler"
 	g "github.com/SimonRichardson/butler/generic"
+	"github.com/SimonRichardson/butler/markdown"
 	"github.com/SimonRichardson/butler/output"
 )
 
@@ -27,13 +28,13 @@ func main() {
 	})
 
 	server := Compile(listEmployees)
-	fmt.Println(server)
+
+	// You can also render the server to markdown, for up to
+	// date documentation
+	doc, _ := markdown.Output(server)
+	fmt.Println(string(doc))
 
 	/*
-		// You can also render the server to markdown, for up to
-		// date documentation
-		fmt.Println(markdown.Output(server))
-
 		// Run the documentation
 		service := Remotely(server)("localhost", 80)
 		service.Run()

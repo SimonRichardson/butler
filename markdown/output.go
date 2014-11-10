@@ -4,23 +4,24 @@ import (
 	"fmt"
 
 	"github.com/SimonRichardson/butler/butler"
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
 )
 
 type Markdown struct{}
 
-func (m Markdown) Encode(a generic.Any) ([]byte, error) {
+func (m Markdown) Encode(a g.Any) ([]byte, error) {
 	return nil, nil
 }
 
-func Output(server butler.Service) ([]byte, error) {
+func Output(server butler.Server) ([]byte, error) {
 	// Build the service and output it as markdown!
-	list := generic.ToList(
+	list := g.List_.To(
 		h1("Butler"),
 		hr(),
 	)
-	document := list.FoldLeft("", func(a, b generic.Any) generic.Any {
-		return a.(string) + b.(string)
+
+	document := list.FoldLeft("", func(a, b g.Any) g.Any {
+		return a.(string) + b.(marks).String()
 	})
 	return []byte(document.(string)), nil
 }
@@ -78,13 +79,17 @@ var (
 func (f furnitureType) String() string {
 	switch f {
 	case HR:
-		return "----\n"
+		return "----"
 	}
 	return ""
 }
 
 type furniture struct {
 	Type furnitureType
+}
+
+func (f furniture) String() string {
+	return fmt.Sprintf("%s\n", f.Type.String())
 }
 
 func hr() marks {
