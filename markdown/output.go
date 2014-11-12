@@ -1,6 +1,8 @@
 package markdown
 
 import (
+	"fmt"
+
 	"github.com/SimonRichardson/butler/butler"
 	g "github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/http"
@@ -23,27 +25,34 @@ func (m Markdown) Encode(a g.Any) ([]byte, error) {
 
 func Output(server butler.Server) ([]byte, error) {
 	// Build the service and output it as markdown!
-	list := g.List_.To(
-		h1("Butler"),
-		hr1(),
+
+	tree := g.NewTreeNode(
+		document(),
+		g.List_.To(
+			g.Tree_.Of(h1("Butler")),
+			g.Tree_.Of(hr1()),
+			g.Tree_.Of(hr2()),
+		),
 	)
 
-	request := server.Describe()
+	/*
+		request := server.Describe()
 
-	getMethod(request).Map(func(x g.Any) g.Any {
-		list = g.NewCons(h2(x.(http.Method).String()), list)
-		return x
-	})
+		getMethod(request).Map(func(x g.Any) g.Any {
+			list = g.NewCons(h2(x.(http.Method).String()), list)
+			return x
+		})
 
-	getRoute(request).Map(func(x g.Any) g.Any {
-		list = g.NewCons(h2(x.(http.Route).String()), list)
-		return x
-	})
+		getRoute(request).Map(func(x g.Any) g.Any {
+			list = g.NewCons(h2(x.(http.Route).String()), list)
+			return x
+		})
+	*/
 
-	document := list.FoldLeft("", func(a, b g.Any) g.Any {
-		return a.(string) + b.(marks).String(DefaultIndent)
+	result := tree.FoldLeft("", func(a, b g.Any) g.Any {
+		return fmt.Sprintf("%s%s", a.(string), b.(marks).String(DefaultIndent))
 	})
-	return []byte(document.(string)), nil
+	return []byte(result.(string)), nil
 }
 
 func getMethod(x g.List) g.Option {
