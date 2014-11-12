@@ -15,8 +15,8 @@ func (l links) Children() g.Option {
 	return g.Option_.Empty()
 }
 
-func (l links) String(indent string) string {
-	return fmt.Sprintf("[%s](%s)\n", l.Name, l.Url)
+func (l links) String() string {
+	return fmt.Sprintf("[%s](%s)", l.Name, l.Url)
 }
 
 func link(name, url string) links {

@@ -7,13 +7,12 @@ import (
 )
 
 const (
-	DefaultIndent string = ""
 	DefaultString string = ""
 )
 
 type marks interface {
 	Children() g.Option
-	String(indent string) string
+	String() string
 }
 
 type empty struct {
@@ -23,7 +22,7 @@ func (e empty) Children() g.Option {
 	return g.Option_.Empty()
 }
 
-func (e empty) String(indent string) string {
+func (e empty) String() string {
 	return ""
 }
 
@@ -66,7 +65,7 @@ func Output(server butler.Server) ([]byte, error) {
 			return x
 		})
 	*/
-	return []byte(doc.String(DefaultIndent)), nil
+	return []byte(doc.String()), nil
 }
 
 func getMethod(x g.List) g.Option {

@@ -18,8 +18,8 @@ func (b blockType) Children() g.Option {
 	return g.Option_.Empty()
 }
 
-func (b blockType) String(indent string) string {
-	return fmt.Sprintf("%s%s", indent, string(b))
+func (b blockType) String() string {
+	return string(b)
 }
 
 type block struct {
@@ -35,12 +35,12 @@ func (b block) Children() g.Option {
 	return g.Option_.Empty()
 }
 
-func (b block) String(indent string) string {
+func (b block) String() string {
 	switch b.Type {
 	case HR1, HR2:
-		return fmt.Sprintf("%s\n\n", b.Type.String(indent))
+		return fmt.Sprintf("%s", b.Type.String())
 	case BlockQuote:
-		return fmt.Sprintf("%s %s\n", b.Type.String(indent), b.Value.String(DefaultIndent))
+		return fmt.Sprintf("%s %s", b.Type.String(), b.Value.String())
 	}
 	return DefaultString
 }

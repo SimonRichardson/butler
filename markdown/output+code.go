@@ -17,8 +17,8 @@ func (c codeType) Children() g.Option {
 	return g.Option_.Empty()
 }
 
-func (c codeType) String(indent string) string {
-	return fmt.Sprintf("%s%s", indent, string(c))
+func (c codeType) String() string {
+	return string(c)
 }
 
 type code struct {
@@ -30,13 +30,13 @@ func (c code) Children() g.Option {
 	return g.Option_.Of([]marks{c.Value})
 }
 
-func (c code) String(indent string) string {
-	t := c.Type.String(DefaultIndent)
+func (c code) String() string {
+	t := c.Type.String()
 	switch c.Type {
 	case Inline:
-		return fmt.Sprintf("%s%s%s", t, c.Value.String(DefaultIndent), t)
+		return fmt.Sprintf("%s%s%s", t, c.Value.String(), t)
 	case Multiline:
-		return fmt.Sprintf("%s\n%s\n%s\n", t, c.Value.String(indent), t)
+		return fmt.Sprintf("%s\n%s\n%s\n", t, c.Value.String(), t)
 	}
 	return DefaultString
 }

@@ -17,8 +17,8 @@ func (t unorderedListType) Children() g.Option {
 	return g.Option_.Empty()
 }
 
-func (t unorderedListType) String(indent string) string {
-	return fmt.Sprintf("%s%s", indent, string(t))
+func (t unorderedListType) String() string {
+	return string(t)
 }
 
 type orderedListType string
@@ -31,8 +31,8 @@ func (t orderedListType) Children() g.Option {
 	return g.Option_.Empty()
 }
 
-func (t orderedListType) String(indent string) string {
-	return fmt.Sprintf("%s%s", indent, string(t))
+func (t orderedListType) String() string {
+	return string(t)
 }
 
 type list struct {
@@ -44,8 +44,8 @@ func (l list) Children() g.Option {
 	return g.Option_.Of(l.nodes)
 }
 
-func (l list) String(indent string) string {
-	return fmt.Sprintf("%s\n", l.Type.String(indent))
+func (l list) String() string {
+	return fmt.Sprintf("%s", l.Type.String())
 }
 
 func ul(values ...marks) list {

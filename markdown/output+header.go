@@ -21,8 +21,8 @@ func (h headerType) Children() g.Option {
 	return g.Option_.Empty()
 }
 
-func (h headerType) String(indent string) string {
-	return fmt.Sprintf("%s%s", indent, string(h))
+func (h headerType) String() string {
+	return string(h)
 }
 
 type header struct {
@@ -34,8 +34,8 @@ func (h header) Children() g.Option {
 	return g.Option_.Of([]marks{h.Value})
 }
 
-func (h header) String(indent string) string {
-	return fmt.Sprintf("%s\n", h.Type.String(indent))
+func (h header) String() string {
+	return fmt.Sprintf("%s", h.Type.String())
 }
 
 func h1(val marks) header {
