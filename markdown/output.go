@@ -1,8 +1,6 @@
 package markdown
 
 import (
-	"fmt"
-
 	"github.com/SimonRichardson/butler/butler"
 	g "github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/http"
@@ -14,10 +12,15 @@ const (
 )
 
 type marks interface {
+	Children() g.Option
 	String(indent string) string
 }
 
 type empty struct {
+}
+
+func (e empty) Children() g.Option {
+	return g.Option_.Empty()
 }
 
 func (e empty) String(indent string) string {
@@ -37,12 +40,16 @@ func (m Markdown) Encode(a g.Any) ([]byte, error) {
 func Output(server butler.Server) ([]byte, error) {
 	// Build the service and output it as markdown!
 
-	tree := g.NewTreeNode(
-		document(),
-		g.List_.To(
-			g.Tree_.Of(h1("Butler")),
-			g.Tree_.Of(hr1()),
-			ul([]marks{value("Hello"), value("World")}),
+	doc := document(
+		h1(link("Butler", "http://github.com/simonrichardson/butler")),
+		hr1(),
+		ul(
+			ul(
+				link("Nested", "link"),
+				ul(
+					link("Nested", "link"),
+				),
+			),
 		),
 	)
 
@@ -59,11 +66,7 @@ func Output(server butler.Server) ([]byte, error) {
 			return x
 		})
 	*/
-
-	result := tree.FoldLeft("", func(a, b g.Any) g.Any {
-		return fmt.Sprintf("%s%s", a.(string), b.(marks).String(DefaultIndent))
-	})
-	return []byte(result.(string)), nil
+	return []byte(doc.String(DefaultIndent)), nil
 }
 
 func getMethod(x g.List) g.Option {

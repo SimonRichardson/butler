@@ -1,6 +1,10 @@
 package markdown
 
-import "fmt"
+import (
+	"fmt"
+
+	g "github.com/SimonRichardson/butler/generic"
+)
 
 type headerType string
 
@@ -13,57 +17,65 @@ var (
 	H6 headerType = "######"
 )
 
+func (h headerType) Children() g.Option {
+	return g.Option_.Empty()
+}
+
 func (h headerType) String(indent string) string {
 	return fmt.Sprintf("%s%s", indent, string(h))
 }
 
 type header struct {
 	Type  headerType
-	Value raw
+	Value marks
+}
+
+func (h header) Children() g.Option {
+	return g.Option_.Of([]marks{h.Value})
 }
 
 func (h header) String(indent string) string {
-	return fmt.Sprintf("%s %s\n", h.Type.String(indent), h.Value.String(DefaultIndent))
+	return fmt.Sprintf("%s\n", h.Type.String(indent))
 }
 
-func h1(val string) header {
+func h1(val marks) header {
 	return header{
 		Type:  H1,
-		Value: value(val),
+		Value: val,
 	}
 }
 
-func h2(val string) header {
+func h2(val marks) header {
 	return header{
 		Type:  H2,
-		Value: value(val),
+		Value: val,
 	}
 }
 
-func h3(val string) header {
+func h3(val marks) header {
 	return header{
 		Type:  H3,
-		Value: value(val),
+		Value: val,
 	}
 }
 
-func h4(val string) header {
+func h4(val marks) header {
 	return header{
 		Type:  H4,
-		Value: value(val),
+		Value: val,
 	}
 }
 
-func h5(val string) header {
+func h5(val marks) header {
 	return header{
 		Type:  H5,
-		Value: value(val),
+		Value: val,
 	}
 }
 
-func h6(val string) header {
+func h6(val marks) header {
 	return header{
 		Type:  H6,
-		Value: value(val),
+		Value: val,
 	}
 }

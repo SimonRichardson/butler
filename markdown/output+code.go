@@ -1,6 +1,10 @@
 package markdown
 
-import "fmt"
+import (
+	"fmt"
+
+	g "github.com/SimonRichardson/butler/generic"
+)
 
 type codeType string
 
@@ -9,13 +13,21 @@ var (
 	Multiline codeType = "```"
 )
 
+func (c codeType) Children() g.Option {
+	return g.Option_.Empty()
+}
+
 func (c codeType) String(indent string) string {
 	return fmt.Sprintf("%s%s", indent, string(c))
 }
 
 type code struct {
 	Type  codeType
-	Value raw
+	Value marks
+}
+
+func (c code) Children() g.Option {
+	return g.Option_.Of([]marks{c.Value})
 }
 
 func (c code) String(indent string) string {
@@ -29,16 +41,16 @@ func (c code) String(indent string) string {
 	return DefaultString
 }
 
-func inline(val string) code {
+func inline(val marks) code {
 	return code{
 		Type:  Inline,
-		Value: value(val),
+		Value: val,
 	}
 }
 
-func multiline(val string) code {
+func multiline(val marks) code {
 	return code{
 		Type:  Multiline,
-		Value: value(val),
+		Value: val,
 	}
 }

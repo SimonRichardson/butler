@@ -13,6 +13,10 @@ var (
 	Hyphen unorderedListType = "-"
 )
 
+func (t unorderedListType) Children() g.Option {
+	return g.Option_.Empty()
+}
+
 func (t unorderedListType) String(indent string) string {
 	return fmt.Sprintf("%s%s", indent, string(t))
 }
@@ -23,54 +27,37 @@ var (
 	Hash orderedListType = "#"
 )
 
+func (t orderedListType) Children() g.Option {
+	return g.Option_.Empty()
+}
+
 func (t orderedListType) String(indent string) string {
 	return fmt.Sprintf("%s%s", indent, string(t))
 }
 
 type list struct {
 	Type  marks
-	Value marks
+	nodes []marks
+}
+
+func (l list) Children() g.Option {
+	return g.Option_.Of(l.nodes)
 }
 
 func (l list) String(indent string) string {
-	return fmt.Sprintf("%s %s\n", l.Type.String(indent), l.Value.String(DefaultIndent))
+	return fmt.Sprintf("%s\n", l.Type.String(indent))
 }
 
-func ul(values []marks) g.Tree {
-	return make(values, func(a marks) list {
-		return li(Hyphen, a)
-	})
-}
-
-func ol(values []marks) g.Tree {
-	return make(values, func(a marks) list {
-		return li(Hash, a)
-	})
-}
-
-func li(a marks, b marks) list {
+func ul(values ...marks) list {
 	return list{
-		Type:  a,
-		Value: b,
+		Type:  Hyphen,
+		nodes: values,
 	}
 }
 
-func make(values []marks, f func(marks) list) g.Tree {
-	var rec func(g.List, []marks) g.List
-	rec = func(a g.List, b []marks) g.List {
-		num := len(b)
-		if num == 0 {
-			return a
-		}
-		var (
-			x = num - 1
-			y = g.Tree_.Of(f(b[x]))
-			z = b[0:x]
-		)
-		return rec(g.NewCons(y, a), z)
+func ol(values ...marks) list {
+	return list{
+		Type:  Hash,
+		nodes: values,
 	}
-	return g.NewTreeNode(
-		nothing(),
-		rec(g.List_.Empty(), values),
-	)
 }

@@ -4,17 +4,19 @@ type Tree interface {
 	Chain(func(Any) Tree) Tree
 	Map(func(Any) Any) Tree
 	FoldLeft(Any, func(Any, Any) Any) Any
+
+	Children() Option
 }
 
 type TreeNode struct {
-	Value    Any
-	Children List
+	Value Any
+	nodes List
 }
 
 func NewTreeNode(x Any, y List) TreeNode {
 	return TreeNode{
-		Value:    x,
-		Children: y,
+		Value: x,
+		nodes: y,
 	}
 }
 
@@ -24,7 +26,7 @@ func (t TreeNode) Chain(f func(Any) Tree) Tree {
 		return x
 	}
 
-	return NewTreeNode(x, t.Children.Chain(func(x Any) List {
+	return NewTreeNode(x, t.nodes.Chain(func(x Any) List {
 		return List_.Of(x.(Tree).Chain(f))
 	}))
 }
@@ -36,9 +38,13 @@ func (t TreeNode) Map(f func(Any) Any) Tree {
 }
 
 func (t TreeNode) FoldLeft(x Any, f func(Any, Any) Any) Any {
-	return t.Children.FoldLeft(f(x, t.Value), func(x, y Any) Any {
+	return t.nodes.FoldLeft(f(x, t.Value), func(x, y Any) Any {
 		return y.(Tree).FoldLeft(x, f)
 	})
+}
+
+func (t TreeNode) Children() Option {
+	return Option_.Of(t.nodes)
 }
 
 type TreeNil struct {
@@ -58,6 +64,10 @@ func (t TreeNil) Map(f func(Any) Any) Tree {
 
 func (t TreeNil) FoldLeft(x Any, f func(Any, Any) Any) Any {
 	return x
+}
+
+func (t TreeNil) Children() Option {
+	return Option_.Empty()
 }
 
 // Static methods
