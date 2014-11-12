@@ -14,6 +14,10 @@ var (
 	BlockQuote blockType = ">"
 )
 
+func (b blockType) IsInline() bool {
+	return false
+}
+
 func (b blockType) Children() g.Option {
 	return g.Option_.Empty()
 }
@@ -25,6 +29,10 @@ func (b blockType) String() string {
 type block struct {
 	Type  blockType
 	Value marks
+}
+
+func (b block) IsInline() bool {
+	return false
 }
 
 func (b block) Children() g.Option {

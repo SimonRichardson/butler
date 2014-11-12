@@ -17,6 +17,10 @@ var (
 	H6 headerType = "######"
 )
 
+func (h headerType) IsInline() bool {
+	return false
+}
+
 func (h headerType) Children() g.Option {
 	return g.Option_.Empty()
 }
@@ -28,6 +32,10 @@ func (h headerType) String() string {
 type header struct {
 	Type  headerType
 	Value marks
+}
+
+func (h header) IsInline() bool {
+	return false
 }
 
 func (h header) Children() g.Option {

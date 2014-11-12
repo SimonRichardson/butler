@@ -11,6 +11,10 @@ type links struct {
 	Url  string
 }
 
+func (l links) IsInline() bool {
+	return true
+}
+
 func (l links) Children() g.Option {
 	return g.Option_.Empty()
 }

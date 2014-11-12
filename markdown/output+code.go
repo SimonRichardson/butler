@@ -13,6 +13,10 @@ var (
 	Multiline codeType = "```"
 )
 
+func (c codeType) IsInline() bool {
+	return false
+}
+
 func (c codeType) Children() g.Option {
 	return g.Option_.Empty()
 }
@@ -24,6 +28,10 @@ func (c codeType) String() string {
 type code struct {
 	Type  codeType
 	Value marks
+}
+
+func (c code) IsInline() bool {
+	return false
 }
 
 func (c code) Children() g.Option {

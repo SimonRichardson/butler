@@ -13,6 +13,10 @@ var (
 	Hyphen unorderedListType = "-"
 )
 
+func (t unorderedListType) IsInline() bool {
+	return false
+}
+
 func (t unorderedListType) Children() g.Option {
 	return g.Option_.Empty()
 }
@@ -27,6 +31,10 @@ var (
 	Hash orderedListType = "#"
 )
 
+func (t orderedListType) IsInline() bool {
+	return false
+}
+
 func (t orderedListType) Children() g.Option {
 	return g.Option_.Empty()
 }
@@ -38,6 +46,10 @@ func (t orderedListType) String() string {
 type list struct {
 	Type  marks
 	nodes g.List
+}
+
+func (l list) IsInline() bool {
+	return false
 }
 
 func (l list) Children() g.Option {

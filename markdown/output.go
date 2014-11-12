@@ -11,11 +11,16 @@ const (
 )
 
 type marks interface {
+	IsInline() bool
 	Children() g.Option
 	String() string
 }
 
 type empty struct {
+}
+
+func (e empty) IsInline() bool {
+	return false
 }
 
 func (e empty) Children() g.Option {
@@ -75,7 +80,7 @@ func fromMarks(s []marks) g.List {
 		if num < 1 {
 			return l
 		}
-		return rec(g.NewCons(v[num-1], l), v[:num-1])
+		return rec(g.NewCons(v[0], l), v[1:])
 	}
 	return rec(g.Nil{}, s)
 }

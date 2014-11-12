@@ -10,13 +10,22 @@ type Document struct {
 	List g.Tree
 }
 
+func (d Document) IsInline() bool {
+	return false
+}
+
 func (d Document) Children() g.Option {
 	return g.Option_.Empty()
 }
 
 func (d Document) String() string {
 	return d.List.FoldLeft("", func(a, b g.Any) g.Any {
-		return fmt.Sprintf("%s%s", a.(string), b.(marks).String())
+		x := b.(marks)
+		if x.IsInline() {
+			return fmt.Sprintf("%s%s", a.(string), b.(marks).String())
+		} else {
+			return fmt.Sprintf("%s\n%s", a.(string), b.(marks).String())
+		}
 	}).(string)
 }
 
