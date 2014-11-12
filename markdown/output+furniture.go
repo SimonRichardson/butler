@@ -30,7 +30,7 @@ type block struct {
 func (b block) Children() g.Option {
 	switch b.Type {
 	case BlockQuote:
-		return g.Option_.Of([]marks{b.Value})
+		return g.Option_.Of(g.List_.Of(b.Value))
 	}
 	return g.Option_.Empty()
 }

@@ -37,7 +37,7 @@ func (t orderedListType) String() string {
 
 type list struct {
 	Type  marks
-	nodes []marks
+	nodes g.List
 }
 
 func (l list) Children() g.Option {
@@ -51,13 +51,13 @@ func (l list) String() string {
 func ul(values ...marks) list {
 	return list{
 		Type:  Hyphen,
-		nodes: values,
+		nodes: fromMarks(values),
 	}
 }
 
 func ol(values ...marks) list {
 	return list{
 		Type:  Hash,
-		nodes: values,
+		nodes: fromMarks(values),
 	}
 }

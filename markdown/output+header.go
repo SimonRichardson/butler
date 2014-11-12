@@ -31,7 +31,7 @@ type header struct {
 }
 
 func (h header) Children() g.Option {
-	return g.Option_.Of([]marks{h.Value})
+	return g.Option_.Of(g.List_.Of(h.Value))
 }
 
 func (h header) String() string {

@@ -21,31 +21,29 @@ func (d Document) String() string {
 }
 
 func document(m ...marks) Document {
-	var (
-		slice = func() g.Any {
-			return make([]marks, 0, 0)
-		}
-		list = func() g.Any {
-			return g.List_.Empty()
-		}
+	list := func() g.Any {
+		return g.List_.Empty()
+	}
 
-		rec func(g.List, []marks) g.Tree
-	)
-	rec = func(l g.List, m []marks) g.Tree {
-		num := len(m)
-		if num == 0 {
-			return g.NewTreeNode(nothing(), l)
-		}
-		var (
-			x        = m[num-1]
-			y        = m[0 : num-1]
-			nodes    = x.Children().GetOrElse(slice).([]marks)
-			children = rec(g.List_.Empty(), nodes)
-			node     = g.NewTreeNode(x, children.Children().GetOrElse(list).(g.List))
-		)
-		return rec(g.NewCons(node, l), y)
+	var rec func(g.List, g.List) g.Tree
+	rec = func(l g.List, m g.List) g.Tree {
+		return m.Head().Fold(
+			func(a g.Any) g.Any {
+				var (
+					x        = a.(marks)
+					y        = m.Tail()
+					nodes    = x.Children().GetOrElse(list).(g.List)
+					children = rec(g.List_.Empty(), nodes)
+					node     = g.NewTreeNode(x, children.Children().GetOrElse(list).(g.List))
+				)
+				return rec(g.NewCons(node, l), y)
+			},
+			func() g.Any {
+				return g.NewTreeNode(nothing(), l)
+			},
+		).(g.Tree)
 	}
 	return Document{
-		List: rec(g.List_.Empty(), m),
+		List: rec(g.List_.Empty(), fromMarks(m)),
 	}
 }

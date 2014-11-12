@@ -27,7 +27,7 @@ type code struct {
 }
 
 func (c code) Children() g.Option {
-	return g.Option_.Of([]marks{c.Value})
+	return g.Option_.Of(g.List_.Of(c.Value))
 }
 
 func (c code) String() string {
