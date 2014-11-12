@@ -1,6 +1,10 @@
 package markdown
 
-import "fmt"
+import (
+	"fmt"
+
+	g "github.com/SimonRichardson/butler/generic"
+)
 
 type unorderedListType string
 
@@ -24,45 +28,49 @@ func (t orderedListType) String(indent string) string {
 }
 
 type list struct {
-	Type   marks
-	Values []listItem
+	Type  marks
+	Value marks
 }
 
 func (l list) String(indent string) string {
-	var (
-		t   = l.Type.String(indent)
-		res = DefaultString
+	return fmt.Sprintf("%s %s\n", l.Type.String(indent), l.Value.String(DefaultIndent))
+}
+
+func ul(values []marks) g.Tree {
+	return make(values, func(a marks) list {
+		return li(Hyphen, a)
+	})
+}
+
+func ol(values []marks) g.Tree {
+	return make(values, func(a marks) list {
+		return li(Hash, a)
+	})
+}
+
+func li(a marks, b marks) list {
+	return list{
+		Type:  a,
+		Value: b,
+	}
+}
+
+func make(values []marks, f func(marks) list) g.Tree {
+	var rec func(g.List, []marks) g.List
+	rec = func(a g.List, b []marks) g.List {
+		num := len(b)
+		if num == 0 {
+			return a
+		}
+		var (
+			x = num - 1
+			y = g.Tree_.Of(f(b[x]))
+			z = b[0:x]
+		)
+		return rec(g.NewCons(y, a), z)
+	}
+	return g.NewTreeNode(
+		nothing(),
+		rec(g.List_.Empty(), values),
 	)
-	for _, v := range l.Values {
-		res += fmt.Sprintf("%s %s\n", t, v.String(DefaultIndent))
-	}
-	return res
-}
-
-type listItem struct {
-	Value raw
-}
-
-func (l listItem) String(indent string) string {
-	return l.Value.String(indent)
-}
-
-func ul(values []listItem) list {
-	return list{
-		Type:   Hyphen,
-		Values: values,
-	}
-}
-
-func ol(values []listItem) list {
-	return list{
-		Type:   Hash,
-		Values: values,
-	}
-}
-
-func li(val string) listItem {
-	return listItem{
-		Value: value(val),
-	}
 }

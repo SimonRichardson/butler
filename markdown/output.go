@@ -17,6 +17,17 @@ type marks interface {
 	String(indent string) string
 }
 
+type empty struct {
+}
+
+func (e empty) String(indent string) string {
+	return ""
+}
+
+func nothing() marks {
+	return empty{}
+}
+
 type Markdown struct{}
 
 func (m Markdown) Encode(a g.Any) ([]byte, error) {
@@ -31,7 +42,7 @@ func Output(server butler.Server) ([]byte, error) {
 		g.List_.To(
 			g.Tree_.Of(h1("Butler")),
 			g.Tree_.Of(hr1()),
-			g.Tree_.Of(hr2()),
+			ul([]marks{value("Hello"), value("World")}),
 		),
 	)
 
