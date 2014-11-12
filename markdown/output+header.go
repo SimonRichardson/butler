@@ -18,7 +18,7 @@ var (
 )
 
 func (h headerType) IsInline() bool {
-	return false
+	return true
 }
 
 func (h headerType) Children() g.Option {
@@ -26,12 +26,11 @@ func (h headerType) Children() g.Option {
 }
 
 func (h headerType) String() string {
-	return string(h)
+	return fmt.Sprintf("%s ", string(h))
 }
 
 type header struct {
-	Type  headerType
-	Value marks
+	nodes g.List
 }
 
 func (h header) IsInline() bool {
@@ -39,51 +38,45 @@ func (h header) IsInline() bool {
 }
 
 func (h header) Children() g.Option {
-	return g.Option_.Of(g.List_.Of(h.Value))
+	return g.Option_.Of(h.nodes)
 }
 
 func (h header) String() string {
-	return fmt.Sprintf("%s", h.Type.String())
+	return ""
 }
 
 func h1(val marks) header {
 	return header{
-		Type:  H1,
-		Value: val,
+		nodes: fromMarks(append([]marks{H1}, val)),
 	}
 }
 
 func h2(val marks) header {
 	return header{
-		Type:  H2,
-		Value: val,
+		nodes: fromMarks(append([]marks{H2}, val)),
 	}
 }
 
 func h3(val marks) header {
 	return header{
-		Type:  H3,
-		Value: val,
+		nodes: fromMarks(append([]marks{H3}, val)),
 	}
 }
 
 func h4(val marks) header {
 	return header{
-		Type:  H4,
-		Value: val,
+		nodes: fromMarks(append([]marks{H4}, val)),
 	}
 }
 
 func h5(val marks) header {
 	return header{
-		Type:  H5,
-		Value: val,
+		nodes: fromMarks(append([]marks{H5}, val)),
 	}
 }
 
 func h6(val marks) header {
 	return header{
-		Type:  H6,
-		Value: val,
+		nodes: fromMarks(append([]marks{H6}, val)),
 	}
 }
