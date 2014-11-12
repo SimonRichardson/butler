@@ -9,36 +9,36 @@ var (
 	Multiline codeType = "```"
 )
 
-func (c codeType) String() string {
-	return string(c)
+func (c codeType) String(indent string) string {
+	return fmt.Sprintf("%s%s", indent, string(c))
 }
 
 type code struct {
 	Type  codeType
-	Value string
+	Value raw
 }
 
-func (c code) String() string {
-	t := c.Type.String()
+func (c code) String(indent string) string {
+	t := c.Type.String(DefaultIndent)
 	switch c.Type {
 	case Inline:
-		return fmt.Sprintf("%s%s%s", t, c.Value, t)
+		return fmt.Sprintf("%s%s%s", t, c.Value.String(DefaultIndent), t)
 	case Multiline:
-		return fmt.Sprintf("%s\n%s\n%s\n", t, c.Value, t)
+		return fmt.Sprintf("%s\n%s\n%s\n", t, c.Value.String(indent), t)
 	}
-	return ""
+	return DefaultString
 }
 
-func inline(value string) code {
+func inline(val string) code {
 	return code{
 		Type:  Inline,
-		Value: value,
+		Value: value(val),
 	}
 }
 
-func multiline(value string) code {
+func multiline(val string) code {
 	return code{
 		Type:  Multiline,
-		Value: value,
+		Value: value(val),
 	}
 }

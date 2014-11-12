@@ -13,57 +13,57 @@ var (
 	H6 headerType = "######"
 )
 
-func (h headerType) String() string {
-	return string(h)
+func (h headerType) String(indent string) string {
+	return fmt.Sprintf("%s%s", indent, string(h))
 }
 
 type header struct {
 	Type  headerType
-	Value string
+	Value raw
 }
 
-func (h header) String() string {
-	return fmt.Sprintf("%s %s\n", h.Type.String(), h.Value)
+func (h header) String(indent string) string {
+	return fmt.Sprintf("%s %s\n", h.Type.String(indent), h.Value.String(DefaultIndent))
 }
 
-func h1(value string) header {
+func h1(val string) header {
 	return header{
 		Type:  H1,
-		Value: value,
+		Value: value(val),
 	}
 }
 
-func h2(value string) header {
+func h2(val string) header {
 	return header{
 		Type:  H2,
-		Value: value,
+		Value: value(val),
 	}
 }
 
-func h3(value string) header {
+func h3(val string) header {
 	return header{
 		Type:  H3,
-		Value: value,
+		Value: value(val),
 	}
 }
 
-func h4(value string) header {
+func h4(val string) header {
 	return header{
 		Type:  H4,
-		Value: value,
+		Value: value(val),
 	}
 }
 
-func h5(value string) header {
+func h5(val string) header {
 	return header{
 		Type:  H5,
-		Value: value,
+		Value: value(val),
 	}
 }
 
-func h6(value string) header {
+func h6(val string) header {
 	return header{
 		Type:  H6,
-		Value: value,
+		Value: value(val),
 	}
 }

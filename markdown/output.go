@@ -6,8 +6,13 @@ import (
 	"github.com/SimonRichardson/butler/http"
 )
 
+const (
+	DefaultIndent string = ""
+	DefaultString string = ""
+)
+
 type marks interface {
-	String() string
+	String(indent string) string
 }
 
 type Markdown struct{}
@@ -36,7 +41,7 @@ func Output(server butler.Server) ([]byte, error) {
 	})
 
 	document := list.FoldLeft("", func(a, b g.Any) g.Any {
-		return a.(string) + b.(marks).String()
+		return a.(string) + b.(marks).String(DefaultIndent)
 	})
 	return []byte(document.(string)), nil
 }

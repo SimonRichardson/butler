@@ -10,23 +10,23 @@ var (
 	BlockQuote blockType = ">"
 )
 
-func (f blockType) String() string {
-	return string(f)
+func (b blockType) String(indent string) string {
+	return fmt.Sprintf("%s%s", indent, string(b))
 }
 
 type block struct {
 	Type  blockType
-	Value string
+	Value raw
 }
 
-func (b block) String() string {
+func (b block) String(indent string) string {
 	switch b.Type {
 	case HR1, HR2:
-		return fmt.Sprintf("%s\n\n", b.Type.String())
+		return fmt.Sprintf("%s\n\n", b.Type.String(indent))
 	case BlockQuote:
-		return fmt.Sprintf("%s %s\n", b.Type.String(), b.Value)
+		return fmt.Sprintf("%s %s\n", b.Type.String(indent), b.Value.String(DefaultIndent))
 	}
-	return ""
+	return DefaultString
 }
 
 func hr1() block {
@@ -41,9 +41,9 @@ func hr2() block {
 	}
 }
 
-func blockquote(value string) block {
+func blockquote(val string) block {
 	return block{
 		Type:  BlockQuote,
-		Value: value,
+		Value: value(val),
 	}
 }

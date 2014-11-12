@@ -9,8 +9,8 @@ var (
 	Hyphen unorderedListType = "-"
 )
 
-func (t unorderedListType) String() string {
-	return string(t)
+func (t unorderedListType) String(indent string) string {
+	return fmt.Sprintf("%s%s", indent, string(t))
 }
 
 type orderedListType string
@@ -19,8 +19,8 @@ var (
 	Hash orderedListType = "#"
 )
 
-func (t orderedListType) String() string {
-	return string(t)
+func (t orderedListType) String(indent string) string {
+	return fmt.Sprintf("%s%s", indent, string(t))
 }
 
 type list struct {
@@ -28,23 +28,23 @@ type list struct {
 	Values []listItem
 }
 
-func (l list) String() string {
+func (l list) String(indent string) string {
 	var (
-		t   = l.Type.String()
-		res = ""
+		t   = l.Type.String(indent)
+		res = DefaultString
 	)
 	for _, v := range l.Values {
-		res += fmt.Sprintf("%s %s\n", t, v.String())
+		res += fmt.Sprintf("%s %s\n", t, v.String(DefaultIndent))
 	}
 	return res
 }
 
 type listItem struct {
-	Value string
+	Value raw
 }
 
-func (l listItem) String() string {
-	return l.Value
+func (l listItem) String(indent string) string {
+	return l.Value.String(indent)
 }
 
 func ul(values []listItem) list {
@@ -61,8 +61,8 @@ func ol(values []listItem) list {
 	}
 }
 
-func li(value string) listItem {
+func li(val string) listItem {
 	return listItem{
-		Value: value,
+		Value: value(val),
 	}
 }
