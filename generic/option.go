@@ -3,7 +3,7 @@ package generic
 type Option interface {
 	Chain(func(Any) Option) Option
 	Map(func(Any) Any) Option
-	Fold(func(Any) Option, func() Option) Option
+	Fold(func(Any) Any, func() Any) Any
 	Ap(Any) Option
 	Traverse(func(Any) Any) Option
 	GetOrElse(func() Any) Any
@@ -36,7 +36,7 @@ func (x Some) Map(f func(v Any) Any) Option {
 	})
 }
 
-func (x Some) Fold(f func(v Any) Option, g func() Option) Option {
+func (x Some) Fold(f func(v Any) Any, g func() Any) Any {
 	return f(x.x)
 }
 
@@ -68,7 +68,7 @@ func (x None) Map(f func(v Any) Any) Option {
 	return x
 }
 
-func (x None) Fold(f func(v Any) Option, g func() Option) Option {
+func (x None) Fold(f func(v Any) Any, g func() Any) Any {
 	return g()
 }
 
@@ -97,5 +97,12 @@ func (x option) Of(v Any) Option {
 }
 
 func (x option) Empty() Option {
+	return NewNone()
+}
+
+func (x option) FromBool(b bool, val Any) Option {
+	if b {
+		return NewSome(val)
+	}
 	return NewNone()
 }

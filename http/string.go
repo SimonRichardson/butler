@@ -159,3 +159,7 @@ func (s String) Build() g.StateT {
 		Chain(modify(api(s.Api))).
 		Chain(finalise(s))
 }
+
+func (s String) String() string {
+	return s.value
+}

@@ -1,11 +1,17 @@
 package http
 
 import (
+	"strings"
+
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
 )
 
 type MethodType string
+
+func (m MethodType) String() string {
+	return strings.ToUpper(string(m))
+}
 
 const (
 	DELETE  MethodType = "delete"
@@ -94,6 +100,10 @@ func (m Method) Build() g.StateT {
 		Chain(modify(validate(contains(methodTypes)))).
 		Chain(modify(api(m.Api))).
 		Chain(finalise(m))
+}
+
+func (m Method) String() string {
+	return m.method.String()
 }
 
 func Delete() Method {

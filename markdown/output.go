@@ -1,94 +1,90 @@
 package markdown
 
 import (
-	"fmt"
-
 	"github.com/SimonRichardson/butler/butler"
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
+	"github.com/SimonRichardson/butler/http"
 )
 
-type Markdown struct{}
-
-func (m Markdown) Encode(a generic.Any) ([]byte, error) {
-	return nil, nil
-}
-
-func Output(server butler.Service) ([]byte, error) {
-	// Build the service and output it as markdown!
-	list := generic.ToList(
-		h1("Butler"),
-		hr(),
-	)
-	document := list.FoldLeft("", func(a, b generic.Any) generic.Any {
-		return a.(string) + b.(string)
-	})
-	return []byte(document.(string)), nil
-}
+const (
+	DefaultString string = ""
+)
 
 type marks interface {
+	IsInline() bool
+	Children() g.Option
 	String() string
 }
 
-type headerType string
+type empty struct {
+}
 
-var (
-	H1 headerType = "h1"
-	H2 headerType = "h2"
-)
+func (e empty) IsInline() bool {
+	return false
+}
 
-func (h headerType) String() string {
-	switch h {
-	case H1:
-		return "#"
-	case H2:
-		return "##"
-	}
+func (e empty) Children() g.Option {
+	return g.Option_.Empty()
+}
+
+func (e empty) String() string {
 	return ""
 }
 
-type header struct {
-	Type  headerType
-	Value string
+func nothing() marks {
+	return empty{}
 }
 
-func (h header) String() string {
-	return fmt.Sprintf("%s %s\n", h.Type.String(), h.Value)
+type Markdown struct{}
+
+func (m Markdown) Encode(a g.Any) ([]byte, error) {
+	return nil, nil
 }
 
-func h1(value string) marks {
-	return header{
-		Type:  H1,
-		Value: value,
-	}
+func Output(server butler.Server) ([]byte, error) {
+	// Build the service and output it as markdown!
+
+	doc := document(
+		h1(link("Butler", "http://github.com/simonrichardson/butler")),
+		hr1(),
+		ul(
+			ul(
+				link("Nested", "link"),
+				ul(
+					link("Nested", "link"),
+				),
+			),
+		),
+		blockquote(link("Damn", "url")),
+		inline(str("dick")),
+	)
+
+	/*
+		request := server.Describe()
+
+		getMethod(request).Map(func(x g.Any) g.Any {
+			list = g.NewCons(h2(x.(http.Method).String()), list)
+			return x
+		})
+
+		getRoute(request).Map(func(x g.Any) g.Any {
+			list = g.NewCons(h2(x.(http.Route).String()), list)
+			return x
+		})
+	*/
+	return []byte(doc.String()), nil
 }
 
-func h2(value string) marks {
-	return header{
-		Type:  H1,
-		Value: value,
-	}
+func getMethod(x g.List) g.Option {
+	return x.Find(func(a g.Any) bool {
+		_, ok := a.(http.Method)
+		return ok
+	})
 }
 
-type furnitureType string
-
-var (
-	HR furnitureType = "hr"
-)
-
-func (f furnitureType) String() string {
-	switch f {
-	case HR:
-		return "----\n"
-	}
-	return ""
-}
-
-type furniture struct {
-	Type furnitureType
-}
-
-func hr() marks {
-	return furniture{
-		Type: HR,
-	}
+func getRoute(x g.List) g.Option {
+	return x.Find(func(a g.Any) bool {
+		_, ok := a.(http.Route)
+		return ok
+	})
 }

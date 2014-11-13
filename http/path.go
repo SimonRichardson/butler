@@ -40,6 +40,10 @@ func (r Route) Build() g.StateT {
 		Chain(modify(api(r.Api)))
 }
 
+func (r Route) String() string {
+	return r.path.String()
+}
+
 func Path(path string) Route {
 	return NewRoute(path)
 }

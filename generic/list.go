@@ -2,9 +2,12 @@ package generic
 
 type List interface {
 	Head() Option
+	Tail() List
 	Chain(func(Any) List) List
 	Map(func(Any) Any) List
+	Find(func(Any) bool) Option
 	FoldLeft(Any, func(Any, Any) Any) Any
+	ReduceLeft(func(Any, Any) Any) Option
 }
 
 type Cons struct {
@@ -23,6 +26,10 @@ func (x Cons) Head() Option {
 	return NewSome(x.head)
 }
 
+func (x Cons) Tail() List {
+	return x.tail
+}
+
 func (x Cons) Chain(f func(Any) List) List {
 	var rec func(List, List) List
 	rec = func(a List, b List) List {
@@ -30,7 +37,7 @@ func (x Cons) Chain(f func(Any) List) List {
 			return b
 		}
 		cons := a.(Cons)
-		list := f(cons.head).FoldLeft(b, func(x Any, y Any) Any {
+		list := f(cons.head).FoldLeft(b, func(x, y Any) Any {
 			return NewCons(y, x.(List))
 		})
 		return rec(cons.tail, list.(List))
@@ -42,6 +49,29 @@ func (x Cons) Map(f func(Any) Any) List {
 	return x.Chain(func(a Any) List {
 		return NewCons(f(a), NewNil())
 	})
+}
+
+func (x Cons) Find(f func(Any) bool) Option {
+	var rec func(List, Option) Option
+	rec = func(a List, b Option) Option {
+		if _, ok := a.(Nil); ok {
+			return b
+		}
+		return b.Fold(
+			func(x Any) Any {
+				return Option_.Of(x)
+			},
+			func() Any {
+				var (
+					cons = a.(Cons)
+					val  = cons.head
+					opt  = Option_.FromBool(f(val), val)
+				)
+				return rec(cons.tail, opt)
+			},
+		).(Option)
+	}
+	return rec(x, Option_.Empty())
 }
 
 func (x Cons) FoldLeft(v Any, f func(Any, Any) Any) Any {
@@ -56,6 +86,10 @@ func (x Cons) FoldLeft(v Any, f func(Any, Any) Any) Any {
 	return rec(x, v)
 }
 
+func (x Cons) ReduceLeft(f func(Any, Any) Any) Option {
+	return Option_.Of(x.tail.FoldLeft(x.head, f))
+}
+
 type Nil struct{}
 
 func NewNil() Nil {
@@ -63,7 +97,11 @@ func NewNil() Nil {
 }
 
 func (x Nil) Head() Option {
-	return NewNone()
+	return Option_.Empty()
+}
+
+func (x Nil) Tail() List {
+	return x
 }
 
 func (x Nil) Chain(f func(Any) List) List {
@@ -74,8 +112,16 @@ func (x Nil) Map(f func(Any) Any) List {
 	return x
 }
 
+func (x Nil) Find(f func(Any) bool) Option {
+	return Option_.Empty()
+}
+
 func (x Nil) FoldLeft(v Any, f func(Any, Any) Any) Any {
 	return v
+}
+
+func (x Nil) ReduceLeft(f func(Any, Any) Any) Option {
+	return Option_.Empty()
 }
 
 // Static methods
@@ -102,6 +148,20 @@ func (x list) ToSlice(l List) []Any {
 	return l.FoldLeft(make([]Any, 0, 0), func(a, b Any) Any {
 		return append(a.([]Any), b)
 	}).([]Any)
+}
+
+func (x list) FromAmount(s int) List {
+	var rec func(List, int) List
+	rec = func(l List, v int) List {
+		if v < 1 {
+			return l
+		}
+		return rec(Cons{
+			head: v,
+			tail: l,
+		}, v-1)
+	}
+	return rec(Nil{}, s)
 }
 
 func (x list) FromSlice(s []Any) List {
