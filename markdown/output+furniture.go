@@ -44,13 +44,7 @@ func (b block) Children() g.Option {
 }
 
 func (b block) String() string {
-	switch b.Type {
-	case HR1, HR2:
-		return fmt.Sprintf("%s ", b.Type.String())
-	case BlockQuote:
-		return fmt.Sprintf("%s %s", b.Type.String(), b.Value.String())
-	}
-	return DefaultString
+	return fmt.Sprintf("%s ", b.Type.String())
 }
 
 func hr1() block {

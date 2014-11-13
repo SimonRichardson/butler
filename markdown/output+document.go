@@ -25,10 +25,14 @@ func (d Document) String() string {
 			y = b.(depthNode)
 			z = y.node.String()
 		)
-		if y.node.IsInline() {
-			return fmt.Sprintf("%s%s", x, z)
+		if z == "" {
+			return x
 		} else {
-			return fmt.Sprintf("%s\n%s%s", x, indent(y.depth), z)
+			if y.node.IsInline() {
+				return fmt.Sprintf("%s%s", x, z)
+			} else {
+				return fmt.Sprintf("%s\n%s%s", x, indent(y.depth), z)
+			}
 		}
 	}).(string)
 }
