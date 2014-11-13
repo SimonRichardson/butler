@@ -1,10 +1,6 @@
 package markdown
 
-import (
-	"fmt"
-
-	g "github.com/SimonRichardson/butler/generic"
-)
+import g "github.com/SimonRichardson/butler/generic"
 
 type codeType string
 
@@ -14,7 +10,7 @@ var (
 )
 
 func (c codeType) IsInline() bool {
-	return false
+	return c == Inline
 }
 
 func (c codeType) Children() g.Option {
@@ -26,8 +22,7 @@ func (c codeType) String() string {
 }
 
 type code struct {
-	Type  codeType
-	Value marks
+	values g.List
 }
 
 func (c code) IsInline() bool {
@@ -35,30 +30,21 @@ func (c code) IsInline() bool {
 }
 
 func (c code) Children() g.Option {
-	return g.Option_.Of(g.List_.Of(c.Value))
+	return g.Option_.Of(c.values)
 }
 
 func (c code) String() string {
-	t := c.Type.String()
-	switch c.Type {
-	case Inline:
-		return fmt.Sprintf("%s%s%s", t, c.Value.String(), t)
-	case Multiline:
-		return fmt.Sprintf("%s\n%s\n%s\n", t, c.Value.String(), t)
-	}
-	return DefaultString
+	return ""
 }
 
 func inline(val marks) code {
 	return code{
-		Type:  Inline,
-		Value: val,
+		values: g.List_.To(Inline, val, Inline),
 	}
 }
 
 func multiline(val marks) code {
 	return code{
-		Type:  Multiline,
-		Value: val,
+		values: g.List_.To(Multiline, val, Multiline),
 	}
 }

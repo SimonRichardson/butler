@@ -56,6 +56,7 @@ func Output(server butler.Server) ([]byte, error) {
 			),
 		),
 		blockquote(link("Damn", "url")),
+		inline(str("dick")),
 	)
 
 	/*

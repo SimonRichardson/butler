@@ -1,10 +1,6 @@
 package markdown
 
-import (
-	"fmt"
-
-	g "github.com/SimonRichardson/butler/generic"
-)
+import g "github.com/SimonRichardson/butler/generic"
 
 type blockType string
 
@@ -27,8 +23,7 @@ func (b blockType) String() string {
 }
 
 type block struct {
-	Type  blockType
-	Value marks
+	values g.List
 }
 
 func (b block) IsInline() bool {
@@ -36,32 +31,27 @@ func (b block) IsInline() bool {
 }
 
 func (b block) Children() g.Option {
-	switch b.Type {
-	case BlockQuote:
-		return g.Option_.Of(g.List_.Of(b.Value))
-	}
-	return g.Option_.Empty()
+	return g.Option_.Of(b.values)
 }
 
 func (b block) String() string {
-	return fmt.Sprintf("%s ", b.Type.String())
+	return ""
 }
 
 func hr1() block {
 	return block{
-		Type: HR1,
+		values: g.List_.To(HR1),
 	}
 }
 
 func hr2() block {
 	return block{
-		Type: HR2,
+		values: g.List_.To(HR2),
 	}
 }
 
 func blockquote(val marks) block {
 	return block{
-		Type:  BlockQuote,
-		Value: val,
+		values: g.List_.To(BlockQuote, val),
 	}
 }
