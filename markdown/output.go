@@ -73,18 +73,6 @@ func Output(server butler.Server) ([]byte, error) {
 	return []byte(doc.String()), nil
 }
 
-func fromMarks(s []marks) g.List {
-	var rec func(g.List, []marks) g.List
-	rec = func(l g.List, v []marks) g.List {
-		num := len(v)
-		if num < 1 {
-			return l
-		}
-		return rec(g.NewCons(v[0], l), v[1:])
-	}
-	return rec(g.Nil{}, s)
-}
-
 func getMethod(x g.List) g.Option {
 	return x.Find(func(a g.Any) bool {
 		_, ok := a.(http.Method)

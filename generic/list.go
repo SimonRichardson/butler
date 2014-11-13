@@ -150,6 +150,20 @@ func (x list) ToSlice(l List) []Any {
 	}).([]Any)
 }
 
+func (x list) FromAmount(s int) List {
+	var rec func(List, int) List
+	rec = func(l List, v int) List {
+		if v < 1 {
+			return l
+		}
+		return rec(Cons{
+			head: v,
+			tail: l,
+		}, v-1)
+	}
+	return rec(Nil{}, s)
+}
+
 func (x list) FromSlice(s []Any) List {
 	var rec func(List, []Any) List
 	rec = func(l List, v []Any) List {

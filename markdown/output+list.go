@@ -57,7 +57,7 @@ func (l list) Children() g.Option {
 }
 
 func (l list) String() string {
-	return fmt.Sprintf("%s", l.Type.String())
+	return fmt.Sprintf("%s ", l.Type.String())
 }
 
 func ul(values ...marks) list {

@@ -1,0 +1,46 @@
+package markdown
+
+import (
+	"fmt"
+
+	g "github.com/SimonRichardson/butler/generic"
+)
+
+type depthNode struct {
+	depth int
+	node  marks
+}
+
+func newDepthNode(depth int, node marks) depthNode {
+	return depthNode{
+		depth: depth,
+		node:  node,
+	}
+}
+
+func fromMarks(s []marks) g.List {
+	var rec func(g.List, []marks) g.List
+	rec = func(l g.List, v []marks) g.List {
+		num := len(v)
+		if num < 1 {
+			return l
+		}
+		return rec(g.NewCons(v[num-1], l), v[:num-1])
+	}
+	return rec(g.Nil{}, s)
+}
+
+func fromMarksToDepthNode(l g.List, depth int) g.List {
+	return l.Map(func(x g.Any) g.Any {
+		return newDepthNode(depth, x.(marks))
+	})
+}
+
+func indent(amount int) string {
+	list := g.List_.FromAmount(amount)
+	return list.Map(func(x g.Any) g.Any {
+		return "\t"
+	}).FoldLeft("", func(a, b g.Any) g.Any {
+		return fmt.Sprintf("%s%s", a, b)
+	}).(string)
+}
