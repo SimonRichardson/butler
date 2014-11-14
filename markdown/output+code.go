@@ -9,8 +9,8 @@ var (
 	Multiline codeType = "```"
 )
 
-func (c codeType) IsInline() bool {
-	return c == Inline
+func (c codeType) IsBlock() bool {
+	return c == Multiline
 }
 
 func (c codeType) Children() g.Option {
@@ -25,8 +25,8 @@ type code struct {
 	values g.List
 }
 
-func (c code) IsInline() bool {
-	return false
+func (c code) IsBlock() bool {
+	return true
 }
 
 func (c code) Children() g.Option {

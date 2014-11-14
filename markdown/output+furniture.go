@@ -1,6 +1,10 @@
 package markdown
 
-import g "github.com/SimonRichardson/butler/generic"
+import (
+	"fmt"
+
+	g "github.com/SimonRichardson/butler/generic"
+)
 
 type blockType string
 
@@ -10,7 +14,7 @@ var (
 	BlockQuote blockType = ">"
 )
 
-func (b blockType) IsInline() bool {
+func (b blockType) IsBlock() bool {
 	return false
 }
 
@@ -19,6 +23,9 @@ func (b blockType) Children() g.Option {
 }
 
 func (b blockType) String() string {
+	if b == BlockQuote {
+		return fmt.Sprintf("%s ", string(b))
+	}
 	return string(b)
 }
 
@@ -26,8 +33,8 @@ type block struct {
 	values g.List
 }
 
-func (b block) IsInline() bool {
-	return false
+func (b block) IsBlock() bool {
+	return true
 }
 
 func (b block) Children() g.Option {

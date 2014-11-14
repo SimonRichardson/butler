@@ -10,8 +10,8 @@ type Document struct {
 	List g.Tree
 }
 
-func (d Document) IsInline() bool {
-	return false
+func (d Document) IsBlock() bool {
+	return true
 }
 
 func (d Document) Children() g.Option {
@@ -25,38 +25,27 @@ func (d Document) String() string {
 			y = b.(depthNode)
 			z = y.node.String()
 		)
-		if z == "" {
-			return x
+		if y.node.IsBlock() {
+			return fmt.Sprintf("%s\n%s\n%s", x, z, indent(y.depth))
 		} else {
-			if y.node.IsInline() {
-				return fmt.Sprintf("%s%s", x, z)
-			} else {
-				return fmt.Sprintf("%s\n%s%s", x, indent(y.depth), z)
-			}
+			return fmt.Sprintf("%s%s", x, z)
 		}
 	}).(string)
 }
 
 func document(m ...marks) Document {
-	var (
-		empty = g.List_.Empty()
-		list  = func() g.Any {
-			return empty
-		}
-		rec func(g.List, g.List, int) g.Tree
-	)
+	var rec func(g.List, g.List, int) g.Tree
 	rec = func(l g.List, m g.List, depth int) g.Tree {
 		return m.Head().Fold(
 			func(a g.Any) g.Any {
 				var (
-					x        = a.(depthNode)
-					y        = m.Tail()
-					nodes    = x.node.Children().GetOrElse(list).(g.List)
-					children = rec(empty, fromMarksToDepthNode(nodes, depth+1), depth+1)
-					z        = children.Children().GetOrElse(list).(g.List)
-					node     = g.NewTreeNode(x, z)
+					x     = a.(depthNode)
+					y     = m.Tail()
+					nodes = children(x.node.Children())
+					tree  = rec(emptyList(), fromMarksToDepthNode(nodes, depth+1), depth+1)
+					leaf  = g.NewTreeNode(x, children(tree.Children()))
 				)
-				return rec(g.NewCons(node, l), y, depth)
+				return rec(g.NewCons(leaf, l), y, depth)
 			},
 			func() g.Any {
 				return g.NewTreeNode(newDepthNode(depth, nothing()), l)
@@ -64,6 +53,6 @@ func document(m ...marks) Document {
 		).(g.Tree)
 	}
 	return Document{
-		List: rec(empty, fromMarksToDepthNode(fromMarks(m), 0), 0),
+		List: rec(emptyList(), fromMarksToDepthNode(fromMarks(m), 0), 0),
 	}
 }

@@ -13,7 +13,7 @@ var (
 	Hyphen unorderedListType = "-"
 )
 
-func (t unorderedListType) IsInline() bool {
+func (t unorderedListType) IsBlock() bool {
 	return false
 }
 
@@ -22,7 +22,7 @@ func (t unorderedListType) Children() g.Option {
 }
 
 func (t unorderedListType) String() string {
-	return string(t)
+	return fmt.Sprintf("%s ", string(t))
 }
 
 type orderedListType string
@@ -31,7 +31,7 @@ var (
 	Hash orderedListType = "#"
 )
 
-func (t orderedListType) IsInline() bool {
+func (t orderedListType) IsBlock() bool {
 	return false
 }
 
@@ -40,16 +40,15 @@ func (t orderedListType) Children() g.Option {
 }
 
 func (t orderedListType) String() string {
-	return string(t)
+	return fmt.Sprintf("%s ", string(t))
 }
 
 type list struct {
-	Type  marks
 	nodes g.List
 }
 
-func (l list) IsInline() bool {
-	return false
+func (l list) IsBlock() bool {
+	return true
 }
 
 func (l list) Children() g.Option {
@@ -57,19 +56,17 @@ func (l list) Children() g.Option {
 }
 
 func (l list) String() string {
-	return fmt.Sprintf("%s ", l.Type.String())
+	return ""
 }
 
 func ul(values ...marks) list {
 	return list{
-		Type:  Hyphen,
-		nodes: fromMarks(values),
+		nodes: fromMarks(append([]marks{Hyphen}, values...)),
 	}
 }
 
 func ol(values ...marks) list {
 	return list{
-		Type:  Hash,
-		nodes: fromMarks(values),
+		nodes: fromMarks(append([]marks{Hyphen}, values...)),
 	}
 }

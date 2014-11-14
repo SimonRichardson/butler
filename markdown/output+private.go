@@ -44,3 +44,14 @@ func indent(amount int) string {
 		return fmt.Sprintf("%s%s", a, b)
 	}).(string)
 }
+
+func emptyList() g.List {
+	return g.List_.Empty()
+}
+
+func children(o g.Option) g.List {
+	list := func() g.Any {
+		return emptyList()
+	}
+	return g.AsList(o.GetOrElse(list))
+}

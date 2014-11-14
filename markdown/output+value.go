@@ -8,8 +8,8 @@ type value struct {
 	value string
 }
 
-func (e value) IsInline() bool {
-	return true
+func (e value) IsBlock() bool {
+	return false
 }
 
 func (e value) Children() g.Option {

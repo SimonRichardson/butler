@@ -11,28 +11,9 @@ const (
 )
 
 type marks interface {
-	IsInline() bool
+	IsBlock() bool
 	Children() g.Option
 	String() string
-}
-
-type empty struct {
-}
-
-func (e empty) IsInline() bool {
-	return false
-}
-
-func (e empty) Children() g.Option {
-	return g.Option_.Empty()
-}
-
-func (e empty) String() string {
-	return ""
-}
-
-func nothing() marks {
-	return empty{}
 }
 
 type Markdown struct{}
@@ -48,6 +29,7 @@ func Output(server butler.Server) ([]byte, error) {
 		h1(link("Butler", "http://github.com/simonrichardson/butler")),
 		hr1(),
 		ul(
+			link("Nested", "link"),
 			ul(
 				link("Nested", "link"),
 				ul(
@@ -56,6 +38,7 @@ func Output(server butler.Server) ([]byte, error) {
 			),
 		),
 		blockquote(link("Damn", "url")),
+		hr1(),
 		inline(str("dick")),
 	)
 
