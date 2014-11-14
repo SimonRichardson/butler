@@ -48,7 +48,7 @@ func document(m ...marks) Document {
 				return rec(g.NewCons(leaf, l), y, depth)
 			},
 			func() g.Any {
-				return g.NewTreeNode(newDepthNode(depth, nothing()), l)
+				return g.NewTreeNode(newDepthNode(0, nothing()), l)
 			},
 		).(g.Tree)
 	}

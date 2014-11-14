@@ -39,7 +39,7 @@ func fromMarksToDepthNode(l g.List, depth int) g.List {
 func indent(amount int) string {
 	list := g.List_.FromAmount(amount)
 	return list.Map(func(x g.Any) g.Any {
-		return "\t"
+		return "    "
 	}).FoldLeft("", func(a, b g.Any) g.Any {
 		return fmt.Sprintf("%s%s", a, b)
 	}).(string)

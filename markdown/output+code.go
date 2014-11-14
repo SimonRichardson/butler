@@ -1,24 +1,49 @@
 package markdown
 
-import g "github.com/SimonRichardson/butler/generic"
+import (
+	"fmt"
 
-type codeType string
-
-var (
-	Inline    codeType = "`"
-	Multiline codeType = "```"
+	g "github.com/SimonRichardson/butler/generic"
 )
 
-func (c codeType) IsBlock() bool {
-	return c == Multiline
+var (
+	uid int = 0
+)
+
+type codeType struct {
+	value string
 }
 
-func (c codeType) Children() g.Option {
+func newCodeType(val string) *codeType {
+	return &codeType{
+		value: val,
+	}
+}
+
+var (
+	Inline         *codeType = newCodeType("`")
+	MultilineOpen  *codeType = newCodeType("```")
+	MultilineClose *codeType = newCodeType("```")
+)
+
+func (c *codeType) IsBlock() bool {
+	return false
+}
+
+func (c *codeType) Children() g.Option {
 	return g.Option_.Empty()
 }
 
-func (c codeType) String() string {
-	return string(c)
+func (c *codeType) String() string {
+	switch c {
+	case Inline:
+		return c.value
+	case MultilineOpen:
+		return fmt.Sprintf("%s\n", c.value)
+	case MultilineClose:
+		return fmt.Sprintf("\n%s", c.value)
+	}
+	return DefaultString
 }
 
 type code struct {
@@ -45,6 +70,6 @@ func inline(val marks) code {
 
 func multiline(val marks) code {
 	return code{
-		values: g.List_.To(Multiline, val, Multiline),
+		values: g.List_.To(MultilineOpen, val, MultilineClose),
 	}
 }

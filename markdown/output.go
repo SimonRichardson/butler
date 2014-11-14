@@ -24,37 +24,17 @@ func (m Markdown) Encode(a g.Any) ([]byte, error) {
 
 func Output(server butler.Server) ([]byte, error) {
 	// Build the service and output it as markdown!
-
 	doc := document(
 		h1(link("Butler", "http://github.com/simonrichardson/butler")),
+		h4(str("Serving you content in a monadic style.")),
 		hr1(),
 		ul(
-			link("Nested", "link"),
-			ul(
-				link("Nested", "link"),
-				ul(
-					link("Nested", "link"),
-				),
-			),
+			link("Route definitions", "#routes"),
 		),
-		blockquote(link("Damn", "url")),
-		hr1(),
-		inline(str("dick")),
+		h5(str("Routes")),
+		p(str("The route definitions for your service are as follows:")),
+		br(),
 	)
-
-	/*
-		request := server.Describe()
-
-		getMethod(request).Map(func(x g.Any) g.Any {
-			list = g.NewCons(h2(x.(http.Method).String()), list)
-			return x
-		})
-
-		getRoute(request).Map(func(x g.Any) g.Any {
-			list = g.NewCons(h2(x.(http.Route).String()), list)
-			return x
-		})
-	*/
 	return []byte(doc.String()), nil
 }
 

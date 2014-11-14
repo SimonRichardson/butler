@@ -6,27 +6,37 @@ import (
 	g "github.com/SimonRichardson/butler/generic"
 )
 
-type blockType string
+type blockType struct {
+	value string
+}
+
+func newBlockType(val string) *blockType {
+	return &blockType{
+		value: val,
+	}
+}
 
 var (
-	HR1        blockType = "======"
-	HR2        blockType = "------"
-	BlockQuote blockType = ">"
+	HR1        *blockType = newBlockType("======")
+	HR2        *blockType = newBlockType("------")
+	BlockQuote *blockType = newBlockType(">")
+	BR         *blockType = newBlockType("")
+	P          *blockType = newBlockType("")
 )
 
-func (b blockType) IsBlock() bool {
+func (b *blockType) IsBlock() bool {
 	return false
 }
 
-func (b blockType) Children() g.Option {
+func (b *blockType) Children() g.Option {
 	return g.Option_.Empty()
 }
 
-func (b blockType) String() string {
+func (b *blockType) String() string {
 	if b == BlockQuote {
-		return fmt.Sprintf("%s ", string(b))
+		return fmt.Sprintf("%s ", b.value)
 	}
-	return string(b)
+	return b.value
 }
 
 type block struct {
@@ -60,5 +70,17 @@ func hr2() block {
 func blockquote(val marks) block {
 	return block{
 		values: g.List_.To(BlockQuote, val),
+	}
+}
+
+func br() block {
+	return block{
+		values: g.List_.To(BR),
+	}
+}
+
+func p(val marks) block {
+	return block{
+		values: g.List_.To(P, val),
 	}
 }
