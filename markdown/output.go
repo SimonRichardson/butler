@@ -24,7 +24,12 @@ func (m Markdown) Encode(a g.Any) ([]byte, error) {
 
 func Output(server butler.Server) ([]byte, error) {
 	// Build the service and output it as markdown!
-	doc := document(
+	doc := document(append(templateHeader(), templateFooter()...)...)
+	return []byte(doc.String()), nil
+}
+
+func templateHeader() []marks {
+	return []marks{
 		h1(link("Butler", "http://github.com/simonrichardson/butler")),
 		h4(str("Serving you content in a monadic style.")),
 		hr1(),
@@ -33,9 +38,14 @@ func Output(server butler.Server) ([]byte, error) {
 		),
 		h5(str("Routes")),
 		p(str("The route definitions for your service are as follows:")),
-		br(),
-	)
-	return []byte(doc.String()), nil
+	}
+}
+
+func templateFooter() []marks {
+	return []marks{
+		hr2(),
+		center(link("Served by Butler", "http://github.com/simonrichardson/butler")),
+	}
 }
 
 func getMethod(x g.List) g.Option {

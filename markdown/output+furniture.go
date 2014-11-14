@@ -17,11 +17,13 @@ func newBlockType(val string) *blockType {
 }
 
 var (
-	HR1        *blockType = newBlockType("======")
-	HR2        *blockType = newBlockType("------")
-	BlockQuote *blockType = newBlockType(">")
-	BR         *blockType = newBlockType("")
-	P          *blockType = newBlockType("")
+	HR1         *blockType = newBlockType("======")
+	HR2         *blockType = newBlockType("------")
+	BlockQuote  *blockType = newBlockType(">")
+	BR          *blockType = newBlockType("")
+	P           *blockType = newBlockType("")
+	CenterOpen  *blockType = newBlockType("->")
+	CenterClose *blockType = newBlockType("<-")
 )
 
 func (b *blockType) IsBlock() bool {
@@ -82,5 +84,11 @@ func br() block {
 func p(val marks) block {
 	return block{
 		values: g.List_.To(P, val),
+	}
+}
+
+func center(val marks) block {
+	return block{
+		values: g.List_.To(CenterOpen, val, CenterClose),
 	}
 }
