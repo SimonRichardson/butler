@@ -45,37 +45,37 @@ func (h header) String() string {
 	return ""
 }
 
-func h1(val marks) header {
+func h1(val mark) header {
 	return header{
 		nodes: g.List_.To(H1, val),
 	}
 }
 
-func h2(val marks) header {
+func h2(val mark) header {
 	return header{
 		nodes: g.List_.To(H2, val),
 	}
 }
 
-func h3(val marks) header {
+func h3(val mark) header {
 	return header{
 		nodes: g.List_.To(H3, val),
 	}
 }
 
-func h4(val marks) header {
+func h4(val mark) header {
 	return header{
 		nodes: g.List_.To(H4, val),
 	}
 }
 
-func h5(val marks) header {
+func h5(val mark) header {
 	return header{
 		nodes: g.List_.To(H5, val),
 	}
 }
 
-func h6(val marks) header {
+func h6(val mark) header {
 	return header{
 		nodes: g.List_.To(H6, val),
 	}

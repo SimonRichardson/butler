@@ -10,7 +10,7 @@ const (
 	DefaultString string = ""
 )
 
-type marks interface {
+type mark interface {
 	IsBlock() bool
 	Children() g.Option
 	String() string
@@ -28,8 +28,8 @@ func Output(server butler.Server) ([]byte, error) {
 	return []byte(doc.String()), nil
 }
 
-func templateHeader() []marks {
-	return []marks{
+func templateHeader() []mark {
+	return []mark{
 		h1(link("Butler", "http://github.com/simonrichardson/butler")),
 		h4(str("Serving you content in a monadic style.")),
 		hr1(),
@@ -41,8 +41,8 @@ func templateHeader() []marks {
 	}
 }
 
-func templateFooter() []marks {
-	return []marks{
+func templateFooter() []mark {
+	return []mark{
 		hr2(),
 		center(link("Served by Butler", "http://github.com/simonrichardson/butler")),
 	}

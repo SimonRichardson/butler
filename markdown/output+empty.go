@@ -19,6 +19,6 @@ func (e empty) String() string {
 	return ""
 }
 
-func nothing() marks {
+func nothing() mark {
 	return empty{}
 }

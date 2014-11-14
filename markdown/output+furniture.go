@@ -69,7 +69,7 @@ func hr2() block {
 	}
 }
 
-func blockquote(val marks) block {
+func blockquote(val mark) block {
 	return block{
 		values: g.List_.To(BlockQuote, val),
 	}
@@ -81,13 +81,13 @@ func br() block {
 	}
 }
 
-func p(val marks) block {
+func p(val mark) block {
 	return block{
 		values: g.List_.To(P, val),
 	}
 }
 
-func center(val marks) block {
+func center(val mark) block {
 	return block{
 		values: g.List_.To(CenterOpen, val, CenterClose),
 	}

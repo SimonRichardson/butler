@@ -59,14 +59,14 @@ func (l list) String() string {
 	return ""
 }
 
-func ul(values ...marks) list {
+func ul(values ...mark) list {
 	return list{
-		nodes: fromMarks(append([]marks{Hyphen}, values...)),
+		nodes: fromMarks(append([]mark{Hyphen}, values...)),
 	}
 }
 
-func ol(values ...marks) list {
+func ol(values ...mark) list {
 	return list{
-		nodes: fromMarks(append([]marks{Hyphen}, values...)),
+		nodes: fromMarks(append([]mark{Hyphen}, values...)),
 	}
 }

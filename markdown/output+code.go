@@ -62,13 +62,13 @@ func (c code) String() string {
 	return ""
 }
 
-func inline(val marks) code {
+func inline(val mark) code {
 	return code{
 		values: g.List_.To(Inline, val, Inline),
 	}
 }
 
-func multiline(val marks) code {
+func multiline(val mark) code {
 	return code{
 		values: g.List_.To(MultilineOpen, val, MultilineClose),
 	}

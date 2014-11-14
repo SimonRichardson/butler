@@ -33,7 +33,7 @@ func (d Document) String() string {
 	}).(string)
 }
 
-func document(m ...marks) Document {
+func document(m ...mark) Document {
 	var rec func(g.List, g.List, int) g.Tree
 	rec = func(l g.List, m g.List, depth int) g.Tree {
 		return m.Head().Fold(
