@@ -14,6 +14,7 @@ func main() {
 		Get().
 		Path("/name/:id").
 		ContentType("application/json").
+		AcceptLanguage("en").
 		QueryInt("limit")
 
 	response := Butler().

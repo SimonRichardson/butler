@@ -5,6 +5,7 @@ type List interface {
 	Tail() List
 	Chain(func(Any) List) List
 	Map(func(Any) Any) List
+	Filter(func(Any) bool) List
 	Find(func(Any) bool) Option
 	FoldLeft(Any, func(Any, Any) Any) Any
 	ReduceLeft(func(Any, Any) Any) Option
@@ -49,6 +50,22 @@ func (x Cons) Map(f func(Any) Any) List {
 	return x.Chain(func(a Any) List {
 		return NewCons(f(a), NewNil())
 	})
+}
+
+func (x Cons) Filter(f func(Any) bool) List {
+	var rec func(List, List) List
+	rec = func(a List, b List) List {
+		if _, ok := a.(Nil); ok {
+			return b
+		}
+		cons := a.(Cons)
+		if f(cons.head) {
+			return rec(cons.tail, NewCons(cons.head, b))
+		} else {
+			return rec(cons.tail, b)
+		}
+	}
+	return rec(x, List_.Empty())
 }
 
 func (x Cons) Find(f func(Any) bool) Option {
@@ -109,6 +126,10 @@ func (x Nil) Chain(f func(Any) List) List {
 }
 
 func (x Nil) Map(f func(Any) Any) List {
+	return x
+}
+
+func (x Nil) Filter(func(Any) bool) List {
 	return x
 }
 

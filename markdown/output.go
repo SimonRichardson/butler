@@ -58,8 +58,11 @@ func templateFooter() []mark {
 
 func templateRoute(list g.List) []mark {
 	var (
-		method = getMethod(list).GetOrElse(g.Constant(DefaultMethod))
-		path   = getRoute(list).GetOrElse(g.Constant(DefaultPath))
+		method  = getMethod(list).GetOrElse(g.Constant(DefaultMethod))
+		path    = getRoute(list).GetOrElse(g.Constant(DefaultPath))
+		headers = getHeaders(list).Map(func(x g.Any) g.Any {
+			return ul(inline(str(x.(http.Header).String())))
+		})
 	)
 	return []mark{
 		h4(
@@ -72,19 +75,19 @@ func templateRoute(list g.List) []mark {
 		ul(
 			str("Request"),
 			ul(
-				str("Body"),
+				append([]mark{str("Headers")}, toMarks(headers)...)...,
 			),
 			ul(
-				str("Headers"),
+				str("Body"),
 			),
 		),
 		ul(
 			str("Response"),
 			ul(
-				str("Body"),
+				str("Headers"),
 			),
 			ul(
-				str("Headers"),
+				str("Body"),
 			),
 		),
 	}
@@ -100,6 +103,13 @@ func getMethod(x g.List) g.Option {
 func getRoute(x g.List) g.Option {
 	return x.Find(func(a g.Any) bool {
 		_, ok := a.(http.Route)
+		return ok
+	})
+}
+
+func getHeaders(x g.List) g.List {
+	return x.Filter(func(a g.Any) bool {
+		_, ok := a.(http.Header)
 		return ok
 	})
 }

@@ -18,6 +18,12 @@ func newDepthNode(depth int, node mark) depthNode {
 	}
 }
 
+func toMarks(s g.List) []mark {
+	return s.FoldLeft([]mark{}, func(a, b g.Any) g.Any {
+		return append(a.([]mark), b.(mark))
+	}).([]mark)
+}
+
 func fromMarks(s []mark) g.List {
 	var rec func(g.List, []mark) g.List
 	rec = func(l g.List, v []mark) g.List {

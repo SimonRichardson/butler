@@ -1,6 +1,8 @@
 package http
 
 import (
+	"fmt"
+
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
 )
@@ -49,6 +51,10 @@ func (h Header) Build() g.StateT {
 		Chain(g.Merge(h.value.Build())).
 		Chain(constant(g.StateT_.Of(h))).
 		Chain(modify(api(h.Api)))
+}
+
+func (h Header) String() string {
+	return fmt.Sprintf("%s: %s", h.name, h.value)
 }
 
 func Accept(value string) Header {

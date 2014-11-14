@@ -22,6 +22,7 @@ func newCodeType(val string) *codeType {
 
 var (
 	Inline         *codeType = newCodeType("`")
+	Multiline      *codeType = newCodeType("```")
 	MultilineOpen  *codeType = newCodeType("```")
 	MultilineClose *codeType = newCodeType("```")
 )
@@ -47,11 +48,12 @@ func (c *codeType) String() string {
 }
 
 type code struct {
+	class  *codeType
 	values g.List
 }
 
 func (c code) IsBlock() bool {
-	return true
+	return c.class != Inline
 }
 
 func (c code) Children() g.Option {
@@ -64,12 +66,14 @@ func (c code) String() string {
 
 func inline(val mark) code {
 	return code{
+		class:  Inline,
 		values: g.List_.To(Inline, val, Inline),
 	}
 }
 
 func multiline(val mark) code {
 	return code{
+		class:  Multiline,
 		values: g.List_.To(MultilineOpen, val, MultilineClose),
 	}
 }
