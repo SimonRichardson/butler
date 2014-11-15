@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Butler : Serve content in a monadic style.">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Butler</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/SimonRichardson/butler">View on GitHub</a>
+
+          <h1 id="project_title">Butler</h1>
+          <h2 id="project_tagline">Serve content in a monadic style.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/SimonRichardson/butler/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/SimonRichardson/butler/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="butler" class="anchor" href="#butler" aria-hidden="true"><span class="octicon octicon-link"></span></a>butler</h1>
+
+<p>Serve content in a monadic style.</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-v">request</span> <span class="pl-ko">:=</span> <span class="pl-sf">Butler</span>().
+    <span class="pl-sf">Get</span>().
+    <span class="pl-sf">Path</span>(<span class="pl-s1"><span class="pl-pds">"</span>/name/:id<span class="pl-pds">"</span></span>).
+    <span class="pl-sf">ContentType</span>(<span class="pl-s1"><span class="pl-pds">"</span>application/json<span class="pl-pds">"</span></span>).
+    <span class="pl-sf">QueryInt</span>(<span class="pl-s1"><span class="pl-pds">"</span>limit<span class="pl-pds">"</span></span>)
+
+<span class="pl-v">response</span> <span class="pl-ko">:=</span> <span class="pl-sf">Butler</span>().
+    <span class="pl-sf">ContentType</span>(<span class="pl-s1"><span class="pl-pds">"</span>application/json<span class="pl-pds">"</span></span>).
+    <span class="pl-sf">Content</span>(output.<span class="pl-v">HtmlEncoder</span>{})
+
+<span class="pl-v">listEmployees</span> <span class="pl-ko">:=</span> <span class="pl-sf">Service</span>(request, response).<span class="pl-sf">Then</span>(<span class="pl-k">func</span>(args <span class="pl-s">map</span>[<span class="pl-s">string</span>]g.<span class="pl-v">Any</span>) g.<span class="pl-v">Any</span> {
+    <span class="pl-v">loadAllEmployees</span> <span class="pl-ko">:=</span> <span class="pl-sf">func</span>(x <span class="pl-s">int</span>) g.<span class="pl-v">Any</span> {
+        <span class="pl-k">return</span> []g.<span class="pl-v">Any</span>{}
+    }
+    <span class="pl-k">return</span> <span class="pl-sf">loadAllEmployees</span>(args[<span class="pl-s1"><span class="pl-pds">"</span>limit<span class="pl-pds">"</span></span>].(<span class="pl-s">int</span>))
+})
+
+<span class="pl-v">server</span> <span class="pl-ko">:=</span> <span class="pl-sf">Compile</span>(listEmployees)
+
+<span class="pl-c"><span class="pl-pdc">//</span> You can also render the server to markdown, for up to</span>
+<span class="pl-c"><span class="pl-pdc">//</span> date documentation</span>
+<span class="pl-v">doc</span>, <span class="pl-v">_</span> <span class="pl-ko">:=</span> markdown.<span class="pl-sf">Output</span>(server)
+fmt.<span class="pl-sf">FPrintln</span>(os.<span class="pl-v">Stdout</span>, doc)
+
+<span class="pl-v">service</span> <span class="pl-ko">:=</span> <span class="pl-sf">Remotely</span>(server)(<span class="pl-s1"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>, <span class="pl-cn">80</span>)
+service.<span class="pl-sf">Run</span>()</pre></div>
+
+<h3>
+<a id="todo" class="anchor" href="#todo" aria-hidden="true"><span class="octicon octicon-link"></span></a>TODO</h3>
+
+<ul>
+<li>[ ] Markdown support</li>
+<li>[ ] Query parameters support</li>
+</ul>
+
+<h4>
+<a id="notes" class="anchor" href="#notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Notes</h4>
+
+<ul>
+<li>This is not idiomatic go and I don't care!</li>
+</ul>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Butler maintained by <a href="https://github.com/SimonRichardson">SimonRichardson</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-128184-3");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+
+  </body>
+</html>
