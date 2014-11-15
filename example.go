@@ -32,8 +32,16 @@ func main() {
 
 	// You can also render the server to markdown, for up to
 	// date documentation
-	doc, _ := markdown.Output(server)
-	fmt.Println(string(doc))
+	markdown.Output(server).Fold(
+		func(err g.Any) g.Any {
+			fmt.Println(err)
+			return err
+		},
+		func(doc g.Any) g.Any {
+			fmt.Println(doc)
+			return doc
+		},
+	)
 
 	/*
 		// Run the documentation

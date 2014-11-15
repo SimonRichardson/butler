@@ -1,8 +1,6 @@
 package butler
 
-import (
-	g "github.com/SimonRichardson/butler/generic"
-)
+import g "github.com/SimonRichardson/butler/generic"
 
 type Server struct {
 	requests g.List
@@ -16,19 +14,26 @@ func (s Server) Requests() g.List {
 	return s.requests
 }
 
-func Compile(x service) Server {
+func Compile(x service) g.Either {
 	var (
 		writer = g.Writer_.Of(g.Empty{})
 		run    = func(a g.Any) g.Any {
 			x, y := g.AsWriter(a).Run()
 			return g.NewTuple2(flatten(g.AsTuple2(x)), y)
 		}
-		request  = g.AsEither(x.Build().ExecState(writer)).Fold(run, run)
-		requests = g.AsTuple2(request)
+		request  = g.AsEither(x.Build().ExecState(writer)).Bimap(run, run)
+		requests = g.AsEither(request)
 	)
-	return Server{
-		requests: g.AsList(requests.Fst()),
-	}
+	return requests.Map(func(y g.Any) g.Any {
+		z := g.AsTuple2(y)
+		return Server{
+			requests: g.AsList(z.Fst()),
+		}
+	})
+}
+
+func validateRequests(a g.List) g.List {
+	return a
 }
 
 func flatten(a g.Tuple2) g.List {

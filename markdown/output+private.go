@@ -18,6 +18,10 @@ func newDepthNode(depth int, node mark) depthNode {
 	}
 }
 
+func asMarks(x g.Any) []mark {
+	return x.([]mark)
+}
+
 func toMarks(s g.List) []mark {
 	return s.FoldLeft([]mark{}, func(a, b g.Any) g.Any {
 		return append(a.([]mark), b.(mark))
