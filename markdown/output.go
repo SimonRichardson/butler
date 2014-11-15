@@ -30,7 +30,7 @@ func (m Markdown) Encode(a g.Any) ([]byte, error) {
 func Output(server butler.Server) ([]byte, error) {
 	// Build the service and output it as markdown!
 	var (
-		route = templateRoute(server.Describe())
+		route = templateRoute(server.Requests())
 		doc   = document(append(templateHeader(), append(route, templateFooter()...)...)...)
 	)
 	return []byte(doc.String()), nil

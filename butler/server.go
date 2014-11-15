@@ -12,7 +12,7 @@ func (s Server) Run(request RemoteRequest) g.Promise {
 	return g.Promise_.Of(request)
 }
 
-func (s Server) Describe() g.List {
+func (s Server) Requests() g.List {
 	return s.requests
 }
 
