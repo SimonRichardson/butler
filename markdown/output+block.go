@@ -32,6 +32,10 @@ var (
 	CenterClose    *blockType = newBlockType("<-")
 	MultilineOpen  *blockType = newBlockType("```")
 	MultilineClose *blockType = newBlockType("```")
+	Star           *blockType = newBlockType("*")
+	Hyphen         *blockType = newBlockType("-")
+	Plus           *blockType = newBlockType("+")
+	Ordered        *blockType = newBlockType("1.")
 )
 
 func (b *blockType) IsBlock() bool {
@@ -45,6 +49,8 @@ func (b *blockType) Children() g.Option {
 func (b *blockType) String() string {
 	switch b {
 	case H1, H2, H3, H4, H5, H6:
+		fallthrough
+	case Star, Hyphen, Plus, Ordered:
 		fallthrough
 	case BlockQuote:
 		return fmt.Sprintf("%s ", b.value)
@@ -147,5 +153,17 @@ func center(val mark) block {
 func multiline(val mark) block {
 	return block{
 		nodes: g.List_.To(MultilineOpen, val, MultilineClose),
+	}
+}
+
+func ul(values ...mark) block {
+	return block{
+		nodes: fromMarks(append(singleton(Hyphen), values...)),
+	}
+}
+
+func ol(values ...mark) block {
+	return block{
+		nodes: fromMarks(append(singleton(Ordered), values...)),
 	}
 }

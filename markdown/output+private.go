@@ -61,3 +61,7 @@ func children(o g.Option) g.List {
 	}
 	return g.AsList(o.GetOrElse(list))
 }
+
+func singleton(m mark) []mark {
+	return []mark{m}
+}
