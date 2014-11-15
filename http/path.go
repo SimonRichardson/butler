@@ -43,7 +43,3 @@ func (r Route) Build() g.StateT {
 func (r Route) String() string {
 	return r.path.String()
 }
-
-func Path(path string) Route {
-	return NewRoute(path)
-}

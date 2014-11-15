@@ -1,8 +1,6 @@
 package http
 
 import (
-	"strconv"
-
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
 )
@@ -42,15 +40,4 @@ func (q Query) Build() g.StateT {
 		Chain(g.Get()).
 		Chain(constant(g.StateT_.Of(q))).
 		Chain(modify(api(q.Api)))
-}
-
-func QueryInt(name string) Query {
-	return NewQuery(name, func(x g.Any) g.Any {
-		y, _ := strconv.Atoi(x.(string))
-		return y
-	})
-}
-
-func QueryString(name string) Query {
-	return NewQuery(name, g.Identity())
 }
