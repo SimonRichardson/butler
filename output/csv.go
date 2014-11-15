@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
 )
 
 const (
@@ -16,7 +16,7 @@ const (
 
 type CsvEncoder struct{}
 
-func (e CsvEncoder) Encode(a generic.Any) ([]byte, error) {
+func (e CsvEncoder) Encode(a g.Any) g.Either {
 	var (
 		buffer  *bytes.Buffer
 		headers []string
@@ -47,12 +47,12 @@ func (e CsvEncoder) Encode(a generic.Any) ([]byte, error) {
 	}
 
 	if err := writer.Write(headers); err != nil {
-		return nil, err
+		return g.NewLeft(err)
 	}
 	if err := writer.Write(values); err != nil {
-		return nil, err
+		return g.NewLeft(err)
 	}
 
 	writer.Flush()
-	return buffer.Bytes(), nil
+	return g.NewRight(buffer.Bytes())
 }

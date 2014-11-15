@@ -4,23 +4,23 @@ import (
 	"bytes"
 	"html/template"
 
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
 )
 
 type HtmlEncoder struct {
 	Template string
 }
 
-func (e HtmlEncoder) Encode(a generic.Any) ([]byte, error) {
+func (e HtmlEncoder) Encode(a g.Any) g.Either {
 	var (
 		buffer *bytes.Buffer
 	)
 	tmpl, err := template.New("html-encoder").Parse(e.Template)
 	if err != nil {
-		return nil, err
+		return g.NewLeft(err)
 	}
 	if err := tmpl.Execute(buffer, a); err != nil {
-		return nil, err
+		return g.NewLeft(err)
 	}
-	return buffer.Bytes(), nil
+	return g.NewRight(buffer.Bytes())
 }

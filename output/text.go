@@ -4,20 +4,20 @@ import (
 	"bytes"
 	"text/template"
 
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
 )
 
 type TextEncoder struct {
 	Template string
 }
 
-func (e TextEncoder) Encode(a generic.Any) ([]byte, error) {
+func (e TextEncoder) Encode(a g.Any) g.Either {
 	var (
 		buffer *bytes.Buffer
 	)
 	tmpl := template.Must(template.New("text-encoder").Parse(e.Template))
 	if err := tmpl.Execute(buffer, a); err != nil {
-		return nil, err
+		return g.NewLeft(err)
 	}
-	return buffer.Bytes(), nil
+	return g.NewRight(buffer.Bytes())
 }

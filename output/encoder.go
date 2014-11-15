@@ -1,7 +1,14 @@
 package output
 
-import "github.com/SimonRichardson/butler/generic"
+import g "github.com/SimonRichardson/butler/generic"
 
 type Encoder interface {
-	Encode(a generic.Any) ([]byte, error)
+	Encode(a g.Any) g.Either
+}
+
+func toEither(a []byte, b error) g.Either {
+	if b != nil {
+		return g.NewLeft(b)
+	}
+	return g.NewRight(a)
 }

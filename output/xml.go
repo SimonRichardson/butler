@@ -3,11 +3,11 @@ package output
 import (
 	"encoding/xml"
 
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
 )
 
 type XmlEncoder struct{}
 
-func (e XmlEncoder) Encode(a generic.Any) ([]byte, error) {
-	return xml.Marshal(a)
+func (e XmlEncoder) Encode(a g.Any) g.Either {
+	return toEither(xml.Marshal(a))
 }
