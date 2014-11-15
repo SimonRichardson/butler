@@ -38,20 +38,3 @@ func Output(server g.Either) g.Either {
 		},
 	)
 }
-
-func templateError() []mark {
-	return []mark{
-		h1(link("Butler", "http://github.com/simonrichardson/butler")),
-		h3(str("Serving you content in a monadic style.")),
-		hr1(),
-		h2(str("ERROR:")),
-		p(str("Failed to build the markdown document, errors:")),
-	}
-}
-
-func templateFailures(x g.List) []mark {
-	return asMarks(x.FoldLeft([]mark{}, func(a, b g.Any) g.Any {
-		value := g.AsEither(b).Fold(g.Identity(), g.Identity())
-		return append(asMarks(a), ul(str(value.(string))))
-	}))
-}
