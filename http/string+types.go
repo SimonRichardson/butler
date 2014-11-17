@@ -1,55 +1,44 @@
 package http
 
-import g "github.com/SimonRichardson/butler/generic"
+import (
+	"regexp"
+
+	g "github.com/SimonRichardson/butler/generic"
+)
+
+var (
+	headerNameChar  *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z0-9\-!"#$%&'^*+| ]$`)
+	headerValueChar *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z0-9\-!"#$%&'^*+| /]$`)
+	pathChar        *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z0-9/:]$`)
+	urlChar         *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z0-9]$`)
+)
 
 func AnyChar() func(byte) g.Either {
-	return func(r byte) g.Either {
-		return g.NewRight(r)
+	return func(b byte) g.Either {
+		return g.NewRight(b)
 	}
 }
 
 func HeaderNameChar() func(byte) g.Either {
-	return func(r byte) g.Either {
-		switch {
-		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
-			fallthrough
-		case r >= 32 && r <= 39 || r >= 94 && r <= 96:
-			fallthrough
-		case r == 42 || r == 43 || r == 45 || r == 46 || r == 124:
-			return g.NewRight(r)
-		}
-		return g.NewLeft(r)
+	return func(b byte) g.Either {
+		return g.Either_.FromBool(headerNameChar.MatchString(string(b)), b)
 	}
 }
 
 func HeaderValueChar() func(byte) g.Either {
-	return func(r byte) g.Either {
-		switch {
-		case r >= 32 && r <= 126:
-			return g.NewRight(r)
-		}
-		return g.NewLeft(r)
+	return func(b byte) g.Either {
+		return g.Either_.FromBool(headerValueChar.MatchString(string(b)), b)
 	}
 }
 
 func PathChar() func(byte) g.Either {
-	return func(r byte) g.Either {
-		switch {
-		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
-			fallthrough
-		case r == 47 || r == 58:
-			return g.NewRight(r)
-		}
-		return g.NewLeft(r)
+	return func(b byte) g.Either {
+		return g.Either_.FromBool(pathChar.MatchString(string(b)), b)
 	}
 }
 
 func UrlChar() func(byte) g.Either {
-	return func(r byte) g.Either {
-		switch {
-		case r >= 48 && r <= 57 || r >= 65 && r <= 90 || r >= 97 && r <= 122:
-			return g.NewRight(r)
-		}
-		return g.NewLeft(r)
+	return func(b byte) g.Either {
+		return g.Either_.FromBool(urlChar.MatchString(string(b)), b)
 	}
 }
