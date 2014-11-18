@@ -1,8 +1,6 @@
 package butler
 
-import (
-	g "github.com/SimonRichardson/butler/generic"
-)
+import g "github.com/SimonRichardson/butler/generic"
 
 type service struct {
 	request  request
@@ -25,9 +23,10 @@ func (s service) Then(f func(map[string]g.Any) g.Any) service {
 	}
 }
 
-func (s service) Build() g.StateT {
+func (s service) Request() g.StateT {
 	return s.request.Build()
-	/*.
-	Chain(g.Get()).
-	Chain(g.Merge(s.response.Build()))*/
+}
+
+func (s service) Response() g.StateT {
+	return s.response.Build()
 }

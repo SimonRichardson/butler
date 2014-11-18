@@ -3,7 +3,8 @@ package butler
 import g "github.com/SimonRichardson/butler/generic"
 
 type Server struct {
-	requests g.List
+	requests  g.List
+	responses g.List
 }
 
 func (s Server) Run(request RemoteRequest) g.Promise {
@@ -14,6 +15,10 @@ func (s Server) Requests() g.List {
 	return s.requests
 }
 
+func (s Server) Responses() g.List {
+	return s.responses
+}
+
 func Compile(x service) g.Either {
 	var (
 		writer = g.Writer_.Of(g.Empty{})
@@ -21,15 +26,38 @@ func Compile(x service) g.Either {
 			x, y := g.AsWriter(a).Run()
 			return g.NewTuple2(flatten(g.AsTuple2(x)), y)
 		}
-		request  = g.AsEither(x.Build().ExecState(writer)).Bimap(run, run)
+
+		request  = g.AsEither(x.Request().ExecState(writer)).Bimap(run, run)
 		requests = g.AsEither(request)
+
+		response  = g.AsEither(x.Response().ExecState(writer)).Bimap(run, run)
+		responses = g.AsEither(response)
 	)
-	return requests.Map(func(y g.Any) g.Any {
-		z := g.AsTuple2(y)
-		return Server{
-			requests: g.AsList(z.Fst()),
-		}
-	})
+
+	return requests.Fold(
+		func(x g.Any) g.Any {
+			return g.NewLeft(x)
+		},
+		func(a g.Any) g.Any {
+			b := g.AsTuple2(a)
+			return responses.Map(func(x g.Any) g.Any {
+				y := g.AsTuple2(x)
+				return Server{
+					requests:  g.AsList(b.Fst()),
+					responses: g.AsList(y.Fst()),
+				}
+			})
+		},
+	).(g.Either)
+
+	/*
+		return requests.Map(func(y g.Any) g.Any {
+			z := g.AsTuple2(y)
+			return Server{
+				requests: g.AsList(z.Fst()),
+			}
+		})
+	*/
 }
 
 func validateRequests(a g.List) g.List {
