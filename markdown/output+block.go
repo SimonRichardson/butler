@@ -162,6 +162,12 @@ func ul(values ...mark) block {
 	}
 }
 
+func ul०p(values ...mark) block {
+	return block{
+		nodes: fromMarks(append(singleton(Plus), values...)),
+	}
+}
+
 func ol(values ...mark) block {
 	return block{
 		nodes: fromMarks(append(singleton(Ordered), values...)),

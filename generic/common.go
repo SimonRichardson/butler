@@ -8,6 +8,10 @@ func AsList(x Any) List {
 	return x.(List)
 }
 
+func AsOption(x Any) Option {
+	return x.(Option)
+}
+
 func AsStateT(x Any) StateT {
 	return x.(StateT)
 }

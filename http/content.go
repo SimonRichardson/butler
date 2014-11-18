@@ -30,28 +30,26 @@ func (c ContentEncoder) Build() g.StateT {
 		always = func(x g.Any) func(g.Any) g.Any {
 			return func(b g.Any) g.Any {
 				var (
-					encoder = asContentEncoder(b).encoder
-					name    = reflect.TypeOf(encoder).String()
+					encoder = asContentEncoder(b)
+					name    = reflect.TypeOf(encoder.encoder).String()
 				)
 				return g.NewTuple2(encoder, name)
 			}
 		}
-		values = func(hint func() g.Any) func(x g.Any) func(g.Any) g.Any {
-			return func(x g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					var (
-						tup = g.AsTuple2(b)
-						fst = tup.Fst().(output.Encoder)
-					)
-					return fst.Keys(hint()).Bimap(
-						func(x g.Any) g.Any {
-							return g.NewTuple2(tup.Snd(), "")
-						},
-						func(x g.Any) g.Any {
-							return g.NewTuple2(tup.Snd(), x)
-						},
-					)
-				}
+		values = func(x g.Any) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				var (
+					tup = g.AsTuple2(b)
+					fst = tup.Fst().(ContentEncoder)
+				)
+				return fst.Keys().Bimap(
+					func(x g.Any) g.Any {
+						return g.NewTuple2(tup.Snd(), "")
+					},
+					func(x g.Any) g.Any {
+						return g.NewTuple2(tup.Snd(), x)
+					},
+				)
 			}
 		}
 		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
@@ -86,7 +84,11 @@ func (c ContentEncoder) Build() g.StateT {
 		Chain(modify(g.Constant1)).
 		Chain(modify(always)).
 		Chain(g.Get()).
-		Chain(modify(values(c.hint))).
+		Chain(modify(values)).
 		Chain(modify(api(c.Api))).
 		Chain(finalise(c))
+}
+
+func (c ContentEncoder) Keys() g.Either {
+	return c.encoder.Keys(c.hint())
 }

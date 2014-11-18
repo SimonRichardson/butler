@@ -25,7 +25,7 @@ func main() {
 		QueryInt("limit")
 
 	response := Butler().
-		ContentType("application/jsonp").
+		ContentType("application/json").
 		Content(output.JsonEncoder{}, g.Constant(hint))
 
 	listEmployees := Service(request, response).Then(func(args map[string]g.Any) g.Any {

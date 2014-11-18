@@ -77,3 +77,14 @@ func (x either) FromBool(b bool, val Any) Either {
 	}
 	return NewLeft(val)
 }
+
+func (x either) ToOption(a Either) Option {
+	return AsOption(a.Fold(
+		func(Any) Any {
+			return Option_.Empty()
+		},
+		func(x Any) Any {
+			return Option_.Of(x)
+		},
+	))
+}

@@ -8,9 +8,9 @@ import (
 const (
 	DefaultString string = ""
 
-	DefaultMethod  string = "GET"
-	DefaultPath    string = "/"
-	DefaultContent string = ""
+	DefaultMethod      string = "GET"
+	DefaultPath        string = "/"
+	DefaultContentType string = ""
 )
 
 type mark interface {

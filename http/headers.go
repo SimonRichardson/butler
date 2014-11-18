@@ -53,6 +53,14 @@ func (h Header) Build() g.StateT {
 		Chain(modify(api(h.Api)))
 }
 
+func (h Header) Name() string {
+	return h.name.value
+}
+
+func (h Header) Value() string {
+	return h.value.value
+}
+
 func (h Header) String() string {
 	return fmt.Sprintf("%s: %s", h.name, h.value)
 }

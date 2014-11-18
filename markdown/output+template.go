@@ -49,14 +49,44 @@ func templateRoute(requests, responses g.List) []mark {
 		method     = getMethod(requests).GetOrElse(g.Constant(DefaultMethod))
 		path       = getRoute(requests).GetOrElse(g.Constant(DefaultPath))
 		reqHeaders = getHeaders(requests).Map(func(x g.Any) g.Any {
-			return ul(inline(str(x.(http.Header).String())))
+			return ul(inline(str(fmt.Sprintf("`%s`", x.(http.Header).String()))))
 		})
 		resHeaders = getHeaders(responses).Map(func(x g.Any) g.Any {
-			return ul(inline(str(x.(http.Header).String())))
+			return ul(inline(str(fmt.Sprintf("`%s`", x.(http.Header).String()))))
 		})
-		content = getContent(responses).Map(func(x g.Any) g.Any {
-			return str("Content")
-		}).GetOrElse(g.Constant(nothing())).(mark)
+		empty = func() g.Any {
+			return nothing()
+		}
+		content = getContent(responses).Chain(func(x g.Any) g.Option {
+			var (
+				encoder = x.(http.ContentEncoder)
+				keys    = encoder.Keys()
+				toMark  = func(x g.Any) g.Any {
+					return g.AsList(x).Map(func(x g.Any) g.Any {
+						return ul०p(str(x.(string)))
+					})
+				}
+				toSlice = func(x g.Any) g.Any {
+					return g.List_.ToSlice(g.AsList(x))
+				}
+				toGroup = func(x g.Any) g.Any {
+					var (
+						val = x.([]g.Any)
+						num = len(val)
+						res = make([]mark, num, num)
+					)
+					for k, v := range val {
+						res[k] = v.(mark)
+					}
+					return group(res...)
+				}
+			)
+			return g.Either_.ToOption(keys).
+				Map(toMark).
+				Map(toSlice).
+				Map(toGroup)
+
+		}).GetOrElse(empty).(mark)
 	)
 	return []mark{
 		h4(
