@@ -11,15 +11,17 @@ import (
 type ContentEncoder struct {
 	doc.Api
 	encoder output.Encoder
+	hint    func() g.Any
 }
 
-func Content(encoder output.Encoder) ContentEncoder {
+func Content(encoder output.Encoder, hint func() g.Any) ContentEncoder {
 	return ContentEncoder{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected content encoder `%s`"),
-			doc.NewInlineText("Unexpected content encoder `%s`"),
+			doc.NewInlineText("Expected content encoder `%s` with keys `%s`"),
+			doc.NewInlineText("Unexpected content encoder `%s` with keys `%s`"),
 		)),
 		encoder: encoder,
+		hint:    hint,
 	}
 }
 
@@ -31,14 +33,36 @@ func (c ContentEncoder) Build() g.StateT {
 					encoder = asContentEncoder(b).encoder
 					name    = reflect.TypeOf(encoder).String()
 				)
-				return g.Either_.Of(name)
+				return g.NewTuple2(encoder, name)
+			}
+		}
+		values = func(hint func() g.Any) func(x g.Any) func(g.Any) g.Any {
+			return func(x g.Any) func(g.Any) g.Any {
+				return func(b g.Any) g.Any {
+					var (
+						tup = g.AsTuple2(b)
+						fst = tup.Fst().(output.Encoder)
+					)
+					return fst.Keys(hint()).Bimap(
+						func(x g.Any) g.Any {
+							return g.NewTuple2(tup.Snd(), "")
+						},
+						func(x g.Any) g.Any {
+							return g.NewTuple2(tup.Snd(), x)
+						},
+					)
+				}
 			}
 		}
 		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
 			return func(g.Any) func(g.Any) g.Any {
 				return func(a g.Any) g.Any {
 					sum := func(a g.Any) g.Any {
-						return singleton(a)
+						tup := g.AsTuple2(a)
+						return []g.Any{
+							tup.Fst(),
+							g.List_.ToSlice(g.AsList(tup.Snd())),
+						}
 					}
 					return api.Run(g.AsEither(a).Bimap(sum, sum))
 				}
@@ -61,6 +85,8 @@ func (c ContentEncoder) Build() g.StateT {
 	return g.StateT_.Of(c).
 		Chain(modify(g.Constant1)).
 		Chain(modify(always)).
+		Chain(g.Get()).
+		Chain(modify(values(c.hint))).
 		Chain(modify(api(c.Api))).
 		Chain(finalise(c))
 }

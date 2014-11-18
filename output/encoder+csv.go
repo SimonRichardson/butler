@@ -16,6 +16,16 @@ const (
 
 type CsvEncoder struct{}
 
+func (e CsvEncoder) Keys(a g.Any) g.Either {
+	return getAllTags(a).Map(func(x g.Any) g.Any {
+		return g.AsList(x).Map(func(x g.Any) g.Any {
+			return x.(reflect.StructTag).Get("csv")
+		}).Filter(func(x g.Any) bool {
+			return x.(string) != ""
+		})
+	})
+}
+
 func (e CsvEncoder) Encode(a g.Any) g.Either {
 	var (
 		buffer  *bytes.Buffer

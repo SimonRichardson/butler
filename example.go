@@ -8,7 +8,14 @@ import (
 	"github.com/SimonRichardson/butler/output"
 )
 
+type User struct {
+	FirstName string `json:"first-name"`
+	LastName  string `json:"last-name"`
+}
+
 func main() {
+
+	hint := User{}
 
 	request := Butler().
 		Get().
@@ -18,8 +25,8 @@ func main() {
 		QueryInt("limit")
 
 	response := Butler().
-		ContentType("application/json").
-		Content(output.HtmlEncoder{})
+		ContentType("application/jsonp").
+		Content(output.JsonEncoder{}, g.Constant(hint))
 
 	listEmployees := Service(request, response).Then(func(args map[string]g.Any) g.Any {
 		loadAllEmployees := func(x int) g.Any {

@@ -44,13 +44,19 @@ func templateFailures(x g.List) []mark {
 	}))
 }
 
-func templateRoute(list g.List) []mark {
+func templateRoute(requests, responses g.List) []mark {
 	var (
-		method  = getMethod(list).GetOrElse(g.Constant(DefaultMethod))
-		path    = getRoute(list).GetOrElse(g.Constant(DefaultPath))
-		headers = getHeaders(list).Map(func(x g.Any) g.Any {
+		method     = getMethod(requests).GetOrElse(g.Constant(DefaultMethod))
+		path       = getRoute(requests).GetOrElse(g.Constant(DefaultPath))
+		reqHeaders = getHeaders(requests).Map(func(x g.Any) g.Any {
 			return ul(inline(str(x.(http.Header).String())))
 		})
+		resHeaders = getHeaders(responses).Map(func(x g.Any) g.Any {
+			return ul(inline(str(x.(http.Header).String())))
+		})
+		content = getContent(responses).Map(func(x g.Any) g.Any {
+			return str("Content")
+		}).GetOrElse(g.Constant(nothing())).(mark)
 	)
 	return []mark{
 		h4(
@@ -63,7 +69,7 @@ func templateRoute(list g.List) []mark {
 		ul(
 			str("Request"),
 			ul(
-				append([]mark{str("Headers")}, toMarks(headers)...)...,
+				append([]mark{str("Headers")}, toMarks(reqHeaders)...)...,
 			),
 			ul(
 				str("Body"),
@@ -72,10 +78,10 @@ func templateRoute(list g.List) []mark {
 		ul(
 			str("Response"),
 			ul(
-				str("Headers"),
+				append([]mark{str("Headers")}, toMarks(resHeaders)...)...,
 			),
 			ul(
-				str("Body"),
+				append([]mark{str("Body")}, content)...,
 			),
 		),
 	}
@@ -98,6 +104,13 @@ func getRoute(x g.List) g.Option {
 func getHeaders(x g.List) g.List {
 	return x.Filter(func(a g.Any) bool {
 		_, ok := a.(http.Header)
+		return ok
+	})
+}
+
+func getContent(x g.List) g.Option {
+	return x.Find(func(a g.Any) bool {
+		_, ok := a.(http.ContentEncoder)
 		return ok
 	})
 }

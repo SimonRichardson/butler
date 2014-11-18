@@ -1,31 +1,31 @@
 package butler
 
 import (
-	"github.com/SimonRichardson/butler/generic"
+	g "github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/http"
 	"github.com/SimonRichardson/butler/output"
 )
 
 func Butler() builder {
 	return builder{
-		list: generic.NewNil(),
+		list: g.NewNil(),
 	}
 }
 
 type builder struct {
-	list generic.List
+	list g.List
 }
 
-func add(b builder, x generic.Any) builder {
+func add(b builder, x g.Any) builder {
 	return builder{
-		list: generic.NewCons(x, b.list),
+		list: g.NewCons(x, b.list),
 	}
 }
 
 // Content
 
-func (b builder) Content(encoder output.Encoder) builder {
-	return add(b, http.Content(encoder))
+func (b builder) Content(encoder output.Encoder, hint func() g.Any) builder {
+	return add(b, http.Content(encoder, hint))
 }
 
 // Headers

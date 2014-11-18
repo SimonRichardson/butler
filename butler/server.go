@@ -49,15 +49,6 @@ func Compile(x service) g.Either {
 			})
 		},
 	).(g.Either)
-
-	/*
-		return requests.Map(func(y g.Any) g.Any {
-			z := g.AsTuple2(y)
-			return Server{
-				requests: g.AsList(z.Fst()),
-			}
-		})
-	*/
 }
 
 func validateRequests(a g.List) g.List {
@@ -73,7 +64,7 @@ func flatten(a g.Tuple2) g.List {
 				b,
 			)
 		} else {
-			return l
+			return g.NewCons(t.Snd(), l)
 		}
 	}
 	return rec(g.List_.Empty(), a)

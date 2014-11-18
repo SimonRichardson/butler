@@ -8,8 +8,9 @@ import (
 const (
 	DefaultString string = ""
 
-	DefaultMethod string = "GET"
-	DefaultPath   string = "/"
+	DefaultMethod  string = "GET"
+	DefaultPath    string = "/"
+	DefaultContent string = ""
 )
 
 type mark interface {
@@ -31,8 +32,11 @@ func Output(server g.Either) g.Either {
 		},
 		func(x g.Any) g.Any {
 			var (
-				route = templateRoute(butler.AsServer(x).Requests())
-				doc   = document(append(templateHeader(), append(route, templateFooter()...)...)...)
+				server    = butler.AsServer(x)
+				requests  = server.Requests()
+				responses = server.Responses()
+				route     = templateRoute(requests, responses)
+				doc       = document(append(templateHeader(), append(route, templateFooter()...)...)...)
 			)
 			return doc.String()
 		},
