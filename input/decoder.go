@@ -5,5 +5,6 @@ import (
 )
 
 type Decoder interface {
-	Decode(a g.Any) (g.Any, error)
+	Keys(g.Any) g.Either
+	Decode(a g.Any) g.Either
 }

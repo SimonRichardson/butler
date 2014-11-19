@@ -17,8 +17,8 @@ type ContentEncoder struct {
 func Content(encoder output.Encoder, hint func() g.Any) ContentEncoder {
 	return ContentEncoder{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected content encoder `%s` with keys `%s`"),
-			doc.NewInlineText("Unexpected content encoder `%s` with keys `%s`"),
+			doc.NewInlineText("Expected content encoder `%s` with example output `%s`"),
+			doc.NewInlineText("Unexpected content encoder `%s` with example output `%s`"),
 		)),
 		encoder: encoder,
 		hint:    hint,
@@ -42,7 +42,7 @@ func (c ContentEncoder) Build() g.StateT {
 					tup = g.AsTuple2(b)
 					fst = tup.Fst().(ContentEncoder)
 				)
-				return fst.Keys().Bimap(
+				return fst.Generate().Bimap(
 					func(x g.Any) g.Any {
 						return g.NewTuple2(tup.Snd(), "")
 					},
@@ -56,11 +56,7 @@ func (c ContentEncoder) Build() g.StateT {
 			return func(g.Any) func(g.Any) g.Any {
 				return func(a g.Any) g.Any {
 					sum := func(a g.Any) g.Any {
-						tup := g.AsTuple2(a)
-						return []g.Any{
-							tup.Fst(),
-							g.List_.ToSlice(g.AsList(tup.Snd())),
-						}
+						return g.AsTuple2(a).Slice()
 					}
 					return api.Run(g.AsEither(a).Bimap(sum, sum))
 				}
@@ -89,6 +85,6 @@ func (c ContentEncoder) Build() g.StateT {
 		Chain(finalise(c))
 }
 
-func (c ContentEncoder) Keys() g.Either {
-	return c.encoder.Keys(c.hint())
+func (c ContentEncoder) Generate() g.Either {
+	return c.encoder.Generate(c.hint())
 }

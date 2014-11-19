@@ -24,3 +24,7 @@ func (e HtmlEncoder) Encode(a g.Any) g.Either {
 	}
 	return g.NewRight(buffer.Bytes())
 }
+
+func (e HtmlEncoder) Generate(x g.Any) g.Either {
+	return generate(e)(x)
+}
