@@ -38,8 +38,12 @@ var (
 	Ordered        *blockType = newBlockType("1.")
 )
 
-func (b *blockType) IsBlock() bool {
+func (b *blockType) IsBlockStart() bool {
 	return false
+}
+
+func (b *blockType) IsBlockFinish() bool {
+	return b == MultilineClose
 }
 
 func (b *blockType) Children() g.Option {
@@ -57,7 +61,7 @@ func (b *blockType) String() string {
 	case MultilineOpen:
 		return fmt.Sprintf("%s\n", b.value)
 	case MultilineClose:
-		return fmt.Sprintf("\n%s", b.value)
+		return fmt.Sprintf("%s", b.value)
 	}
 	return b.value
 }
@@ -66,7 +70,11 @@ type block struct {
 	nodes g.List
 }
 
-func (b block) IsBlock() bool {
+func (b block) IsBlockStart() bool {
+	return true
+}
+
+func (b block) IsBlockFinish() bool {
 	return true
 }
 

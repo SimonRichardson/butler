@@ -20,7 +20,11 @@ var (
 	Code *inlineType = newInlineType("`")
 )
 
-func (b *inlineType) IsBlock() bool {
+func (b *inlineType) IsBlockStart() bool {
+	return false
+}
+
+func (b *inlineType) IsBlockFinish() bool {
 	return false
 }
 
@@ -38,7 +42,11 @@ type inline struct {
 	value string
 }
 
-func (b inline) IsBlock() bool {
+func (b inline) IsBlockStart() bool {
+	return false
+}
+
+func (b inline) IsBlockFinish() bool {
 	return false
 }
 

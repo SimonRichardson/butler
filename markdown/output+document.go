@@ -10,7 +10,11 @@ type Document struct {
 	List g.Tree
 }
 
-func (d Document) IsBlock() bool {
+func (d Document) IsBlockStart() bool {
+	return true
+}
+
+func (d Document) IsBlockFinish() bool {
 	return true
 }
 
@@ -25,8 +29,10 @@ func (d Document) String() string {
 			y = b.(depthNode)
 			z = y.node.String()
 		)
-		if y.node.IsBlock() {
+		if y.node.IsBlockStart() {
 			return fmt.Sprintf("%s\n%s\n%s", x, z, indent(y.depth))
+		} else if y.node.IsBlockFinish() {
+			return fmt.Sprintf("%s\n%s%s", x, indent(y.depth-1), z)
 		} else {
 			return fmt.Sprintf("%s%s", x, z)
 		}

@@ -14,7 +14,8 @@ const (
 )
 
 type mark interface {
-	IsBlock() bool
+	IsBlockStart() bool
+	IsBlockFinish() bool
 	Children() g.Option
 	String() string
 }
