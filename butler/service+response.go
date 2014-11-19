@@ -8,7 +8,7 @@ type response struct {
 	list g.List
 }
 
-func Response(list g.List) response {
+func ServiceResponse(list g.List) response {
 	return response{
 		list: list,
 	}

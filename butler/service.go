@@ -10,8 +10,8 @@ type service struct {
 
 func Service(request, response builder) service {
 	return service{
-		request:  Request(request.list),
-		response: Response(response.list),
+		request:  ServiceRequest(request.list),
+		response: ServiceResponse(response.list),
 	}
 }
 

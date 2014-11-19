@@ -6,7 +6,7 @@ type request struct {
 	list g.List
 }
 
-func Request(list g.List) request {
+func ServiceRequest(list g.List) request {
 	return request{
 		list: list,
 	}
