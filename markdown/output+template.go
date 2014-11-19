@@ -66,6 +66,9 @@ func templateRoute(requests, responses g.List) []mark {
 			ul(
 				append([]mark{str("Body")}, renderResponseContent(responses))...,
 			),
+			ul(
+				append([]mark{str("Example")}, renderResponseExample(responses))...,
+			),
 		),
 	}
 }
@@ -121,11 +124,18 @@ func renderRequestHeaders(requests g.List) []mark {
 	return toMarks(headers)
 }
 
-func renderRequestContent(requests g.List) mark {
-	return getContent(requests).Chain(func(x g.Any) g.Option {
+func renderResponseHeaders(responses g.List) []mark {
+	headers := getHeaders(responses).Map(func(x g.Any) g.Any {
+		return ul(inline(str(fmt.Sprintf("`%s`", x.(http.Header).String()))))
+	})
+	return toMarks(headers)
+}
+
+func renderResponseContent(responses g.List) mark {
+	return getContent(responses).Chain(func(x g.Any) g.Option {
 		var (
 			encoder  = x.(http.ContentEncoder)
-			generate = encoder.Generate()
+			generate = encoder.Keys()
 			toMark   = func(x g.Any) g.Any {
 				return g.AsList(x).Map(func(x g.Any) g.Any {
 					return ul०p(str(x.(string)))
@@ -154,14 +164,7 @@ func renderRequestContent(requests g.List) mark {
 	}).GetOrElse(empty).(mark)
 }
 
-func renderResponseHeaders(responses g.List) []mark {
-	headers := getHeaders(responses).Map(func(x g.Any) g.Any {
-		return ul(inline(str(fmt.Sprintf("`%s`", x.(http.Header).String()))))
-	})
-	return toMarks(headers)
-}
-
-func renderResponseContent(responses g.List) mark {
+func renderResponseExample(responses g.List) mark {
 	return getContent(responses).Chain(func(x g.Any) g.Option {
 		var (
 			encoder  = x.(http.ContentEncoder)

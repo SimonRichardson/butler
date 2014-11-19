@@ -4,8 +4,8 @@ import (
 	"fmt"
 	. "github.com/SimonRichardson/butler/butler"
 	g "github.com/SimonRichardson/butler/generic"
+	"github.com/SimonRichardson/butler/io"
 	"github.com/SimonRichardson/butler/markdown"
-	"github.com/SimonRichardson/butler/output"
 )
 
 type User struct {
@@ -18,7 +18,7 @@ func main() {
 	hint := User{}
 
 	request := Butler().
-		Get().
+		Post().
 		Path("/name/:id").
 		ContentType("application/json").
 		AcceptLanguage("en").
@@ -26,7 +26,7 @@ func main() {
 
 	response := Butler().
 		ContentType("application/json").
-		Content(output.JsonEncoder{}, g.Constant(hint))
+		Content(io.JsonEncoder{}, g.Constant(hint))
 
 	listEmployees := Service(request, response).Then(func(args map[string]g.Any) g.Any {
 		loadAllEmployees := func(x int) g.Any {

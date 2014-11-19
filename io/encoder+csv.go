@@ -1,4 +1,4 @@
-package output
+package io
 
 import (
 	"bytes"
@@ -56,6 +56,10 @@ func (e CsvEncoder) Encode(a g.Any) g.Either {
 
 	writer.Flush()
 	return g.NewRight(buffer.Bytes())
+}
+
+func (e CsvEncoder) Keys(a g.Any) g.Either {
+	return getAllTagsByName(a, "csv")
 }
 
 func (e CsvEncoder) Generate(x g.Any) g.Either {

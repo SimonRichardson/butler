@@ -5,16 +5,16 @@ import (
 
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
-	"github.com/SimonRichardson/butler/output"
+	"github.com/SimonRichardson/butler/io"
 )
 
 type ContentEncoder struct {
 	doc.Api
-	encoder output.Encoder
+	encoder io.Encoder
 	hint    func() g.Any
 }
 
-func Content(encoder output.Encoder, hint func() g.Any) ContentEncoder {
+func Content(encoder io.Encoder, hint func() g.Any) ContentEncoder {
 	return ContentEncoder{
 		Api: doc.NewApi(doc.NewDocTypes(
 			doc.NewInlineText("Expected content encoder `%s` with example output `%s`"),
@@ -83,6 +83,10 @@ func (c ContentEncoder) Build() g.StateT {
 		Chain(modify(values)).
 		Chain(modify(api(c.Api))).
 		Chain(finalise(c))
+}
+
+func (c ContentEncoder) Keys() g.Either {
+	return c.encoder.Keys(c.hint())
 }
 
 func (c ContentEncoder) Generate() g.Either {

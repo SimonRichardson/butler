@@ -1,4 +1,4 @@
-package output
+package io
 
 import (
 	g "github.com/SimonRichardson/butler/generic"

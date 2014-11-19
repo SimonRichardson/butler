@@ -3,7 +3,7 @@ package butler
 import (
 	g "github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/http"
-	"github.com/SimonRichardson/butler/output"
+	"github.com/SimonRichardson/butler/io"
 )
 
 func Butler() builder {
@@ -24,7 +24,7 @@ func add(b builder, x g.Any) builder {
 
 // Content
 
-func (b builder) Content(encoder output.Encoder, hint func() g.Any) builder {
+func (b builder) Content(encoder io.Encoder, hint func() g.Any) builder {
 	return add(b, http.Content(encoder, hint))
 }
 

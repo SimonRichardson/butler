@@ -1,4 +1,4 @@
-package output
+package io
 
 import (
 	"math/rand"

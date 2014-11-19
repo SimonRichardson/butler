@@ -1,4 +1,4 @@
-package output
+package io
 
 import (
 	"bytes"
@@ -23,6 +23,10 @@ func (e HtmlEncoder) Encode(a g.Any) g.Either {
 		return g.NewLeft(err)
 	}
 	return g.NewRight(buffer.Bytes())
+}
+
+func (e HtmlEncoder) Keys(a g.Any) g.Either {
+	return g.NewLeft(a)
 }
 
 func (e HtmlEncoder) Generate(x g.Any) g.Either {

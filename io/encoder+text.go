@@ -1,4 +1,4 @@
-package output
+package io
 
 import (
 	"bytes"
@@ -20,6 +20,10 @@ func (e TextEncoder) Encode(a g.Any) g.Either {
 		return g.NewLeft(err)
 	}
 	return g.NewRight(buffer.Bytes())
+}
+
+func (e TextEncoder) Keys(a g.Any) g.Either {
+	return g.NewLeft(a)
 }
 
 func (e TextEncoder) Generate(x g.Any) g.Either {
