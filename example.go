@@ -18,14 +18,14 @@ func main() {
 
 	hint := User{}
 
-	request := Butler().
+	request := Request().
 		Post().
 		Path("/name/:id").
 		ContentType("application/json").
 		AcceptLanguage("en").
 		QueryInt("limit")
 
-	response := Butler().
+	response := Response().
 		ContentType("application/json").
 		Content(io.JsonEncoder{}, g.Constant(hint))
 

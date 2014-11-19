@@ -8,10 +8,10 @@ type service struct {
 	callable func(map[string]g.Any) g.Any
 }
 
-func Service(request, response builder) service {
+func Service(request, response Builder) service {
 	return service{
-		request:  ServiceRequest(request.list),
-		response: ServiceResponse(response.list),
+		request:  ServiceRequest(request.List()),
+		response: ServiceResponse(response.List()),
 	}
 }
 

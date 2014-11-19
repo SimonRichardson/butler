@@ -64,7 +64,7 @@ func templateRoute(requests, responses g.List) []mark {
 				append([]mark{str("Headers")}, renderResponseHeaders(responses)...)...,
 			),
 			ul(
-				append([]mark{str("Body")}, renderResponseContent(responses))...,
+				append([]mark{str("Content")}, renderResponseContent(responses))...,
 			),
 			ul(
 				append([]mark{str("Example")}, renderResponseExample(responses))...,

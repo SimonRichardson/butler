@@ -18,6 +18,10 @@ func constant(a g.StateT) func(g.Any) g.StateT {
 
 // Common aliases
 
+func asContentDecoder(x g.Any) ContentDecoder {
+	return x.(ContentDecoder)
+}
+
 func asContentEncoder(x g.Any) ContentEncoder {
 	return x.(ContentEncoder)
 }
