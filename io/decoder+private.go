@@ -12,7 +12,11 @@ func getAllTags(a g.Any) g.Either {
 		if i >= t.NumField() {
 			return l
 		}
-		return rec(g.NewCons(t.Field(i).Tag, l), t, i+1)
+		var (
+			field = t.Field(i)
+			tuple = g.NewTuple2(field.Type, field.Tag)
+		)
+		return rec(g.NewCons(tuple, l), t, i+1)
 	}
 
 	elem := reflect.TypeOf(a)
@@ -23,16 +27,33 @@ func getAllTags(a g.Any) g.Either {
 
 func getAllTagsByName(a g.Any, b string) g.Either {
 	var (
-		isEmpty = func(x g.Any) bool {
-			return x.(string) != ""
-		}
 		get = func(x g.Any) g.Any {
-			return x.(reflect.StructTag).Get(b)
+			var (
+				tuple = g.AsTuple2(x)
+				tag   = tuple.Snd().(reflect.StructTag)
+			)
+			return g.NewTuple2(tuple.Fst(), tag.Get(b))
+		}
+		isEmpty = func(x g.Any) bool {
+			var (
+				tuple = g.AsTuple2(x)
+				str   = tuple.Snd().(string)
+			)
+			return str != ""
+		}
+		stringify = func(x g.Any) g.Any {
+			var (
+				tuple = g.AsTuple2(x)
+				a     = tuple.Fst().(reflect.Type)
+				b     = tuple.Snd().(string)
+			)
+			return g.NewTuple2(a.String(), b)
 		}
 		filter = func(x g.Any) g.Any {
 			return g.AsList(x).
 				Map(get).
-				Filter(isEmpty)
+				Filter(isEmpty).
+				Map(stringify)
 		}
 	)
 	return getAllTags(a).

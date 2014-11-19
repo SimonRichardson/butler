@@ -138,7 +138,11 @@ func renderResponseContent(responses g.List) mark {
 			generate = encoder.Keys()
 			toMark   = func(x g.Any) g.Any {
 				return g.AsList(x).Map(func(x g.Any) g.Any {
-					return ul०p(str(x.(string)))
+					var (
+						tuple = g.AsTuple2(x)
+						value = fmt.Sprintf("%s [%s]", tuple.Snd(), tuple.Fst())
+					)
+					return ul०p(str(value))
 				})
 			}
 			toSlice = func(x g.Any) g.Any {
