@@ -6,13 +6,24 @@ import (
 	g "github.com/SimonRichardson/butler/generic"
 )
 
-type XmlDecoder struct{}
-
-func (e XmlDecoder) Keys(a g.Any) g.Either {
-	return getAllTagsByName(a, "xml")
+type xmlDecoder struct {
+	create func() g.Any
 }
 
-func (e XmlDecoder) Decode(a []byte, b g.Any) (g.Any, error) {
-	err := xml.Unmarshal(a, &b)
-	return b, err
+func XmlDecoder(create func() g.Any) xmlDecoder {
+	return xmlDecoder{
+		create: create,
+	}
+}
+
+func (e xmlDecoder) Keys() g.Either {
+	return getAllTagsByName(e.create(), "xml")
+}
+
+func (e xmlDecoder) Decode(a []byte) g.Either {
+	b := e.create()
+	if err := xml.Unmarshal(a, &b); err != nil {
+		return g.NewLeft(err)
+	}
+	return g.NewRight(b)
 }

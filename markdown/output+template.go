@@ -55,7 +55,7 @@ func templateRoute(requests, responses g.List) []mark {
 				append([]mark{str("Headers")}, renderRequestHeaders(requests)...)...,
 			),
 			ul(
-				str("Body"),
+				append([]mark{str("Body")}, renderRequestBody(requests))...,
 			),
 		),
 		ul(
@@ -94,6 +94,13 @@ func getHeaders(x g.List) g.List {
 	})
 }
 
+func getBody(x g.List) g.Option {
+	return x.Find(func(a g.Any) bool {
+		_, ok := a.(http.ContentDecoder)
+		return ok
+	})
+}
+
 func getContent(x g.List) g.Option {
 	return x.Find(func(a g.Any) bool {
 		_, ok := a.(http.ContentEncoder)
@@ -122,6 +129,43 @@ func renderRequestHeaders(requests g.List) []mark {
 		return ul(inline(str(fmt.Sprintf("`%s`", x.(http.Header).String()))))
 	})
 	return toMarks(headers)
+}
+
+func renderRequestBody(requests g.List) mark {
+	return getBody(requests).Chain(func(x g.Any) g.Option {
+		var (
+			decoder  = x.(http.ContentDecoder)
+			generate = decoder.Keys()
+			toMark   = func(x g.Any) g.Any {
+				return g.AsList(x).Map(func(x g.Any) g.Any {
+					var (
+						tuple = g.AsTuple2(x)
+						value = fmt.Sprintf("%s [%s]", tuple.Snd(), tuple.Fst())
+					)
+					return ul०p(str(value))
+				})
+			}
+			toSlice = func(x g.Any) g.Any {
+				return g.List_.ToSlice(g.AsList(x))
+			}
+			toGroup = func(x g.Any) g.Any {
+				var (
+					val = x.([]g.Any)
+					num = len(val)
+					res = make([]mark, num, num)
+				)
+				for k, v := range val {
+					res[k] = v.(mark)
+				}
+				return group(res...)
+			}
+		)
+		return g.Either_.ToOption(generate).
+			Map(toMark).
+			Map(toSlice).
+			Map(toGroup)
+
+	}).GetOrElse(empty).(mark)
 }
 
 func renderResponseHeaders(responses g.List) []mark {

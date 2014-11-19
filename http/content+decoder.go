@@ -11,17 +11,15 @@ import (
 type ContentDecoder struct {
 	doc.Api
 	decoder io.Decoder
-	hint    func() g.Any
 }
 
-func Body(decoder io.Decoder, hint func() g.Any) ContentDecoder {
+func Body(decoder io.Decoder) ContentDecoder {
 	return ContentDecoder{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected content decoder `%s` with example output `%s`"),
-			doc.NewInlineText("Unexpected content decoder `%s` with example output `%s`"),
+			doc.NewInlineText("Expected content decoder `%s` with keys `%s`"),
+			doc.NewInlineText("Unexpected content decoder `%s` with keys `%s`"),
 		)),
 		decoder: decoder,
-		hint:    hint,
 	}
 }
 
@@ -36,11 +34,31 @@ func (c ContentDecoder) Build() g.StateT {
 				return g.NewTuple2(decoder, name)
 			}
 		}
+		values = func(x g.Any) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				var (
+					tup = g.AsTuple2(b)
+					fst = asContentDecoder(tup.Fst())
+				)
+				return fst.Keys().Bimap(
+					func(x g.Any) g.Any {
+						return g.NewTuple2(tup.Snd(), "")
+					},
+					func(x g.Any) g.Any {
+						return g.NewTuple2(tup.Snd(), x)
+					},
+				)
+			}
+		}
 		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
 			return func(g.Any) func(g.Any) g.Any {
 				return func(a g.Any) g.Any {
 					sum := func(a g.Any) g.Any {
-						return singleton(g.AsTuple2(a).Snd())
+						tup := g.AsTuple2(a)
+						return []g.Any{
+							tup.Fst(),
+							g.List_.ToSlice(g.AsList(tup.Snd())),
+						}
 					}
 					return api.Run(g.AsEither(a).Bimap(sum, sum))
 				}
@@ -63,10 +81,12 @@ func (c ContentDecoder) Build() g.StateT {
 	return g.StateT_.Of(c).
 		Chain(modify(g.Constant1)).
 		Chain(modify(always)).
+		Chain(g.Get()).
+		Chain(modify(values)).
 		Chain(modify(api(c.Api))).
 		Chain(finalise(c))
 }
 
 func (c ContentDecoder) Keys() g.Either {
-	return c.decoder.Keys(c.hint())
+	return c.decoder.Keys()
 }

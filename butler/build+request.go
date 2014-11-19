@@ -28,8 +28,8 @@ func (b req) add(x g.Any) req {
 
 // Body
 
-func (b req) Body(encoder io.Decoder, hint func() g.Any) req {
-	return b.add(http.Body(encoder, hint))
+func (b req) Body(encoder io.Decoder) req {
+	return b.add(http.Body(encoder))
 }
 
 // Headers

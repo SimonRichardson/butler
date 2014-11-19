@@ -16,14 +16,20 @@ type User struct {
 
 func main() {
 
-	hint := User{}
+	var (
+		hint   = User{}
+		create = func() g.Any {
+			return User{}
+		}
+	)
 
 	request := Request().
 		Post().
 		Path("/name/:id").
 		ContentType("application/json").
 		AcceptLanguage("en").
-		QueryInt("limit")
+		QueryInt("limit").
+		Body(io.JsonDecoder(create))
 
 	response := Response().
 		ContentType("application/json").
