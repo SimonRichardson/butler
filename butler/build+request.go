@@ -203,8 +203,16 @@ func (b req) Path(path string) req {
 
 // Query
 
+func (b req) Query(q http.RawQuery) req {
+	return b.add(q)
+}
+
 func (b req) QueryInt(name string) req {
 	return b.add(http.QueryInt(name))
+}
+
+func (b req) QueryUint(name string) req {
+	return b.add(http.QueryUint(name))
 }
 
 func (b req) QueryString(name string) req {

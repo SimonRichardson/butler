@@ -28,7 +28,8 @@ func main() {
 		Path("/name/:id").
 		ContentType("application/json").
 		AcceptLanguage("en").
-		QueryInt("limit").
+		QueryUint("offset").
+		QueryUint("limit").
 		Body(io.JsonDecoder(create))
 
 	response := Response().

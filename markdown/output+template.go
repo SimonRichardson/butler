@@ -52,22 +52,25 @@ func templateRoute(requests, responses g.List) []mark {
 		ul(
 			str("Request"),
 			ul(
-				append([]mark{str("Headers")}, renderRequestHeaders(requests)...)...,
+				append(singleton(str("Queries")), renderRequestQueries(requests))...,
 			),
 			ul(
-				append([]mark{str("Body")}, renderRequestBody(requests))...,
+				append(singleton(str("Headers")), renderRequestHeaders(requests)...)...,
+			),
+			ul(
+				append(singleton(str("Body")), renderRequestBody(requests))...,
 			),
 		),
 		ul(
 			str("Response"),
 			ul(
-				append([]mark{str("Headers")}, renderResponseHeaders(responses)...)...,
+				append(singleton(str("Headers")), renderResponseHeaders(responses)...)...,
 			),
 			ul(
-				append([]mark{str("Content")}, renderResponseContent(responses))...,
+				append(singleton(str("Content")), renderResponseContent(responses))...,
 			),
 			ul(
-				append([]mark{str("Example")}, renderResponseExample(responses))...,
+				append(singleton(str("Example")), renderResponseExample(responses))...,
 			),
 		),
 	}
@@ -94,6 +97,13 @@ func getHeaders(x g.List) g.List {
 	})
 }
 
+func getQueries(x g.List) g.List {
+	return x.Filter(func(a g.Any) bool {
+		_, ok := a.(http.Query)
+		return ok
+	})
+}
+
 func getBody(x g.List) g.Option {
 	return x.Find(func(a g.Any) bool {
 		_, ok := a.(http.ContentDecoder)
@@ -112,6 +122,38 @@ func empty() g.Any {
 	return nothing()
 }
 
+func extractContent(generate g.Either) g.Option {
+	var (
+		toMark = func(x g.Any) g.Any {
+			return g.AsList(x).Map(func(x g.Any) g.Any {
+				var (
+					tuple = g.AsTuple2(x)
+					value = fmt.Sprintf("%s [%s]", tuple.Snd(), tuple.Fst())
+				)
+				return ul०p(str(value))
+			})
+		}
+		toSlice = func(x g.Any) g.Any {
+			return g.List_.ToSlice(g.AsList(x))
+		}
+		toGroup = func(x g.Any) g.Any {
+			var (
+				val = x.([]g.Any)
+				num = len(val)
+				res = make([]mark, num, num)
+			)
+			for k, v := range val {
+				res[k] = v.(mark)
+			}
+			return group(res...)
+		}
+	)
+	return g.Either_.ToOption(generate).
+		Map(toMark).
+		Map(toSlice).
+		Map(toGroup)
+}
+
 func renderHeader(requests g.List) mark {
 	var (
 		method = getMethod(requests).GetOrElse(g.Constant(DefaultMethod))
@@ -122,6 +164,13 @@ func renderHeader(requests g.List) mark {
 		str(fmt.Sprintf("[%s] ", method)),
 		str(fmt.Sprintf("[%s]", path)),
 	)
+}
+
+func renderRequestQueries(requests g.List) mark {
+	queries := getQueries(requests).Map(func(x g.Any) g.Any {
+		return ul०p(str(fmt.Sprintf("%s", x.(http.Query).String())))
+	})
+	return group(toMarks(queries)...)
 }
 
 func renderRequestHeaders(requests g.List) []mark {
@@ -136,35 +185,8 @@ func renderRequestBody(requests g.List) mark {
 		var (
 			decoder  = x.(http.ContentDecoder)
 			generate = decoder.Keys()
-			toMark   = func(x g.Any) g.Any {
-				return g.AsList(x).Map(func(x g.Any) g.Any {
-					var (
-						tuple = g.AsTuple2(x)
-						value = fmt.Sprintf("%s [%s]", tuple.Snd(), tuple.Fst())
-					)
-					return ul०p(str(value))
-				})
-			}
-			toSlice = func(x g.Any) g.Any {
-				return g.List_.ToSlice(g.AsList(x))
-			}
-			toGroup = func(x g.Any) g.Any {
-				var (
-					val = x.([]g.Any)
-					num = len(val)
-					res = make([]mark, num, num)
-				)
-				for k, v := range val {
-					res[k] = v.(mark)
-				}
-				return group(res...)
-			}
 		)
-		return g.Either_.ToOption(generate).
-			Map(toMark).
-			Map(toSlice).
-			Map(toGroup)
-
+		return extractContent(generate)
 	}).GetOrElse(empty).(mark)
 }
 
@@ -180,35 +202,8 @@ func renderResponseContent(responses g.List) mark {
 		var (
 			encoder  = x.(http.ContentEncoder)
 			generate = encoder.Keys()
-			toMark   = func(x g.Any) g.Any {
-				return g.AsList(x).Map(func(x g.Any) g.Any {
-					var (
-						tuple = g.AsTuple2(x)
-						value = fmt.Sprintf("%s [%s]", tuple.Snd(), tuple.Fst())
-					)
-					return ul०p(str(value))
-				})
-			}
-			toSlice = func(x g.Any) g.Any {
-				return g.List_.ToSlice(g.AsList(x))
-			}
-			toGroup = func(x g.Any) g.Any {
-				var (
-					val = x.([]g.Any)
-					num = len(val)
-					res = make([]mark, num, num)
-				)
-				for k, v := range val {
-					res[k] = v.(mark)
-				}
-				return group(res...)
-			}
 		)
-		return g.Either_.ToOption(generate).
-			Map(toMark).
-			Map(toSlice).
-			Map(toGroup)
-
+		return extractContent(generate)
 	}).GetOrElse(empty).(mark)
 }
 

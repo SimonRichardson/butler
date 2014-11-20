@@ -1,24 +1,59 @@
 package http
 
 import (
+	"fmt"
+
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
 )
 
-type Query struct {
-	doc.Api
-	value String
-	build func(g.Any) g.Any
+type QueryType interface {
+	Type() string
 }
 
-func NewQuery(value string, build func(g.Any) g.Any) Query {
+type queryType struct {
+	value string
+}
+
+func newQueryType(val string) *queryType {
+	return &queryType{
+		value: val,
+	}
+}
+
+func (t *queryType) Type() string {
+	return t.value
+}
+
+var (
+	QDate     = newQueryType("date")
+	QDateTime = newQueryType("date-time")
+	QInt      = newQueryType("int")
+	QUint     = newQueryType("uint")
+	QString   = newQueryType("string")
+)
+
+type RawQuery interface {
+	Name() string
+	Type() string
+}
+
+type Query struct {
+	doc.Api
+	name      String
+	queryType QueryType
+	build     func(g.Any) g.Any
+}
+
+func NewQuery(name string, queryType QueryType, build func(g.Any) g.Any) Query {
 	return Query{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected query `%s`"),
-			doc.NewInlineText("Unexpected query `%s`"),
+			doc.NewInlineText("Expected query `%s` with type `%s`"),
+			doc.NewInlineText("Unexpected query `%s` with type `%s`"),
 		)),
-		value: NewString(value, UrlChar()),
-		build: build,
+		name:      NewString(name, UrlChar()),
+		queryType: queryType,
+		build:     build,
 	}
 }
 
@@ -36,8 +71,20 @@ func (q Query) Build() g.StateT {
 		}
 	)
 
-	return q.value.Build().
+	return q.name.Build().
 		Chain(g.Get()).
 		Chain(constant(g.StateT_.Of(q))).
 		Chain(modify(api(q.Api)))
+}
+
+func (q Query) Name() string {
+	return q.name.value
+}
+
+func (q Query) Type() string {
+	return q.queryType.Type()
+}
+
+func (q Query) String() string {
+	return fmt.Sprintf("%s [%s]", q.name, q.queryType.Type())
 }
