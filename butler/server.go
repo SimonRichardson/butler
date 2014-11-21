@@ -20,52 +20,12 @@ func (s Server) Responses() g.List {
 }
 
 func Compile(x service) g.Either {
-	var (
-		writer = g.Writer_.Of(g.Empty{})
-		run    = func(a g.Any) g.Any {
-			x, y := g.AsWriter(a).Run()
-			return g.NewTuple2(flatten(g.AsTuple2(x)), y)
+	// TODO Make this take multiple services.
+	return x.Compile().Map(func(x g.Any) g.Any {
+		tup := g.AsTuple2(x)
+		return Server{
+			requests:  g.AsList(tup.Fst()),
+			responses: g.AsList(tup.Snd()),
 		}
-
-		request  = g.AsEither(x.Request().ExecState(writer)).Bimap(run, run)
-		requests = g.AsEither(request)
-
-		response  = g.AsEither(x.Response().ExecState(writer)).Bimap(run, run)
-		responses = g.AsEither(response)
-	)
-
-	return requests.Fold(
-		func(x g.Any) g.Any {
-			return g.NewLeft(x)
-		},
-		func(a g.Any) g.Any {
-			b := g.AsTuple2(a)
-			return responses.Map(func(x g.Any) g.Any {
-				y := g.AsTuple2(x)
-				return Server{
-					requests:  g.AsList(b.Fst()),
-					responses: g.AsList(y.Fst()),
-				}
-			})
-		},
-	).(g.Either)
-}
-
-func validateRequests(a g.List) g.List {
-	return a
-}
-
-func flatten(a g.Tuple2) g.List {
-	var rec func(l g.List, t g.Tuple2) g.List
-	rec = func(l g.List, t g.Tuple2) g.List {
-		if b, ok := t.Fst().(g.Tuple2); ok {
-			return rec(
-				g.NewCons(t.Snd(), l),
-				b,
-			)
-		} else {
-			return g.NewCons(t.Snd(), l)
-		}
-	}
-	return rec(g.List_.Empty(), a)
+	})
 }

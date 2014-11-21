@@ -23,10 +23,31 @@ func (s service) Then(f func(map[string]g.Any) g.Any) service {
 	}
 }
 
-func (s service) Request() g.StateT {
-	return s.request.Build()
-}
+func (s service) Compile() g.Either {
+	var (
+		writer = g.Writer_.Of(g.Empty{})
+		run    = func(a g.Any) g.Any {
+			x, y := g.AsWriter(a).Run()
+			return g.NewTuple2(flatten(g.AsTuple2(x)), y)
+		}
+		exec = func(b Build) g.Either {
+			return g.AsEither(b.Build().ExecState(writer)).Bimap(run, run)
+		}
+	)
 
-func (s service) Response() g.StateT {
-	return s.response.Build()
+	return exec(s.request).Fold(
+		func(x g.Any) g.Any {
+			return g.NewLeft(x)
+		},
+		func(a g.Any) g.Any {
+			b := g.AsTuple2(a)
+			return exec(s.response).Map(func(x g.Any) g.Any {
+				y := g.AsTuple2(x)
+				return g.NewTuple2(
+					g.AsList(b.Fst()),
+					g.AsList(y.Fst()),
+				)
+			})
+		},
+	).(g.Either)
 }
