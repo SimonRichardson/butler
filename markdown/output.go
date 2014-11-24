@@ -22,6 +22,7 @@ type mark interface {
 
 func Output(server g.Either) g.Either {
 	// Build the service and output it as markdown!
+	empty := g.NewTuple2(g.List_.Empty(), g.List_.Empty())
 	return server.Bimap(
 		func(x g.Any) g.Any {
 			var (
@@ -33,11 +34,17 @@ func Output(server g.Either) g.Either {
 		},
 		func(x g.Any) g.Any {
 			var (
-				server    = butler.AsServer(x)
-				requests  = server.Requests()
-				responses = server.Responses()
+				server = butler.AsServer(x)
+				io     = server.IO()
+
+				// get the first one for now!
+				tuple     = g.AsTuple2(io.Head().GetOrElse(g.Constant(empty)))
+				requests  = g.AsList(tuple.Fst())
+				responses = g.AsList(tuple.Snd())
 				route     = templateRoute(requests, responses)
-				doc       = document(append(templateHeader(), append(route, templateFooter()...)...)...)
+
+				// Concat all the routes together!
+				doc = document(append(templateHeader(), append(route, templateFooter()...)...)...)
 			)
 			return doc.String()
 		},
