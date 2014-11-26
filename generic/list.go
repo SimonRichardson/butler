@@ -5,6 +5,7 @@ type List interface {
 	Tail() List
 	Chain(func(Any) List) List
 	Map(func(Any) Any) List
+	Concat(List) List
 	Filter(func(Any) bool) List
 	Find(func(Any) bool) Option
 	FoldLeft(Any, func(Any, Any) Any) Any
@@ -52,9 +53,23 @@ func (x Cons) Map(f func(Any) Any) List {
 	})
 }
 
+func (x Cons) Concat(y List) List {
+	var rec func(List, List) Result
+	rec = func(a, b List) Result {
+		if _, ok := b.(Nil); ok {
+			return Done(a)
+		}
+		return Cont(func() Result {
+			cons := b.(Cons)
+			return rec(NewCons(cons.head, a), cons.tail)
+		})
+	}
+	return Trampoline(rec(x, y)).(List)
+}
+
 func (x Cons) Filter(f func(Any) bool) List {
 	var rec func(List, List) List
-	rec = func(a List, b List) List {
+	rec = func(a, b List) List {
 		if _, ok := a.(Nil); ok {
 			return b
 		}
@@ -127,6 +142,10 @@ func (x Nil) Chain(f func(Any) List) List {
 
 func (x Nil) Map(f func(Any) Any) List {
 	return x
+}
+
+func (x Nil) Concat(y List) List {
+	return y
 }
 
 func (x Nil) Filter(func(Any) bool) List {

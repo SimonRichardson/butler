@@ -3,29 +3,53 @@ package butler
 import g "github.com/SimonRichardson/butler/generic"
 
 type Server struct {
-	requests  g.List
-	responses g.List
+	io g.List
 }
 
-func (s Server) Run(request RemoteRequest) g.Promise {
-	return g.Promise_.Of(request)
+func (s Server) IO() g.List {
+	return s.io
 }
 
-func (s Server) Requests() g.List {
-	return s.requests
+func (s Server) concat(a Server) Server {
+	return Server{
+		io: s.io.Concat(a.io),
+	}
 }
 
-func (s Server) Responses() g.List {
-	return s.responses
+type server struct {
+	x func() g.Either
 }
 
-func Compile(x service) g.Either {
-	// TODO Make this take multiple services.
-	return x.Compile().Map(func(x g.Any) g.Any {
-		tup := g.AsTuple2(x)
-		return Server{
-			requests:  g.AsList(tup.Fst()),
-			responses: g.AsList(tup.Snd()),
-		}
-	})
+func (s server) AndThen(x service) server {
+	return server{
+		x: func() g.Either {
+			return s.x().Chain(func(y g.Any) g.Either {
+				a := y.(Server)
+				return Compile(x).x().Bimap(
+					g.Constant1(a),
+					func(y g.Any) g.Any {
+						b := y.(Server)
+						return a.concat(b)
+					},
+				)
+			})
+		},
+	}
+}
+
+func (s server) Run() g.Either {
+	return s.x()
+}
+
+func Compile(x service) server {
+	return server{
+		x: func() g.Either {
+			return x.Compile().Map(func(x g.Any) g.Any {
+				tup := g.AsTuple2(x)
+				return Server{
+					io: g.List_.Of(tup),
+				}
+			})
+		},
+	}
 }

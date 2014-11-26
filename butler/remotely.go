@@ -40,16 +40,5 @@ func (r Remote) Run() generic.Either {
 }
 
 func handle(server Server) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		server.Run(RemotelyRequest(r)).Fork(func(x generic.Any) generic.Any {
-			result := x.(Result)
-			header := w.Header()
-			for k, v := range result.Headers() {
-				header.Set(k, v)
-			}
-			w.WriteHeader(result.StatusCode())
-			w.Write([]byte(result.Body()))
-			return x
-		})
-	}
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
