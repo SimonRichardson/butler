@@ -34,7 +34,7 @@ service.Run()
 
 ### TODO
 
-- [ ] Markdown support
+- [x] Markdown support
 - [ ] Query parameters support
 
 #### Notes

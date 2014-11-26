@@ -59,11 +59,23 @@ func NewQuery(name string, queryType QueryType, build func(g.Any) g.Any) Query {
 
 func (q Query) Build() g.StateT {
 	var (
+		query = func(t QueryType) func(g.Any) func(g.Any) g.Any {
+			return func(g.Any) func(g.Any) g.Any {
+				return func(b g.Any) g.Any {
+					return g.NewTuple2(b, t.Type())
+				}
+			}
+		}
 		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
 			return func(a g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
-					return g.AsWriter(b).Chain(func(a g.Any) g.Writer {
-						str := g.Either_.Of(singleton(a.(String).value))
+					tuple := g.AsTuple2(b)
+					return g.AsWriter(tuple.Fst()).Chain(func(a g.Any) g.Writer {
+						var (
+							name  = singleton(a.(String).value)
+							value = tuple.Snd()
+							str   = g.Either_.Of(append(name, value))
+						)
 						return g.NewWriter(q, singleton(api.Run(str)))
 					})
 				}
@@ -73,6 +85,7 @@ func (q Query) Build() g.StateT {
 
 	return q.name.Build().
 		Chain(g.Get()).
+		Chain(modify(query(q.queryType))).
 		Chain(constant(g.StateT_.Of(q))).
 		Chain(modify(api(q.Api)))
 }
