@@ -7,16 +7,22 @@ import (
 )
 
 type Server struct {
-	io g.List
+	list g.List
+	io   g.IO
 }
 
-func (s Server) IO() g.List {
+func (s Server) IO() g.IO {
 	return s.io
+}
+
+func (s Server) List() g.List {
+	return s.list
 }
 
 func (s Server) concat(a Server) Server {
 	return Server{
-		io: s.io.Concat(a.io),
+		list: s.list.Concat(a.list),
+		io:   s.io,
 	}
 }
 
@@ -54,7 +60,8 @@ func Compile(x service) server {
 			return x.Compile(io).Map(func(x g.Any) g.Any {
 				tup := g.AsTuple2(x)
 				return Server{
-					io: g.List_.Of(tup),
+					list: g.List_.Of(tup),
+					io:   io,
 				}
 			})
 		},

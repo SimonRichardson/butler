@@ -34,8 +34,8 @@ func Output(server g.Either) g.Either {
 		func(x g.Any) g.Any {
 			var (
 				server = butler.AsServer(x)
-				io     = server.IO()
-				folded = io.FoldLeft([]mark{}, func(a, b g.Any) g.Any {
+				list   = server.List()
+				folded = list.FoldLeft([]mark{}, func(a, b g.Any) g.Any {
 					var (
 						tuple     = g.AsTuple2(b)
 						requests  = g.AsList(tuple.Fst())

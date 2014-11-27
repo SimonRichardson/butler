@@ -58,9 +58,6 @@ func main() {
 		},
 	)
 
-	/*
-		// Run the documentation
-		service := Remotely(server)("localhost", 80)
-		service.Run()
-	*/
+	// Run the documentation
+	Remotely(server)("localhost", "8080")
 }
