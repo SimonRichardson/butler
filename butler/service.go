@@ -23,7 +23,7 @@ func (s service) Then(f func(map[string]g.Any) g.Any) service {
 	}
 }
 
-func (s service) Compile() g.Either {
+func (s service) Compile(io g.IO) g.Either {
 	var (
 		writer = g.Writer_.Of(g.Empty{})
 		run    = func(a g.Any) g.Any {
@@ -42,10 +42,14 @@ func (s service) Compile() g.Either {
 		func(a g.Any) g.Any {
 			b := g.AsTuple2(a)
 			return exec(s.response).Map(func(x g.Any) g.Any {
-				y := g.AsTuple2(x)
+				var (
+					y         = g.AsTuple2(x)
+					requests  = g.AsList(b.Fst())
+					responses = g.AsList(y.Fst())
+				)
 				return g.NewTuple2(
-					g.AsList(b.Fst()),
-					g.AsList(y.Fst()),
+					requests,
+					responses,
 				)
 			})
 		},
