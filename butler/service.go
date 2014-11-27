@@ -51,13 +51,13 @@ func (s service) Compile(io g.IO) g.Either {
 					requests  = g.AsList(b.Fst())
 					responses = g.AsList(y.Fst())
 				)
-				io.Map(func(x g.Any) g.Any {
-					fmt.Println(">>", x)
-					return x
-				})
-				return g.NewTuple2(
+				return g.NewTuple3(
 					requests,
 					responses,
+					io.Map(func(x g.Any) g.Any {
+						fmt.Println(">>", x)
+						return x
+					}),
 				)
 			})
 		},

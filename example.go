@@ -43,7 +43,7 @@ func main() {
 		return loadAllEmployees(args["limit"].(int))
 	})
 
-	server := Compile(listEmployees).AndThen(listEmployees).Run()
+	server := Compile(listEmployees).Run() //.AndThen(listEmployees).Run()
 
 	// You can also render the server to markdown, for up to
 	// date documentation
@@ -53,7 +53,7 @@ func main() {
 			return err
 		},
 		func(doc g.Any) g.Any {
-			fmt.Println(doc)
+			// fmt.Println(doc)
 			return doc
 		},
 	)

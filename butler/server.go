@@ -58,10 +58,10 @@ func Compile(x service) server {
 	return server{
 		x: func(io g.IO) g.Either {
 			return x.Compile(io).Map(func(x g.Any) g.Any {
-				tup := g.AsTuple2(x)
+				tup := g.AsTuple3(x)
 				return Server{
-					list: g.List_.Of(tup),
-					io:   io,
+					list: g.List_.Of(g.NewTuple2(tup.Fst(), tup.Snd())),
+					io:   g.AsIO(tup.Trd()),
 				}
 			})
 		},

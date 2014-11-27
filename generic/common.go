@@ -24,6 +24,10 @@ func AsTuple2(x Any) Tuple2 {
 	return x.(Tuple2)
 }
 
+func AsTuple3(x Any) Tuple3 {
+	return x.(Tuple3)
+}
+
 func AsWriter(x Any) Writer {
 	return x.(Writer)
 }
