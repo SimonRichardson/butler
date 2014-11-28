@@ -106,3 +106,7 @@ func (x option) FromBool(b bool, val Any) Option {
 	}
 	return NewNone()
 }
+
+func (x option) ToBool(val Option) bool {
+	return val.Fold(Constant1(true), Constant(false)).(bool)
+}

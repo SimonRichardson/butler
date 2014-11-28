@@ -9,6 +9,7 @@ type List interface {
 	Filter(func(Any) bool) List
 	Find(func(Any) bool) Option
 	FoldLeft(Any, func(Any, Any) Any) Any
+	GroupBy(func(Any) Any) List
 	ReduceLeft(func(Any, Any) Any) Option
 }
 
@@ -33,18 +34,20 @@ func (x Cons) Tail() List {
 }
 
 func (x Cons) Chain(f func(Any) List) List {
-	var rec func(List, List) List
-	rec = func(a List, b List) List {
+	var rec func(List, List) Result
+	rec = func(a List, b List) Result {
 		if _, ok := a.(Nil); ok {
-			return b
+			return Done(b)
 		}
-		cons := a.(Cons)
-		list := f(cons.head).FoldLeft(b, func(x, y Any) Any {
-			return NewCons(y, x.(List))
+		return Cont(func() Result {
+			cons := a.(Cons)
+			list := f(cons.head).FoldLeft(b, func(x, y Any) Any {
+				return NewCons(y, x.(List))
+			})
+			return rec(cons.tail, list.(List))
 		})
-		return rec(cons.tail, list.(List))
 	}
-	return rec(x, NewNil())
+	return Trampoline(rec(x, NewNil())).(List)
 }
 
 func (x Cons) Map(f func(Any) Any) List {
@@ -68,30 +71,32 @@ func (x Cons) Concat(y List) List {
 }
 
 func (x Cons) Filter(f func(Any) bool) List {
-	var rec func(List, List) List
-	rec = func(a, b List) List {
+	var rec func(List, List) Result
+	rec = func(a, b List) Result {
 		if _, ok := a.(Nil); ok {
-			return b
+			return Done(b)
 		}
-		cons := a.(Cons)
-		if f(cons.head) {
-			return rec(cons.tail, NewCons(cons.head, b))
-		} else {
-			return rec(cons.tail, b)
-		}
+		return Cont(func() Result {
+			cons := a.(Cons)
+			if f(cons.head) {
+				return rec(cons.tail, NewCons(cons.head, b))
+			} else {
+				return rec(cons.tail, b)
+			}
+		})
 	}
-	return rec(x, List_.Empty())
+	return Trampoline(rec(x, List_.Empty())).(List)
 }
 
 func (x Cons) Find(f func(Any) bool) Option {
-	var rec func(List, Option) Option
-	rec = func(a List, b Option) Option {
+	var rec func(List, Option) Result
+	rec = func(a List, b Option) Result {
 		if _, ok := a.(Nil); ok {
-			return b
+			return Done(b)
 		}
 		return b.Fold(
 			func(x Any) Any {
-				return Option_.Of(x)
+				return Done(Option_.Of(x))
 			},
 			func() Any {
 				var (
@@ -99,23 +104,57 @@ func (x Cons) Find(f func(Any) bool) Option {
 					val  = cons.head
 					opt  = Option_.FromBool(f(val), val)
 				)
-				return rec(cons.tail, opt)
+				return Cont(func() Result {
+					return rec(cons.tail, opt)
+				})
 			},
-		).(Option)
+		).(Result)
 	}
-	return rec(x, Option_.Empty())
+	return Trampoline(rec(x, Option_.Empty())).(Option)
 }
 
 func (x Cons) FoldLeft(v Any, f func(Any, Any) Any) Any {
-	var rec func(List, Any) Any
-	rec = func(a List, b Any) Any {
+	var rec func(List, Any) Result
+	rec = func(a List, b Any) Result {
 		if _, ok := a.(Nil); ok {
-			return b
+			return Done(b)
 		}
-		cons := a.(Cons)
-		return rec(cons.tail, f(b, cons.head))
+		return Cont(func() Result {
+			cons := a.(Cons)
+			return rec(cons.tail, f(b, cons.head))
+		})
 	}
-	return rec(x, v)
+	return Trampoline(rec(x, v))
+}
+
+func (x Cons) GroupBy(f func(Any) Any) List {
+	var (
+		contains = func(a List, b Any) Option {
+			return a.Find(func(x Any) bool {
+				return AsTuple2(x).Fst() == b
+			})
+		}
+		unique = func(a Any) func(Any) bool {
+			return func(b Any) bool {
+				return AsTuple2(b).Fst() != a
+			}
+		}
+	)
+	return x.FoldLeft(NewNil(), func(a, b Any) Any {
+		var (
+			id   = f(b)
+			list = AsList(a)
+		)
+		return contains(list, id).Fold(
+			func(x Any) Any {
+				merge := AsList(AsTuple2(x).Snd()).Concat(List_.Of(b))
+				return NewCons(NewTuple2(id, merge), list.Filter(unique(id)))
+			},
+			func() Any {
+				return NewCons(NewTuple2(id, List_.Of(b)), list)
+			},
+		)
+	}).(List)
 }
 
 func (x Cons) ReduceLeft(f func(Any, Any) Any) Option {
@@ -158,6 +197,10 @@ func (x Nil) Find(f func(Any) bool) Option {
 
 func (x Nil) FoldLeft(v Any, f func(Any, Any) Any) Any {
 	return v
+}
+
+func (x Nil) GroupBy(f func(Any) Any) List {
+	return x
 }
 
 func (x Nil) ReduceLeft(f func(Any, Any) Any) Option {
