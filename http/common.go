@@ -30,6 +30,10 @@ func asMethod(x g.Any) Method {
 	return x.(Method)
 }
 
+func AsRoute(x g.Any) Route {
+	return x.(Route)
+}
+
 func asString(x g.Any) String {
 	return x.(String)
 }
