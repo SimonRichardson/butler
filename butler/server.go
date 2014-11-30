@@ -1,45 +1,32 @@
 package butler
 
 import (
-	"net/http"
-
 	g "github.com/SimonRichardson/butler/generic"
+	h "github.com/SimonRichardson/butler/http"
 )
 
 type Server struct {
 	list g.List
-	io   g.IO
-}
-
-func (s Server) IO() g.IO {
-	return s.io
 }
 
 func (s Server) List() g.List {
 	return s.list
 }
 
-func (s Server) concat(a Server) Server {
-	return Server{
-		list: s.list.Concat(a.list),
-		io:   s.io,
-	}
-}
-
 type server struct {
-	x func(g.IO) g.Either
+	x func() g.Either
 }
 
 func (s server) AndThen(x service) server {
 	return server{
-		x: func(io g.IO) g.Either {
-			return s.x(io).Chain(func(y g.Any) g.Either {
+		x: func() g.Either {
+			return s.x().Chain(func(y g.Any) g.Either {
 				a := y.(Server)
-				return Compile(x).x(io).Bimap(
+				return Compile(x).x().Bimap(
 					g.Constant1(a),
 					func(y g.Any) g.Any {
 						b := y.(Server)
-						return a.concat(b)
+						return concat(a, b)
 					},
 				)
 			})
@@ -48,22 +35,50 @@ func (s server) AndThen(x service) server {
 }
 
 func (s server) Run() g.Either {
-	io := g.NewIO(func() g.Any {
-		return http.NewServeMux()
-	})
-	return s.x(io)
+	//io := g.NewIO(func() g.Any {
+	//	return http.NewServeMux()
+	//})
+	return s.x().Bimap(
+		g.Identity(),
+		func(a g.Any) g.Any {
+			//fmt.Println(a)
+			return a
+		},
+	)
 }
 
 func Compile(x service) server {
 	return server{
-		x: func(io g.IO) g.Either {
-			return x.Compile(io).Map(func(x g.Any) g.Any {
-				tup := g.AsTuple3(x)
+		x: func() g.Either {
+			return x.Compile().Map(func(x g.Any) g.Any {
 				return Server{
-					list: g.List_.Of(g.NewTuple2(tup.Fst(), tup.Snd())),
-					io:   g.AsIO(tup.Trd()),
+					list: groupBy(g.List_.Of(x)),
 				}
 			})
 		},
 	}
+}
+
+func concat(a, b Server) Server {
+	return Server{
+		list: groupBy(a.list.Concat(b.list)),
+	}
+}
+
+func groupBy(list g.List) g.List {
+	var (
+		route = func(a g.List) g.Option {
+			return a.Find(func(a g.Any) bool {
+				_, ok := a.(h.Route)
+				return ok
+			})
+		}
+		group = func(a g.Any) g.Any {
+			list := g.AsList(g.AsTuple3(a).Snd())
+			return route(list).Map(func(a g.Any) g.Any {
+				return a.(h.Route).String()
+			}).GetOrElse(g.Constant(""))
+		}
+	)
+	return list.GroupBy(group)
 }

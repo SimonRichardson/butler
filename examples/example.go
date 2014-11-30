@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	. "github.com/SimonRichardson/butler/butler"
 	g "github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/io"

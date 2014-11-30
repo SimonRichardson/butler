@@ -37,11 +37,21 @@ func Output(server g.Either) g.Either {
 				list   = server.List()
 				folded = list.FoldLeft([]mark{}, func(a, b g.Any) g.Any {
 					var (
-						tuple     = g.AsTuple2(b)
-						requests  = g.AsList(tuple.Fst())
-						responses = g.AsList(tuple.Snd())
+						tuple  = g.AsTuple2(b)
+						values = g.AsList(tuple.Snd())
+
+						folded = values.FoldLeft([]mark{}, func(a, b g.Any) g.Any {
+							var (
+								tuple     = g.AsTuple3(b)
+								requests  = g.AsList(tuple.Snd())
+								responses = g.AsList(tuple.Trd())
+							)
+
+							return append(asMarks(a), templateRoute(requests, responses)...)
+						})
 					)
-					return append(asMarks(a), templateRoute(requests, responses)...)
+
+					return append(asMarks(a), asMarks(folded)...)
 				})
 				doc = document(append(templateHeader(), append(asMarks(folded), templateFooter()...)...)...)
 			)

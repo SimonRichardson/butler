@@ -1,10 +1,6 @@
 package butler
 
-import (
-	"fmt"
-
-	g "github.com/SimonRichardson/butler/generic"
-)
+import g "github.com/SimonRichardson/butler/generic"
 
 type service struct {
 	request  request
@@ -27,7 +23,7 @@ func (s service) Then(f func(map[string]g.Any) g.Any) service {
 	}
 }
 
-func (s service) Compile(io g.IO) g.Either {
+func (s service) Compile() g.Either {
 	var (
 		writer = g.Writer_.Of(g.Empty{})
 		run    = func(a g.Any) g.Any {
@@ -52,12 +48,9 @@ func (s service) Compile(io g.IO) g.Either {
 					responses = g.AsList(y.Fst())
 				)
 				return g.NewTuple3(
+					s,
 					requests,
 					responses,
-					io.Map(func(x g.Any) g.Any {
-						fmt.Println(">>", x)
-						return x
-					}),
 				)
 			})
 		},
