@@ -11,7 +11,3 @@ func AsBuild(x g.Any) Build {
 func AsServer(x g.Any) Server {
 	return x.(Server)
 }
-
-func AsServerWithIO(x g.Any) ServerWithIO {
-	return x.(ServerWithIO)
-}

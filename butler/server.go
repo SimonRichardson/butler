@@ -1,31 +1,12 @@
 package butler
 
-import (
-	"fmt"
-	"html"
-	"net/http"
-
-	g "github.com/SimonRichardson/butler/generic"
-)
+import g "github.com/SimonRichardson/butler/generic"
 
 type Server struct {
 	list g.List
 }
 
 func (s Server) List() g.List {
-	return s.list
-}
-
-type ServerWithIO struct {
-	list g.List
-	io   g.IO
-}
-
-func (s ServerWithIO) IO() g.IO {
-	return s.io
-}
-
-func (s ServerWithIO) List() g.List {
 	return s.list
 }
 
@@ -51,50 +32,7 @@ func (s server) AndThen(x service) server {
 }
 
 func (s server) Run() g.Either {
-	return s.x().Bimap(
-		g.Identity(),
-		func(a g.Any) g.Any {
-			var (
-				io = g.NewIO(func() g.Any {
-					return http.NewServeMux()
-				})
-				list   = AsServer(a).list
-				mutate = func(a, b g.Any) g.Any {
-					var (
-						io    = g.AsIO(a)
-						tuple = g.AsTuple2(b)
-						route = tuple.Fst().(string)
-						// list  = g.AsList(tuple.Snd())
-					)
-					return io.Map(func(a g.Any) g.Any {
-						var (
-							mux = a.(*http.ServeMux)
-						)
-						mux.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-							fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-						})
-						return mux
-					})
-					/*
-						// Create the patterns required here.
-
-							return list.FoldLeft(io, func(x, y g.Any) g.Any {
-								var (
-									io      = g.AsIO(x)
-									tuple   = g.AsTuple3(y)
-									service = tuple.Fst().(service)
-								)
-								return x
-							})
-					*/
-				}
-			)
-			return ServerWithIO{
-				list: list,
-				io:   g.AsIO(list.FoldLeft(io, mutate)),
-			}
-		},
-	)
+	return s.x()
 }
 
 func Compile(x service) server {
