@@ -11,6 +11,7 @@ type List interface {
 	FoldLeft(Any, func(Any, Any) Any) Any
 	GroupBy(func(Any) Any) List
 	ReduceLeft(func(Any, Any) Any) Option
+	Reverse() List
 }
 
 type Cons struct {
@@ -161,6 +162,12 @@ func (x Cons) ReduceLeft(f func(Any, Any) Any) Option {
 	return Option_.Of(x.tail.FoldLeft(x.head, f))
 }
 
+func (x Cons) Reverse() List {
+	return AsList(x.FoldLeft(NewNil(), func(a, b Any) Any {
+		return NewCons(b, AsList(a))
+	}))
+}
+
 type Nil struct{}
 
 func NewNil() Nil {
@@ -205,6 +212,10 @@ func (x Nil) GroupBy(f func(Any) Any) List {
 
 func (x Nil) ReduceLeft(f func(Any, Any) Any) Option {
 	return Option_.Empty()
+}
+
+func (x Nil) Reverse() List {
+	return x
 }
 
 // Static methods

@@ -64,7 +64,6 @@ func toNode(a string) g.Either {
 			return g.NewRight(g.NewSome(newVariable(str)))
 		}
 		return g.NewLeft(g.NewSome(a))
-
 	case a == "*":
 		return g.NewRight(g.NewSome(newWildcard()))
 	default:
@@ -100,9 +99,18 @@ func compilePath(a String) g.List {
 				},
 			)
 		}
+		nones = func(a g.Any) bool {
+			return g.AsEither(a).Fold(
+				func(a g.Any) g.Any {
+					return g.Option_.ToBool(g.AsOption(a))
+				},
+				g.Constant1(true),
+			).(bool)
+		}
 	)
 
 	return x.
 		Map(option).
-		Map(nodes)
+		Map(nodes).
+		Filter(nones)
 }

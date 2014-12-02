@@ -20,6 +20,10 @@ func AsStateT(x Any) StateT {
 	return x.(StateT)
 }
 
+func AsTree(x Any) Tree {
+	return x.(Tree)
+}
+
 func AsTuple2(x Any) Tuple2 {
 	return x.(Tuple2)
 }
