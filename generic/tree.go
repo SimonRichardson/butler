@@ -4,7 +4,7 @@ type Tree interface {
 	Chain(func(Any) Tree) Tree
 	Map(func(Any) Any) Tree
 	FoldLeft(Any, func(Any, Any) Any) Any
-
+	Merge(t Tree) Tree
 	Children() Option
 }
 
@@ -43,6 +43,44 @@ func (t TreeNode) FoldLeft(x Any, f func(Any, Any) Any) Any {
 	})
 }
 
+// a
+// | - b, x, y
+//     | - c
+//         | - d, 1, 2
+
+// a
+// | - b, x, y
+//     | - z
+//         | - d, 1, 2
+
+// a, b, x, y, c, d, 1, 2
+// a, b, x, y, z, d, 1, 2
+
+// a
+// | - b, x, y
+//     | - c             z
+//         | - d, 1, 2   | - d, 1, 2
+func (t TreeNode) Merge(m Tree) Tree {
+	var rec func(a, b Tree) Tree
+	rec = func(a, b Tree) Tree {
+		_, ok := a.(TreeNil)
+		if ok {
+			return b
+		}
+
+		x := a.(TreeNode)
+		nodes := x.nodes.Reverse().FoldLeft(NewNil(), func(a, b Any) Any {
+			var (
+				x = AsList(a)
+				y = AsTree(b)
+			)
+			return NewCons(rec(y, NewTreeNil()), x)
+		})
+		return NewTreeNode(x.Value, AsList(nodes))
+	}
+	return rec(t, NewTreeNil())
+}
+
 func (t TreeNode) Children() Option {
 	return Option_.Of(t.nodes)
 }
@@ -64,6 +102,10 @@ func (t TreeNil) Map(f func(Any) Any) Tree {
 
 func (t TreeNil) FoldLeft(x Any, f func(Any, Any) Any) Any {
 	return x
+}
+
+func (t TreeNil) Merge(m Tree) Tree {
+	return m
 }
 
 func (t TreeNil) Children() Option {

@@ -61,4 +61,32 @@ func main() {
 
 	// Run the documentation
 	Remotely(server)("localhost", "8080")
+
+	a := g.NewTreeNode("a",
+		g.List_.To(
+			g.NewTreeNode("b",
+				g.List_.Of(
+					g.NewTreeNode("x",
+						g.List_.Of(
+							g.NewTreeNode("1",
+								g.List_.Empty(),
+							),
+						),
+					),
+				),
+			),
+			g.NewTreeNode("c",
+				g.List_.To(
+					g.NewTreeNode("y",
+						g.List_.Empty(),
+					),
+				),
+			),
+		),
+	)
+	b := g.Tree_.FromList(g.List_.FromString("abzd"))
+
+	fmt.Println(a)
+	fmt.Println(b)
+	fmt.Println(a.Merge(b))
 }
