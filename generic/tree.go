@@ -61,11 +61,11 @@ func (t TreeNode) FoldLeft(x Any, f func(Any, Any) Any) Any {
 //     | - c             z
 //         | - d, 1, 2   | - d, 1, 2
 func (t TreeNode) Merge(m Tree) Tree {
-	var rec func(a, b Tree) Tree
-	rec = func(a, b Tree) Tree {
+	var rec func(a, b, c Tree) Tree
+	rec = func(a, b, c Tree) Tree {
 		_, ok := a.(TreeNil)
 		if ok {
-			return b
+			return c
 		}
 
 		x := a.(TreeNode)
@@ -74,11 +74,11 @@ func (t TreeNode) Merge(m Tree) Tree {
 				x = AsList(a)
 				y = AsTree(b)
 			)
-			return NewCons(rec(y, NewTreeNil()), x)
+			return NewCons(rec(y, NewTreeNil(), NewTreeNil()), x)
 		})
 		return NewTreeNode(x.Value, AsList(nodes))
 	}
-	return rec(t, NewTreeNil())
+	return rec(t, m, NewTreeNil())
 }
 
 func (t TreeNode) Children() Option {
