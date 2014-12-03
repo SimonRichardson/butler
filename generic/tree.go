@@ -61,24 +61,56 @@ func (t TreeNode) FoldLeft(x Any, f func(Any, Any) Any) Any {
 //     | - c             z
 //         | - d, 1, 2   | - d, 1, 2
 func (t TreeNode) Merge(m Tree) Tree {
-	var rec func(a, b, c Tree) Tree
-	rec = func(a, b, c Tree) Tree {
-		_, ok := a.(TreeNil)
-		if ok {
-			return c
-		}
+	var rec func(a, b, c Tree) List
 
-		x := a.(TreeNode)
-		nodes := x.nodes.Reverse().FoldLeft(NewNil(), func(a, b Any) Any {
+	xxx := func(nodes List) List {
+		return AsList(nodes.Reverse().FoldLeft(NewNil(), func(a, b Any) Any {
 			var (
 				x = AsList(a)
 				y = AsTree(b)
 			)
-			return NewCons(rec(y, NewTreeNil(), NewTreeNil()), x)
-		})
-		return NewTreeNode(x.Value, AsList(nodes))
+			return rec(y, NewTreeNil(), NewTreeNil()).Concat(x)
+		}))
 	}
-	return rec(t, m, NewTreeNil())
+	yyy := func(a TreeNode) List {
+		x := xxx(a.nodes)
+		return List_.Of(
+			NewTreeNode(a.Value, x),
+		)
+	}
+
+	rec = func(a, b, c Tree) List {
+		_, ok1 := a.(TreeNil)
+		_, ok2 := b.(TreeNil)
+		if ok1 && ok2 {
+			return List_.Of(c)
+		}
+
+		if !ok1 && ok2 {
+			return yyy(a.(TreeNode))
+		} else if ok1 && !ok2 {
+			return yyy(b.(TreeNode))
+		} else {
+
+			x := a.(TreeNode)
+			y := b.(TreeNode)
+
+			xNodes := xxx(x.nodes)
+			yNodes := xxx(y.nodes)
+
+			if x.Value == y.Value {
+				return List_.Of(
+					NewTreeNode(x.Value, xNodes.Concat(yNodes)),
+				)
+			} else {
+				return List_.To(
+					NewTreeNode(x.Value, AsList(xNodes)),
+					NewTreeNode(y.Value, AsList(yNodes)),
+				)
+			}
+		}
+	}
+	return NewTreeNode(".", rec(t, m, NewTreeNil()))
 }
 
 func (t TreeNode) Children() Option {
