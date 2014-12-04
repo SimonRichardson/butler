@@ -44,9 +44,7 @@ func (t TreeNode) FoldLeft(x Any, f func(Any, Any) Any) Any {
 }
 
 func (t TreeNode) Merge(m Tree) Tree {
-	var (
-		rec func(a, b List) List
-	)
+	var rec func(a, b List) List
 	rec = func(a, b List) List {
 		return a.Chain(func(x Any) List {
 			if _, ok := x.(TreeNil); ok {
@@ -66,13 +64,24 @@ func (t TreeNode) Merge(m Tree) Tree {
 					return node.value == val
 				})
 				children = AsList(others.FoldLeft(NewNil(), func(a, b Any) Any {
-					return a.(List).Concat(b.(TreeNode).nodes)
+					return AsList(a).Concat(b.(TreeNode).nodes)
 				}))
 			)
-			return List_.Of(NewTreeNode(val, rec(nodes, children))).Concat(clean)
+			return List_.Of(
+				NewTreeNode(
+					Option_.Of(val),
+					rec(nodes, children),
+				),
+			).Concat(clean)
 		})
 	}
-	return NewTreeNode("/", rec(List_.Of(t), List_.Of(m)))
+	return NewTreeNode(
+		Option_.Empty(),
+		rec(
+			List_.Of(t),
+			List_.Of(m),
+		),
+	)
 }
 
 func (t TreeNode) Children() Option {
