@@ -59,7 +59,8 @@ func (t TreeNode) Merge(m Tree) Tree {
 					node = x.(TreeNode)
 					return node.value == val
 				})
-				children = AsList(AsList(tuple.Fst()).FoldLeft(NewNil(), func(a, b Any) Any {
+				fst      = AsList(tuple.Fst())
+				children = AsList(fst.FoldLeft(List_.Empty(), func(a, b Any) Any {
 					return AsList(a).Concat(b.(TreeNode).nodes)
 				}))
 			)
