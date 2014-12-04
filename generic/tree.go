@@ -55,15 +55,11 @@ func (t TreeNode) Merge(m Tree) Tree {
 				node  = x.(TreeNode)
 				val   = node.value
 				nodes = node.nodes
-				clean = b.Filter(func(x Any) bool {
-					node = x.(TreeNode)
-					return node.value != val
-				})
-				others = b.Filter(func(x Any) bool {
+				tuple = b.Partition(func(x Any) bool {
 					node = x.(TreeNode)
 					return node.value == val
 				})
-				children = AsList(others.FoldLeft(NewNil(), func(a, b Any) Any {
+				children = AsList(AsList(tuple.Fst()).FoldLeft(NewNil(), func(a, b Any) Any {
 					return AsList(a).Concat(b.(TreeNode).nodes)
 				}))
 			)
@@ -72,7 +68,7 @@ func (t TreeNode) Merge(m Tree) Tree {
 					Option_.Of(val),
 					rec(nodes, children),
 				),
-			).Concat(clean)
+			).Concat(AsList(tuple.Snd()))
 		})
 	}
 	return NewTreeNode(

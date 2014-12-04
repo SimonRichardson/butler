@@ -10,6 +10,7 @@ type List interface {
 	Find(func(Any) bool) Option
 	FoldLeft(Any, func(Any, Any) Any) Any
 	GroupBy(func(Any) Any) List
+	Partition(func(Any) bool) Tuple2
 	ReduceLeft(func(Any, Any) Any) Option
 	Reverse() List
 }
@@ -158,6 +159,16 @@ func (x Cons) GroupBy(f func(Any) Any) List {
 	}).(List)
 }
 
+func (x Cons) Partition(f func(Any) bool) Tuple2 {
+	return AsTuple2(x.FoldLeft(NewTuple2(List_.Empty(), List_.Empty()), func(a, b Any) Any {
+		x := AsTuple2(a)
+		if f(b) {
+			return NewTuple2(NewCons(b, AsList(x.Fst())), x.Snd())
+		}
+		return NewTuple2(x.Fst(), NewCons(b, AsList(x.Snd())))
+	}))
+}
+
 func (x Cons) ReduceLeft(f func(Any, Any) Any) Option {
 	return Option_.Of(x.tail.FoldLeft(x.head, f))
 }
@@ -208,6 +219,10 @@ func (x Nil) FoldLeft(v Any, f func(Any, Any) Any) Any {
 
 func (x Nil) GroupBy(f func(Any) Any) List {
 	return x
+}
+
+func (x Nil) Partition(f func(Any) bool) Tuple2 {
+	return NewTuple2(List_.Empty(), List_.Empty())
 }
 
 func (x Nil) ReduceLeft(f func(Any, Any) Any) Option {
