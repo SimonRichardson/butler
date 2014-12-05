@@ -1,11 +1,12 @@
 package generic
 
 type Tree interface {
+	Children() Option
 	Chain(func(Any) Tree) Tree
 	Map(func(Any) Any) Tree
 	FoldLeft(Any, func(Any, Any) Any) Any
 	Merge(t Tree) Tree
-	Children() Option
+	Match(func(List, Any, int) bool) List
 }
 
 type TreeNode struct {
@@ -18,6 +19,10 @@ func NewTreeNode(x Any, y List) TreeNode {
 		value: x,
 		nodes: y,
 	}
+}
+
+func (t TreeNode) Children() Option {
+	return Option_.Of(t.nodes)
 }
 
 func (t TreeNode) Chain(f func(Any) Tree) Tree {
@@ -56,6 +61,10 @@ func (t TreeNode) Merge(m Tree) Tree {
 				val   = node.value
 				nodes = node.nodes
 				tuple = b.Partition(func(x Any) bool {
+					if _, ok := x.(TreeNil); ok {
+						return false
+					}
+
 					node = x.(TreeNode)
 					return node.value == val
 				})
@@ -81,8 +90,35 @@ func (t TreeNode) Merge(m Tree) Tree {
 	)
 }
 
-func (t TreeNode) Children() Option {
-	return Option_.Of(t.nodes)
+func (t TreeNode) Match(f func(List, Any, int) bool) List {
+	var rec func(a List, b Tree, c int) List
+	rec = func(a List, b Tree, c int) List {
+		if _, ok := b.(TreeNil); ok {
+			return a
+		}
+
+		var (
+			x = b.(TreeNode)
+			y = Option_.FromBool(f(a, x.value, c), x.value)
+		)
+
+		return AsList(y.Fold(
+			func(y Any) Any {
+				return x.nodes.FoldLeft(NewCons(x.value, a), func(a, b Any) Any {
+					if _, ok := b.(TreeNil); ok {
+						return a
+					}
+					var (
+						list = AsList(a)
+						node = b.(TreeNode)
+					)
+					return rec(list, node, c+1)
+				})
+			},
+			Constant(a),
+		))
+	}
+	return rec(NewNil(), t, 0)
 }
 
 type TreeNil struct {
@@ -90,6 +126,10 @@ type TreeNil struct {
 
 func NewTreeNil() TreeNil {
 	return TreeNil{}
+}
+
+func (t TreeNil) Children() Option {
+	return Option_.Empty()
 }
 
 func (t TreeNil) Chain(f func(Any) Tree) Tree {
@@ -108,8 +148,8 @@ func (t TreeNil) Merge(m Tree) Tree {
 	return m
 }
 
-func (t TreeNil) Children() Option {
-	return Option_.Empty()
+func (t TreeNil) Match(f func(List, Any, int) bool) List {
+	return List_.Empty()
 }
 
 // Static methods

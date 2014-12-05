@@ -2,6 +2,7 @@ package generic
 
 type List interface {
 	Head() Option
+	Last() Option
 	Tail() List
 	Chain(func(Any) List) List
 	Map(func(Any) Any) List
@@ -29,6 +30,10 @@ func NewCons(x Any, y List) Cons {
 
 func (x Cons) Head() Option {
 	return NewSome(x.head)
+}
+
+func (x Cons) Last() Option {
+	return x.Reverse().Head()
 }
 
 func (x Cons) Tail() List {
@@ -186,6 +191,10 @@ func NewNil() Nil {
 }
 
 func (x Nil) Head() Option {
+	return Option_.Empty()
+}
+
+func (x Nil) Last() Option {
 	return Option_.Empty()
 }
 
