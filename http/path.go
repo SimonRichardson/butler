@@ -13,8 +13,8 @@ type Route struct {
 func NewRoute(path string) Route {
 	return Route{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected route `%s`"),
-			doc.NewInlineText("Unexpected route `%s`"),
+			doc.NewInlineText("Expected route `%s` parts `%s`"),
+			doc.NewInlineText("Unexpected route `%s` parts `%s`"),
 		)),
 		path: NewString(path, PathChar()),
 	}
@@ -25,8 +25,7 @@ func (r Route) Build() g.StateT {
 		compile = func(a g.Any) func(g.Any) g.Any {
 			return func(b g.Any) g.Any {
 				return g.AsWriter(b).Map(func(a g.Any) g.Any {
-					result := compilePath(asString(a))
-					return g.NewTuple2(a, g.Tree_.FromList(result))
+					return g.NewTuple2(a, r.Route())
 				})
 			}
 		}
@@ -37,7 +36,8 @@ func (r Route) Build() g.StateT {
 						var (
 							tuple  = g.AsTuple2(a)
 							str    = asString(tuple.Fst())
-							single = singleton(str.value)
+							parts  = g.Tree_.ToList(g.AsTree(tuple.Snd()))
+							single = append(singleton(str.value), g.List_.ToSlice(parts))
 							either = g.Either_.Of(single)
 						)
 
@@ -53,6 +53,11 @@ func (r Route) Build() g.StateT {
 		Chain(modify(compile)).
 		Chain(constant(g.StateT_.Of(r))).
 		Chain(modify(api(r.Api)))
+}
+
+func (r Route) Route() g.Tree {
+	result := compilePath(r.String())
+	return g.Tree_.FromList(result)
 }
 
 func (r Route) String() string {

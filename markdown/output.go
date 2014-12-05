@@ -34,24 +34,15 @@ func Output(server g.Either) g.Either {
 		func(x g.Any) g.Any {
 			var (
 				server = butler.AsServer(x)
-				list   = server.List()
+				list   = server.RouteList()
 				folded = list.FoldLeft([]mark{}, func(a, b g.Any) g.Any {
 					var (
-						tuple  = g.AsTuple2(b)
-						values = g.AsList(tuple.Snd())
-
-						folded = values.FoldLeft([]mark{}, func(a, b g.Any) g.Any {
-							var (
-								tuple     = g.AsTuple3(b)
-								requests  = g.AsList(tuple.Snd())
-								responses = g.AsList(tuple.Trd())
-							)
-
-							return append(asMarks(a), templateRoute(requests, responses)...)
-						})
+						tuple     = g.AsTuple2(b)
+						requests  = g.AsList(tuple.Fst())
+						responses = g.AsList(tuple.Snd())
 					)
 
-					return append(asMarks(a), asMarks(folded)...)
+					return append(asMarks(a), templateRoute(requests, responses)...)
 				})
 				doc = document(append(templateHeader(), append(asMarks(folded), templateFooter()...)...)...)
 			)

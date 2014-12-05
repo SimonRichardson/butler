@@ -174,3 +174,9 @@ func (x tree) FromList(l List) Tree {
 		return NewTreeNode(b, List_.Of(node))
 	}))
 }
+
+func (x tree) ToList(t Tree) List {
+	return AsList(t.FoldLeft(NewNil(), func(a, b Any) Any {
+		return NewCons(b, AsList(a))
+	}))
+}

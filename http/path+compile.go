@@ -86,9 +86,9 @@ func stringToList(s []string) g.List {
 	return g.AsList(g.Trampoline(rec(g.NewNil(), s)))
 }
 
-func compilePath(a String) g.List {
+func compilePath(a string) g.List {
 	var (
-		x      = stringToList(strings.Split(a.value, "/"))
+		x      = stringToList(strings.Split(a, "/")).Reverse()
 		option = func(a g.Any) g.Any {
 			return g.Option_.FromBool(strings.TrimSpace(a.(string)) != "", a)
 		}
