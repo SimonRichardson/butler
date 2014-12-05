@@ -1,8 +1,6 @@
 package http
 
 import (
-	"fmt"
-
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
 )
@@ -28,14 +26,7 @@ func (r Route) Build() g.StateT {
 			return func(b g.Any) g.Any {
 				return g.AsWriter(b).Map(func(a g.Any) g.Any {
 					result := compilePath(asString(a))
-
-					// This is actually a Trie tree
-					g.Tree_.FromList(result).Map(func(a g.Any) g.Any {
-						fmt.Println(a.(g.Right))
-						return a
-					})
-
-					return g.NewTuple2(a, result)
+					return g.NewTuple2(a, g.Tree_.FromList(result))
 				})
 			}
 		}

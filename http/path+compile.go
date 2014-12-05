@@ -72,15 +72,18 @@ func toNode(a string) g.Either {
 }
 
 func stringToList(s []string) g.List {
-	var rec func(g.List, []string) g.List
-	rec = func(l g.List, v []string) g.List {
+	var rec func(g.List, []string) g.Result
+	rec = func(l g.List, v []string) g.Result {
 		num := len(v)
 		if num < 1 {
-			return l
+			return g.Done(l)
 		}
-		return rec(g.NewCons(v[num-1], l), v[:num-1])
+		return g.Cont(func() g.Result {
+			return rec(g.NewCons(v[num-1], l), v[:num-1])
+		})
+
 	}
-	return rec(g.NewNil(), s)
+	return g.AsList(g.Trampoline(rec(g.NewNil(), s)))
 }
 
 func compilePath(a String) g.List {
