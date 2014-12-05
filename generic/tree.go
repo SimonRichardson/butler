@@ -5,7 +5,7 @@ type Tree interface {
 	Chain(func(Any) Tree) Tree
 	Map(func(Any) Any) Tree
 	FoldLeft(Any, func(Any, Any) Any) Any
-	Merge(t Tree) Tree
+	Merge(t Tree, f func(Any, Any) bool) Tree
 	Match(func(List, Any, int) bool) List
 }
 
@@ -31,7 +31,8 @@ func (t TreeNode) Chain(f func(Any) Tree) Tree {
 		return x
 	}
 
-	return NewTreeNode(x, t.nodes.Chain(func(x Any) List {
+	y := x.(TreeNode)
+	return NewTreeNode(y.value, t.nodes.Chain(func(x Any) List {
 		return List_.Of(x.(Tree).Chain(f))
 	}))
 }
@@ -48,7 +49,7 @@ func (t TreeNode) FoldLeft(x Any, f func(Any, Any) Any) Any {
 	})
 }
 
-func (t TreeNode) Merge(m Tree) Tree {
+func (t TreeNode) Merge(m Tree, f func(Any, Any) bool) Tree {
 	var rec func(a, b List) List
 	rec = func(a, b List) List {
 		return a.Chain(func(x Any) List {
@@ -66,7 +67,7 @@ func (t TreeNode) Merge(m Tree) Tree {
 					}
 
 					node = x.(TreeNode)
-					return node.value == val
+					return f(node.value, val)
 				})
 				fst      = AsList(tuple.Fst())
 				children = AsList(fst.FoldLeft(List_.Empty(), func(a, b Any) Any {
@@ -144,7 +145,7 @@ func (t TreeNil) FoldLeft(x Any, f func(Any, Any) Any) Any {
 	return x
 }
 
-func (t TreeNil) Merge(m Tree) Tree {
+func (t TreeNil) Merge(m Tree, f func(Any, Any) bool) Tree {
 	return m
 }
 

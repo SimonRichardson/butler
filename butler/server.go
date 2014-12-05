@@ -43,7 +43,7 @@ func (s server) Run() g.Either {
 	return s.x()
 }
 
-func Compile(x service) server {
+func Compile(s service) server {
 	route := func(a g.List) g.Option {
 		return a.Find(func(a g.Any) bool {
 			_, ok := a.(http.Route)
@@ -52,7 +52,7 @@ func Compile(x service) server {
 	}
 	return server{
 		x: func() g.Either {
-			return g.AsEither(x.Compile().Fold(
+			return g.AsEither(s.Compile().Fold(
 				func(x g.Any) g.Any {
 					return g.NewLeft(x)
 				},
@@ -65,10 +65,15 @@ func Compile(x service) server {
 					)
 					return route(requests).Fold(
 						func(y g.Any) g.Any {
-							route := y.(http.Route)
+							var (
+								route  = y.(http.Route)
+								mapped = route.Route().Map(func(a g.Any) g.Any {
+									return g.NewTuple2(a, s)
+								})
+							)
 							return g.NewRight(
 								Server{
-									routes:    route.Route(),
+									routes:    mapped,
 									routeList: g.List_.Of(g.NewTuple2(requests, responses)),
 								},
 							)

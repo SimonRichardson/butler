@@ -12,9 +12,10 @@ var (
 	Named    nodeType = "named"
 	Variable nodeType = "variable"
 	Wildcard nodeType = "wildcard"
+	Empty    nodeType = "empty"
 )
 
-type node interface {
+type PathNode interface {
 	Type() nodeType
 }
 
@@ -54,6 +55,16 @@ func newWildcard() wildcard {
 
 func (n wildcard) Type() nodeType {
 	return Wildcard
+}
+
+type empty struct{}
+
+func newEmpty() empty {
+	return empty{}
+}
+
+func (n empty) Type() nodeType {
+	return Empty
 }
 
 func toNode(a string) g.Either {
@@ -104,16 +115,25 @@ func compilePath(a string) g.List {
 		}
 		nones = func(a g.Any) bool {
 			return g.AsEither(a).Fold(
+				g.Constant1(false),
 				func(a g.Any) g.Any {
 					return g.Option_.ToBool(g.AsOption(a))
 				},
-				g.Constant1(true),
 			).(bool)
+		}
+		extract = func(a g.Any) g.Any {
+			return g.AsEither(a).Fold(
+				g.Constant1(newEmpty()),
+				func(a g.Any) g.Any {
+					return g.AsOption(a).GetOrElse(g.Constant(newEmpty()))
+				},
+			).(PathNode)
 		}
 	)
 
 	return x.
 		Map(option).
 		Map(nodes).
-		Filter(nones)
+		Filter(nones).
+		Map(extract)
 }
