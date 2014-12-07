@@ -14,6 +14,7 @@ type List interface {
 	Partition(func(Any) bool) Tuple2
 	ReduceLeft(func(Any, Any) Any) Option
 	Reverse() List
+	Size() int
 }
 
 type Cons struct {
@@ -184,6 +185,12 @@ func (x Cons) Reverse() List {
 	}))
 }
 
+func (x Cons) Size() int {
+	return x.FoldLeft(0, func(a, b Any) Any {
+		return a.(int) + 1
+	}).(int)
+}
+
 type Nil struct{}
 
 func NewNil() Nil {
@@ -240,6 +247,10 @@ func (x Nil) ReduceLeft(f func(Any, Any) Any) Option {
 
 func (x Nil) Reverse() List {
 	return x
+}
+
+func (x Nil) Size() int {
+	return 0
 }
 
 // Static methods

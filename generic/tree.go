@@ -140,8 +140,37 @@ func (w walker) Match(f func(List, Any, int) bool) List {
 	return rec(NewNil(), w.tree, 0)
 }
 
-func (w walker) Map(f func(Any, int) Any) Tree {
-	return NewTreeNil()
+func (w walker) Map(f func(Any, int, bool) Any) Tree {
+	var rec func(a List, b int) List
+	rec = func(a List, b int) List {
+		return a.Chain(func(x Any) List {
+			if _, ok := x.(TreeNil); ok {
+				return List_.Of(x)
+			}
+
+			var (
+				node     = x.(TreeNode)
+				val      = node.value
+				nodes    = node.nodes
+				children = nodes.(Cons)
+				last     = false
+			)
+
+			if nodes.Size() == 1 {
+				_, last = children.head.(TreeNil)
+			}
+
+			return List_.Of(
+				NewTreeNode(
+					f(val, b, last),
+					rec(nodes, b+1),
+				),
+			)
+		})
+	}
+	return AsTree(rec(List_.Of(w.tree), 0).Head().GetOrElse(func() Any {
+		return NewTreeNil()
+	}))
 }
 
 func (w walker) Merge(m Tree, f func(Any, Any) bool) Tree {
