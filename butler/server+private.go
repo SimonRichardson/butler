@@ -4,7 +4,7 @@ import g "github.com/SimonRichardson/butler/generic"
 
 func concat(a, b Server) Server {
 	return Server{
-		routes: a.routes.Merge(b.routes, func(a, b g.Any) bool {
+		routes: g.Tree_.Walker(a.routes).Merge(b.routes, func(a, b g.Any) bool {
 			var (
 				x = g.AsTuple2(a)
 				y = g.AsTuple2(b)

@@ -5,8 +5,6 @@ type Tree interface {
 	Chain(func(Any) Tree) Tree
 	Map(func(Any) Any) Tree
 	FoldLeft(Any, func(Any, Any) Any) Any
-	Merge(t Tree, f func(Any, Any) bool) Tree
-	Match(func(List, Any, int) bool) List
 }
 
 type TreeNode struct {
@@ -49,7 +47,104 @@ func (t TreeNode) FoldLeft(x Any, f func(Any, Any) Any) Any {
 	})
 }
 
-func (t TreeNode) Merge(m Tree, f func(Any, Any) bool) Tree {
+type TreeNil struct {
+}
+
+func NewTreeNil() TreeNil {
+	return TreeNil{}
+}
+
+func (t TreeNil) Children() Option {
+	return Option_.Empty()
+}
+
+func (t TreeNil) Chain(f func(Any) Tree) Tree {
+	return t
+}
+
+func (t TreeNil) Map(f func(Any) Any) Tree {
+	return t
+}
+
+func (t TreeNil) FoldLeft(x Any, f func(Any, Any) Any) Any {
+	return x
+}
+
+// Static methods
+
+var (
+	Tree_ = tree{}
+)
+
+type tree struct{}
+
+func (x tree) Of(v Any) Tree {
+	return NewTreeNode(v, NewNil())
+}
+
+func (x tree) Empty() Tree {
+	return NewTreeNil()
+}
+
+func (x tree) FromList(l List) Tree {
+	return AsTree(l.Reverse().FoldLeft(NewTreeNil(), func(a, b Any) Any {
+		node := AsTree(a)
+		return NewTreeNode(b, List_.Of(node))
+	}))
+}
+
+func (x tree) ToList(t Tree) List {
+	return AsList(t.FoldLeft(NewNil(), func(a, b Any) Any {
+		return NewCons(b, AsList(a))
+	}))
+}
+
+func (x tree) Walker(t Tree) walker {
+	return walker{
+		tree: t,
+	}
+}
+
+type walker struct {
+	tree Tree
+}
+
+func (w walker) Match(f func(List, Any, int) bool) List {
+	var rec func(a List, b Tree, c int) List
+	rec = func(a List, b Tree, c int) List {
+		if _, ok := b.(TreeNil); ok {
+			return a
+		}
+
+		var (
+			x = b.(TreeNode)
+			y = Option_.FromBool(f(a, x.value, c), x.value)
+		)
+
+		return AsList(y.Fold(
+			func(y Any) Any {
+				return x.nodes.FoldLeft(NewCons(x.value, a), func(a, b Any) Any {
+					if _, ok := b.(TreeNil); ok {
+						return a
+					}
+					var (
+						list = AsList(a)
+						node = b.(TreeNode)
+					)
+					return rec(list, node, c+1)
+				})
+			},
+			Constant(a),
+		))
+	}
+	return rec(NewNil(), w.tree, 0)
+}
+
+func (w walker) Map(f func(Any, int) Any) Tree {
+	return NewTreeNil()
+}
+
+func (w walker) Merge(m Tree, f func(Any, Any) bool) Tree {
 	var rec func(a, b List) List
 	rec = func(a, b List) List {
 		return a.Chain(func(x Any) List {
@@ -82,102 +177,17 @@ func (t TreeNode) Merge(m Tree, f func(Any, Any) bool) Tree {
 			).Concat(AsList(tuple.Snd()))
 		})
 	}
+
+	do := List_.Of(m)
+	if _, ok := w.tree.(TreeNil); ok {
+		do = rec(
+			List_.Of(w.tree),
+			List_.Of(m),
+		)
+	}
+
 	return NewTreeNode(
 		Option_.Empty(),
-		rec(
-			List_.Of(t),
-			List_.Of(m),
-		),
+		do,
 	)
-}
-
-func (t TreeNode) Match(f func(List, Any, int) bool) List {
-	var rec func(a List, b Tree, c int) List
-	rec = func(a List, b Tree, c int) List {
-		if _, ok := b.(TreeNil); ok {
-			return a
-		}
-
-		var (
-			x = b.(TreeNode)
-			y = Option_.FromBool(f(a, x.value, c), x.value)
-		)
-
-		return AsList(y.Fold(
-			func(y Any) Any {
-				return x.nodes.FoldLeft(NewCons(x.value, a), func(a, b Any) Any {
-					if _, ok := b.(TreeNil); ok {
-						return a
-					}
-					var (
-						list = AsList(a)
-						node = b.(TreeNode)
-					)
-					return rec(list, node, c+1)
-				})
-			},
-			Constant(a),
-		))
-	}
-	return rec(NewNil(), t, 0)
-}
-
-type TreeNil struct {
-}
-
-func NewTreeNil() TreeNil {
-	return TreeNil{}
-}
-
-func (t TreeNil) Children() Option {
-	return Option_.Empty()
-}
-
-func (t TreeNil) Chain(f func(Any) Tree) Tree {
-	return t
-}
-
-func (t TreeNil) Map(f func(Any) Any) Tree {
-	return t
-}
-
-func (t TreeNil) FoldLeft(x Any, f func(Any, Any) Any) Any {
-	return x
-}
-
-func (t TreeNil) Merge(m Tree, f func(Any, Any) bool) Tree {
-	return m
-}
-
-func (t TreeNil) Match(f func(List, Any, int) bool) List {
-	return List_.Empty()
-}
-
-// Static methods
-
-var (
-	Tree_ = tree{}
-)
-
-type tree struct{}
-
-func (x tree) Of(v Any) Tree {
-	return NewTreeNode(v, NewNil())
-}
-
-func (x tree) Empty() Tree {
-	return NewTreeNil()
-}
-
-func (x tree) FromList(l List) Tree {
-	return AsTree(l.Reverse().FoldLeft(NewTreeNil(), func(a, b Any) Any {
-		node := AsTree(a)
-		return NewTreeNode(b, List_.Of(node))
-	}))
-}
-
-func (x tree) ToList(t Tree) List {
-	return AsList(t.FoldLeft(NewNil(), func(a, b Any) Any {
-		return NewCons(b, AsList(a))
-	}))
 }
