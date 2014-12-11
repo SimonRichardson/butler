@@ -14,6 +14,8 @@ type List interface {
 	Partition(func(Any) bool) Tuple2
 	ReduceLeft(func(Any, Any) Any) Option
 	Reverse() List
+	Size() int
+	Zip(List) List
 }
 
 type Cons struct {
@@ -184,6 +186,33 @@ func (x Cons) Reverse() List {
 	}))
 }
 
+func (x Cons) Size() int {
+	return x.FoldLeft(0, func(a, b Any) Any {
+		return a.(int) + 1
+	}).(int)
+}
+
+func (x Cons) Zip(y List) List {
+	var rec func(a, b, c List) Result
+	rec = func(a, b, c List) Result {
+		_, ok1 := a.(Nil)
+		_, ok2 := b.(Nil)
+
+		if ok1 || ok2 {
+			return Done(c)
+		}
+
+		return Cont(func() Result {
+			var (
+				x = a.(Cons)
+				y = b.(Cons)
+			)
+			return rec(x.tail, y.tail, NewCons(NewTuple2(x.head, y.head), c))
+		})
+	}
+	return AsList(Trampoline(rec(x, y, NewNil())))
+}
+
 type Nil struct{}
 
 func NewNil() Nil {
@@ -242,6 +271,14 @@ func (x Nil) Reverse() List {
 	return x
 }
 
+func (x Nil) Size() int {
+	return 0
+}
+
+func (x Nil) Zip(a List) List {
+	return List_.Empty()
+}
+
 // Static methods
 
 var (
@@ -280,6 +317,13 @@ func (x list) FromAmount(s int) List {
 		}, v-1)
 	}
 	return rec(Nil{}, s)
+}
+
+func (x list) FromBool(a bool, b Any) List {
+	if a {
+		return List_.Of(b)
+	}
+	return List_.Empty()
 }
 
 func (x list) FromSlice(s []Any) List {

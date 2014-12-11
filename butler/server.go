@@ -67,8 +67,8 @@ func Compile(s service) server {
 						func(y g.Any) g.Any {
 							var (
 								route  = y.(http.Route)
-								mapped = route.Route().Map(func(a g.Any) g.Any {
-									return g.NewTuple2(a, s)
+								mapped = g.Walker_.Map(route.Route(), func(a g.Any, b int, c bool) g.Any {
+									return g.NewTuple2(a, g.List_.FromBool(c, s))
 								})
 							)
 							return g.NewRight(

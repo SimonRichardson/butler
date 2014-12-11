@@ -99,17 +99,17 @@ func (x tree) ToList(t Tree) List {
 	}))
 }
 
-func (x tree) Walker(t Tree) walker {
-	return walker{
-		tree: t,
-	}
+func (x tree) Walker() walker {
+	return Walker_
 }
 
-type walker struct {
-	tree Tree
-}
+var (
+	Walker_ = walker{}
+)
 
-func (w walker) Match(f func(List, Any, int) bool) List {
+type walker struct{}
+
+func (w walker) Match(a Tree, f func(List, Any, int) bool) List {
 	var rec func(a List, b Tree, c int) List
 	rec = func(a List, b Tree, c int) List {
 		if _, ok := b.(TreeNil); ok {
@@ -137,14 +137,43 @@ func (w walker) Match(f func(List, Any, int) bool) List {
 			Constant(a),
 		))
 	}
-	return rec(NewNil(), w.tree, 0)
+	return rec(NewNil(), a, 0)
 }
 
-func (w walker) Map(f func(Any, int) Any) Tree {
-	return NewTreeNil()
+func (w walker) Map(a Tree, f func(Any, int, bool) Any) Tree {
+	var rec func(a List, b int) List
+	rec = func(a List, b int) List {
+		return a.Chain(func(x Any) List {
+			if _, ok := x.(TreeNil); ok {
+				return List_.Of(x)
+			}
+
+			var (
+				node     = x.(TreeNode)
+				val      = node.value
+				nodes    = node.nodes
+				children = nodes.(Cons)
+				last     = false
+			)
+
+			if nodes.Size() == 1 {
+				_, last = children.head.(TreeNil)
+			}
+
+			return List_.Of(
+				NewTreeNode(
+					f(val, b, last),
+					rec(nodes, b+1),
+				),
+			)
+		})
+	}
+	return AsTree(rec(List_.Of(a), 0).Head().GetOrElse(func() Any {
+		return NewTreeNil()
+	}))
 }
 
-func (w walker) Merge(m Tree, f func(Any, Any) bool) Tree {
+func (w walker) Merge(a, b Tree, f func(Any, Any) bool) Tree {
 	var rec func(a, b List) List
 	rec = func(a, b List) List {
 		return a.Chain(func(x Any) List {
@@ -178,11 +207,75 @@ func (w walker) Merge(m Tree, f func(Any, Any) bool) Tree {
 		})
 	}
 
-	do := List_.Of(m)
-	if _, ok := w.tree.(TreeNil); ok {
+	do := List_.Of(b)
+	if _, ok := a.(TreeNode); ok {
 		do = rec(
-			List_.Of(w.tree),
-			List_.Of(m),
+			List_.Of(a),
+			List_.Of(b),
+		)
+	}
+
+	return NewTreeNode(
+		Option_.Empty(),
+		do,
+	)
+}
+
+func (w walker) Combine(a, b Tree, f func(Any, Any) Option) Tree {
+	var rec func(a, b List) List
+	rec = func(a, b List) List {
+		return a.Chain(func(x Any) List {
+			if _, ok := x.(TreeNil); ok {
+				return List_.Of(x)
+			}
+
+			var (
+				node     = x.(TreeNode)
+				val      = node.value
+				nodes    = node.nodes
+				combined = AsOption(b.FoldLeft(Option_.Empty(), func(x, y Any) Any {
+					if _, ok := y.(TreeNil); ok {
+						return x
+					}
+
+					node = y.(TreeNode)
+					return f(node.value, val).Fold(
+						func(a Any) Any {
+							return Option_.Of(a)
+						},
+						Constant(x),
+					)
+				}))
+				tuple = b.Partition(func(x Any) bool {
+					if _, ok := x.(TreeNil); ok {
+						return false
+					}
+
+					node = x.(TreeNode)
+					return f(node.value, val).Fold(
+						Constant1(true),
+						Constant(false),
+					).(bool)
+				})
+				fst      = AsList(tuple.Fst())
+				children = AsList(fst.FoldLeft(List_.Empty(), func(a, b Any) Any {
+					return AsList(a).Concat(b.(TreeNode).nodes)
+				}))
+			)
+			return List_.Of(
+				NewTreeNode(
+					Option_.Of(combined.GetOrElse(Constant(val))),
+					rec(nodes, children),
+				),
+			).Concat(AsList(tuple.Snd()))
+		})
+	}
+
+	do := List_.Of(b)
+	if _, ok := a.(TreeNode); ok {
+		do = rec(
+			List_.Of(a),
+			List_.Of(b),
 		)
 	}
 

@@ -110,3 +110,17 @@ func (x option) FromBool(b bool, val Any) Option {
 func (x option) ToBool(val Option) bool {
 	return val.Fold(Constant1(true), Constant(false)).(bool)
 }
+
+func (x option) Equals(a, b Option) bool {
+	return a.Fold(
+		func(x Any) Any {
+			return b.Fold(
+				func(y Any) Any {
+					return x == y
+				},
+				Constant(false),
+			)
+		},
+		Constant(false),
+	).(bool)
+}
