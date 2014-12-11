@@ -208,7 +208,7 @@ func (w walker) Merge(a, b Tree, f func(Any, Any) bool) Tree {
 	}
 
 	do := List_.Of(b)
-	if _, ok := a.(TreeNil); ok {
+	if _, ok := a.(TreeNode); ok {
 		do = rec(
 			List_.Of(a),
 			List_.Of(b),
@@ -221,7 +221,7 @@ func (w walker) Merge(a, b Tree, f func(Any, Any) bool) Tree {
 	)
 }
 
-func (w walker) Combine(a, b Tree, f func(List, List) Option) Tree {
+func (w walker) Combine(a, b Tree, f func(Any, Any) Option) Tree {
 	var rec func(a, b List) List
 	rec = func(a, b List) List {
 		return a.Chain(func(x Any) List {
@@ -230,16 +230,32 @@ func (w walker) Combine(a, b Tree, f func(List, List) Option) Tree {
 			}
 
 			var (
-				node  = x.(TreeNode)
-				val   = node.value
-				nodes = node.nodes
+				node     = x.(TreeNode)
+				val      = node.value
+				nodes    = node.nodes
+				combined = AsOption(b.FoldLeft(Option_.Empty(), func(x, y Any) Any {
+					if _, ok := y.(TreeNil); ok {
+						return x
+					}
+
+					node = y.(TreeNode)
+					return f(node.value, val).Fold(
+						func(a Any) Any {
+							return Option_.Of(a)
+						},
+						Constant(x),
+					)
+				}))
 				tuple = b.Partition(func(x Any) bool {
 					if _, ok := x.(TreeNil); ok {
 						return false
 					}
 
 					node = x.(TreeNode)
-					return f(node.value, val)
+					return f(node.value, val).Fold(
+						Constant1(true),
+						Constant(false),
+					).(bool)
 				})
 				fst      = AsList(tuple.Fst())
 				children = AsList(fst.FoldLeft(List_.Empty(), func(a, b Any) Any {
@@ -248,7 +264,7 @@ func (w walker) Combine(a, b Tree, f func(List, List) Option) Tree {
 			)
 			return List_.Of(
 				NewTreeNode(
-					Option_.Of(val),
+					Option_.Of(combined.GetOrElse(Constant(val))),
 					rec(nodes, children),
 				),
 			).Concat(AsList(tuple.Snd()))
@@ -256,7 +272,7 @@ func (w walker) Combine(a, b Tree, f func(List, List) Option) Tree {
 	}
 
 	do := List_.Of(b)
-	if _, ok := a.(TreeNil); ok {
+	if _, ok := a.(TreeNode); ok {
 		do = rec(
 			List_.Of(a),
 			List_.Of(b),

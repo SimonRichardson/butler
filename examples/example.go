@@ -61,4 +61,21 @@ func main() {
 
 	// Run the documentation
 	Remotely(server)("localhost", "8080")
+
+	/*
+		toList := func(a g.Any) g.Any {
+			return g.List_.Of(a)
+		}
+
+		a := g.Tree_.FromList(g.List_.FromString("abcd")).Map(toList)
+		b := g.Tree_.FromList(g.List_.FromString("ab12")).Map(toList)
+		fmt.Println(g.Walker_.Combine(a, b, func(a, b g.Any) g.Option {
+			x := g.AsList(a)
+			y := g.AsList(b)
+			if g.Option_.Equals(x.Head(), y.Head()) {
+				return g.Option_.Of(x.Concat(y))
+			} else {
+				return g.Option_.Empty()
+			}
+		}))*/
 }
