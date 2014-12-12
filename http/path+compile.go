@@ -16,6 +16,7 @@ var (
 )
 
 type PathNode interface {
+	Match(string) bool
 	Type() nodeType
 }
 
@@ -27,6 +28,10 @@ func newNamed(name string) named {
 	return named{
 		name: name,
 	}
+}
+
+func (n named) Match(x string) bool {
+	return n.name == x
 }
 
 func (n named) Type() nodeType {
@@ -43,6 +48,10 @@ func newVariable(name string) variable {
 	}
 }
 
+func (n variable) Match(x string) bool {
+	return true
+}
+
 func (n variable) Type() nodeType {
 	return Variable
 }
@@ -51,6 +60,10 @@ type wildcard struct{}
 
 func newWildcard() wildcard {
 	return wildcard{}
+}
+
+func (n wildcard) Match(x string) bool {
+	return true
 }
 
 func (n wildcard) Type() nodeType {
@@ -82,24 +95,9 @@ func toNode(a string) g.Either {
 	}
 }
 
-func stringToList(s []string) g.List {
-	var rec func(g.List, []string) g.Result
-	rec = func(l g.List, v []string) g.Result {
-		num := len(v)
-		if num < 1 {
-			return g.Done(l)
-		}
-		return g.Cont(func() g.Result {
-			return rec(g.NewCons(v[num-1], l), v[:num-1])
-		})
-
-	}
-	return g.AsList(g.Trampoline(rec(g.NewNil(), s)))
-}
-
 func compilePath(a string) g.List {
 	var (
-		x      = stringToList(strings.Split(a, "/")).Reverse()
+		x      = g.List_.StringSliceToList(strings.Split(a, "/")).Reverse()
 		option = func(a g.Any) g.Any {
 			return g.Option_.FromBool(strings.TrimSpace(a.(string)) != "", a)
 		}

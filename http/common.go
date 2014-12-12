@@ -30,6 +30,10 @@ func asMethod(x g.Any) Method {
 	return x.(Method)
 }
 
+func AsPathNode(x g.Any) PathNode {
+	return x.(PathNode)
+}
+
 func AsRoute(x g.Any) Route {
 	return x.(Route)
 }

@@ -11,6 +11,7 @@ type List interface {
 	Find(func(Any) bool) Option
 	FoldLeft(Any, func(Any, Any) Any) Any
 	GroupBy(func(Any) Any) List
+	Index(uint) Option
 	Partition(func(Any) bool) Tuple2
 	ReduceLeft(func(Any, Any) Any) Option
 	Reverse() List
@@ -166,6 +167,24 @@ func (x Cons) GroupBy(f func(Any) Any) List {
 	}).(List)
 }
 
+func (x Cons) Index(index uint) Option {
+	var rec func(List, uint) Result
+	rec = func(a List, b uint) Result {
+		if _, ok := a.(Nil); ok {
+			return Done(Option_.Empty())
+		}
+
+		cons := a.(Cons)
+		if b == 0 {
+			return Done(Option_.Of(cons.head))
+		}
+		return Cont(func() Result {
+			return rec(cons.tail, b-1)
+		})
+	}
+	return AsOption(Trampoline(rec(x, index)))
+}
+
 func (x Cons) Partition(f func(Any) bool) Tuple2 {
 	return AsTuple2(x.FoldLeft(NewTuple2(List_.Empty(), List_.Empty()), func(a, b Any) Any {
 		x := AsTuple2(a)
@@ -259,6 +278,10 @@ func (x Nil) GroupBy(f func(Any) Any) List {
 	return x
 }
 
+func (x Nil) Index(index uint) Option {
+	return Option_.Empty()
+}
+
 func (x Nil) Partition(f func(Any) bool) Tuple2 {
 	return NewTuple2(List_.Empty(), List_.Empty())
 }
@@ -348,4 +371,19 @@ func (x list) FromString(s string) List {
 		res[i] = string(s[i])
 	}
 	return x.FromSlice(res)
+}
+
+func (x list) StringSliceToList(s []string) List {
+	var rec func(List, []string) Result
+	rec = func(l List, v []string) Result {
+		num := len(v)
+		if num < 1 {
+			return Done(l)
+		}
+		return Cont(func() Result {
+			return rec(NewCons(v[num-1], l), v[:num-1])
+		})
+
+	}
+	return AsList(Trampoline(rec(NewNil(), s)))
 }

@@ -87,7 +87,7 @@ func (x tree) Empty() Tree {
 }
 
 func (x tree) FromList(l List) Tree {
-	return AsTree(l.Reverse().FoldLeft(NewTreeNil(), func(a, b Any) Any {
+	return AsTree(l.FoldLeft(NewTreeNil(), func(a, b Any) Any {
 		node := AsTree(a)
 		return NewTreeNode(b, List_.Of(node))
 	}))
