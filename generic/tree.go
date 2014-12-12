@@ -174,51 +174,10 @@ func (w walker) Map(a Tree, f func(Any, int, bool) Any) Tree {
 }
 
 func (w walker) Merge(a, b Tree, f func(Any, Any) bool) Tree {
-	var rec func(a, b List) List
-	rec = func(a, b List) List {
-		return a.Chain(func(x Any) List {
-			if _, ok := x.(TreeNil); ok {
-				return List_.Of(x)
-			}
-
-			var (
-				node  = x.(TreeNode)
-				val   = node.value
-				nodes = node.nodes
-				tuple = b.Partition(func(x Any) bool {
-					if _, ok := x.(TreeNil); ok {
-						return false
-					}
-
-					node = x.(TreeNode)
-					return f(node.value, val)
-				})
-				fst      = AsList(tuple.Fst())
-				children = AsList(fst.FoldLeft(List_.Empty(), func(a, b Any) Any {
-					return AsList(a).Concat(b.(TreeNode).nodes)
-				}))
-			)
-			return List_.Of(
-				NewTreeNode(
-					Option_.Of(val),
-					rec(nodes, children),
-				),
-			).Concat(AsList(tuple.Snd()))
-		})
-	}
-
-	do := List_.Of(b)
-	if _, ok := a.(TreeNode); ok {
-		do = rec(
-			List_.Of(a),
-			List_.Of(b),
-		)
-	}
-
-	return NewTreeNode(
-		Option_.Empty(),
-		do,
-	)
+	return w.Combine(a, b, func(a, b Any) Option {
+		x := f(a, b)
+		return Option_.FromBool(x, a)
+	})
 }
 
 func (w walker) Combine(a, b Tree, f func(Any, Any) Option) Tree {
