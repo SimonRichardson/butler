@@ -37,11 +37,11 @@ func main() {
 		ContentType("application/json").
 		Content(io.JsonEncoder{}, g.Constant(hint))
 
-	listEmployees := Service(request, response).Then(func(args map[string]g.Any) g.Any {
-		loadAllEmployees := func(x int) g.Any {
+	listEmployees := Service(request, response).Then(func() g.Any {
+		loadAllEmployees := func() g.Any {
 			return []g.Any{}
 		}
-		return loadAllEmployees(args["limit"].(int))
+		return loadAllEmployees()
 	})
 
 	server := Compile(listEmployees).AndThen(listEmployees).Run()

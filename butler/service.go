@@ -1,11 +1,15 @@
 package butler
 
-import g "github.com/SimonRichardson/butler/generic"
+import (
+	"fmt"
+
+	g "github.com/SimonRichardson/butler/generic"
+)
 
 type service struct {
 	request  request
 	response response
-	callable func(map[string]g.Any) g.Any
+	callable func() g.Any
 }
 
 func Service(request, response Builder) service {
@@ -15,7 +19,7 @@ func Service(request, response Builder) service {
 	}
 }
 
-func (s service) Then(f func(map[string]g.Any) g.Any) service {
+func (s service) Then(f func() g.Any) service {
 	return service{
 		request:  s.request,
 		response: s.response,
@@ -55,4 +59,13 @@ func (s service) Compile() g.Either {
 			})
 		},
 	).(g.Either)
+}
+
+func (s service) String() string {
+	return getRoute(s.request.list).Fold(
+		func(x g.Any) g.Any {
+			return fmt.Sprintf("Service(`%s`)", x)
+		},
+		g.Constant("Service()"),
+	).(string)
 }

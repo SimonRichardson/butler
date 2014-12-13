@@ -9,6 +9,18 @@ import (
 	h "github.com/SimonRichardson/butler/http"
 )
 
+var (
+	notFoundService = func(r *http.Request) func() g.Any {
+		return func() g.Any {
+			return service{
+				callable: func() g.Any {
+					return error404()
+				},
+			}
+		}
+	}
+)
+
 type Server struct {
 	routes    g.Tree
 	routeList g.List
@@ -42,16 +54,12 @@ func (s Server) Run() g.IO {
 					).(bool)
 				}
 			}
-			empty = func(a g.List) bool {
-				return a.Head().Fold(
-					func(x g.Any) g.Any {
-						return g.AsOption(x).Fold(
-							g.Constant1(false),
-							g.Constant(true),
-						).(bool)
+			isNonEmpty = func(a g.List) g.Option {
+				return a.Head().Chain(
+					func(x g.Any) g.Option {
+						return g.AsOption(x)
 					},
-					g.Constant(true),
-				).(bool)
+				)
 			}
 		)
 
@@ -63,11 +71,45 @@ func (s Server) Run() g.IO {
 				matched = g.Walker_.Match(s.routes, condition(parts))
 			)
 
-			if empty(matched) {
-				fmt.Fprintln(w, "404")
-			} else {
-				fmt.Println(matched)
-			}
+			x := isNonEmpty(matched).Map(func(x g.Any) g.Any {
+				// TODO (Simon) :
+				// 0. Move http.Request over to a better object.
+				// 1. Now go through the service, matches all the values
+				// 2. Render service if matched
+				// 3. No match = 404
+				var (
+					remove = func(x g.Any) bool {
+						return g.Option_.ToBool(g.AsOption(x))
+					}
+					extract = func(x g.Any) g.Any {
+						return g.AsOption(x).Map(
+							func(y g.Any) g.Any {
+								return g.AsTuple2(y).Snd()
+							},
+						)
+					}
+					match = func(x g.Any) g.Any {
+						return g.AsOption(x).Chain(
+							func(a g.Any) g.Option {
+								return g.AsList(a).Find(func(b g.Any) bool {
+									return true
+									//return b.(service).Match().Run(r)
+								})
+							},
+						)
+					}
+
+					result = matched.
+						Filter(remove).
+						Map(extract).
+						Map(match).
+						Head()
+				)
+
+				return g.AsOption(result)
+			}).GetOrElse(notFoundService(r))
+
+			fmt.Println(x)
 		}
 	})
 }
@@ -98,12 +140,6 @@ func (s server) Run() g.Either {
 }
 
 func Compile(s service) server {
-	route := func(a g.List) g.Option {
-		return a.Find(func(a g.Any) bool {
-			_, ok := a.(h.Route)
-			return ok
-		})
-	}
 	return server{
 		x: func() g.Either {
 			return g.AsEither(s.Compile().Fold(
@@ -117,7 +153,7 @@ func Compile(s service) server {
 						requests  = g.AsList(tuple.Snd())
 						responses = g.AsList(tuple.Trd())
 					)
-					return route(requests).Fold(
+					return getRoute(requests).Fold(
 						func(y g.Any) g.Any {
 							var (
 								route  = y.(h.Route)
