@@ -37,6 +37,20 @@ func (s service) Compile() g.Either {
 		exec = func(b Build) g.Either {
 			return g.AsEither(b.Build().ExecState(writer)).Bimap(run, run)
 		}
+		collate = func(a g.Tuple2) func(g.Any) g.Any {
+			return func(x g.Any) g.Any {
+				var (
+					b         = g.AsTuple2(x)
+					requests  = g.AsList(a.Fst())
+					responses = g.AsList(b.Fst())
+				)
+				return g.NewTuple3(
+					s,
+					requests,
+					responses,
+				)
+			}
+		}
 	)
 
 	return exec(s.request).Fold(
@@ -45,18 +59,8 @@ func (s service) Compile() g.Either {
 		},
 		func(a g.Any) g.Any {
 			b := g.AsTuple2(a)
-			return exec(s.response).Map(func(x g.Any) g.Any {
-				var (
-					y         = g.AsTuple2(x)
-					requests  = g.AsList(b.Fst())
-					responses = g.AsList(y.Fst())
-				)
-				return g.NewTuple3(
-					s,
-					requests,
-					responses,
-				)
-			})
+			return exec(s.response).
+				Map(collate(b))
 		},
 	).(g.Either)
 }
