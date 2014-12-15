@@ -12,11 +12,14 @@ import (
 var (
 	notFoundService = func(r *http.Request) func() g.Any {
 		return func() g.Any {
-			return service{
-				callable: func() g.Any {
-					return error404()
-				},
-			}
+			// We build the not found service at run time.
+			var (
+				request  = Request()
+				response = Response().ContentType(r.Header.Get("content-type"))
+			)
+			return Service(request, response).Then(func() g.Any {
+				return error404()
+			})
 		}
 	}
 )
@@ -64,6 +67,12 @@ func (s Server) Run() g.IO {
 		)
 
 		return func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Println("Recovered:", r)
+				}
+			}()
+
 			var (
 				path  = r.URL.Path
 				parts = strings.Split(path, "/")
@@ -78,9 +87,6 @@ func (s Server) Run() g.IO {
 				// 2. Render service if matched
 				// 3. No match = 404
 				var (
-					remove = func(x g.Any) bool {
-						return g.Option_.ToBool(g.AsOption(x))
-					}
 					extract = func(x g.Any) g.Any {
 						return g.AsOption(x).Map(
 							func(y g.Any) g.Any {
@@ -88,12 +94,15 @@ func (s Server) Run() g.IO {
 							},
 						)
 					}
+					remove = func(x g.Any) bool {
+						return g.Option_.ToBool(g.AsOption(x))
+					}
 					match = func(x g.Any) g.Any {
 						return g.AsOption(x).Chain(
 							func(a g.Any) g.Option {
 								return g.AsList(a).Find(func(b g.Any) bool {
+									// TODO: We should use the compiled service!
 									return true
-									//return b.(service).Match().Run(r)
 								})
 							},
 						)
@@ -102,6 +111,7 @@ func (s Server) Run() g.IO {
 					result = matched.
 						Filter(remove).
 						Map(extract).
+						Filter(remove).
 						Map(match).
 						Head()
 				)
