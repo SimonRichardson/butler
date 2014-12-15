@@ -1,6 +1,38 @@
 package butler
 
-import g "github.com/SimonRichardson/butler/generic"
+import (
+	"net/http"
+
+	g "github.com/SimonRichardson/butler/generic"
+)
+
+var (
+	noContent       = g.Empty{}
+	notFoundService = func(r *http.Request) func() g.Any {
+		return func() g.Any {
+			// We build the not found service at run time.
+			var (
+				request  = Request()
+				response = Response().ContentType(r.Header.Get("content-type"))
+			)
+			return Service(request, response).Then(func() g.Any {
+				return error404()
+			})
+		}
+	}
+	redirectService = func(r *http.Request) func(x g.Any) g.Any {
+		return func(x g.Any) g.Any {
+			// We build the redirect service at run time.
+			var (
+				request  = Request()
+				response = Response().ContentType(r.Header.Get("content-type"))
+			)
+			return Service(request, response).Then(func() g.Any {
+				return noContent
+			})
+		}
+	}
+)
 
 func concat(a, b Server) Server {
 	return Server{

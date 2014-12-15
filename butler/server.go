@@ -9,21 +9,6 @@ import (
 	h "github.com/SimonRichardson/butler/http"
 )
 
-var (
-	notFoundService = func(r *http.Request) func() g.Any {
-		return func() g.Any {
-			// We build the not found service at run time.
-			var (
-				request  = Request()
-				response = Response().ContentType(r.Header.Get("content-type"))
-			)
-			return Service(request, response).Then(func() g.Any {
-				return error404()
-			})
-		}
-	}
-)
-
 type Server struct {
 	routes    g.Tree
 	routeList g.List
@@ -64,62 +49,77 @@ func (s Server) Run() g.IO {
 					},
 				)
 			}
+			overflow = func(matched g.List, parts []string) func(g.Any) g.Option {
+				return func(x g.Any) g.Option {
+					return g.Option_.FromBool(len(parts) <= matched.Size(), g.Option_.Of(x))
+				}
+			}
+			compute = func(matched g.List) func(g.Any) g.Option {
+				return func(x g.Any) g.Option {
+					var (
+						preRemove = func(x g.Any) bool {
+							return g.Option_.ToBool(g.AsOption(x))
+						}
+						extract = func(x g.Any) g.Any {
+							return g.AsOption(x).Map(
+								func(y g.Any) g.Any {
+									return g.AsTuple2(y).Snd()
+								},
+							)
+						}
+						postRemove = func(x g.Any) bool {
+							return g.AsOption(x).Fold(
+								func(x g.Any) g.Any {
+									return g.Option_.ToBool(g.AsList(x).Head())
+								},
+								g.Constant(false),
+							).(bool)
+						}
+						match = func(x g.Any) g.Any {
+							return g.AsOption(x).Chain(
+								func(a g.Any) g.Option {
+									return g.AsList(a).Find(func(b g.Any) bool {
+										// TODO: We should use the compiled service!
+										return true
+									})
+								},
+							)
+						}
+
+						result = matched.
+							Filter(preRemove).
+							Map(extract).
+							Filter(postRemove).
+							Map(match).
+							Head()
+					)
+
+					return g.AsOption(result)
+				}
+			}
 		)
 
 		return func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				if r := recover(); r != nil {
-					fmt.Println("Recovered:", r)
-				}
-			}()
-
 			var (
-				path  = r.URL.Path
-				parts = strings.Split(path, "/")
-
-				matched = g.Walker_.Match(s.routes, condition(parts))
+				path     = r.URL.Path
+				last     = path[len(path)-1]
+				redirect = g.Option_.FromBool(string(last) == "/", last)
+				parts    = strings.Split(path, "/")
 			)
 
-			x := isNonEmpty(matched).Map(func(x g.Any) g.Any {
-				// TODO (Simon) :
-				// 0. Move http.Request over to a better object.
-				// 1. Now go through the service, matches all the values
-				// 2. Render service if matched
-				// 3. No match = 404
-				var (
-					extract = func(x g.Any) g.Any {
-						return g.AsOption(x).Map(
-							func(y g.Any) g.Any {
-								return g.AsTuple2(y).Snd()
-							},
-						)
-					}
-					remove = func(x g.Any) bool {
-						return g.Option_.ToBool(g.AsOption(x))
-					}
-					match = func(x g.Any) g.Any {
-						return g.AsOption(x).Chain(
-							func(a g.Any) g.Option {
-								return g.AsList(a).Find(func(b g.Any) bool {
-									// TODO: We should use the compiled service!
-									return true
-								})
-							},
-						)
-					}
+			x := redirect.Fold(
+				redirectService(r),
+				func() g.Any {
+					matched := g.Walker_.Match(s.routes, condition(parts))
 
-					result = matched.
-						Filter(remove).
-						Map(extract).
-						Filter(remove).
-						Map(match).
-						Head()
-				)
+					return isNonEmpty(matched).
+						Chain(overflow(matched, parts)).
+						Chain(compute(matched)).
+						GetOrElse(notFoundService(r))
+				},
+			)
 
-				return g.AsOption(result)
-			}).GetOrElse(notFoundService(r))
-
-			fmt.Println(x)
+			fmt.Println("Fin", x)
 		}
 	})
 }

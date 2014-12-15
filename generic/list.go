@@ -87,11 +87,14 @@ func (x Cons) Filter(f func(Any) bool) List {
 			return Done(b)
 		}
 		return Cont(func() Result {
-			cons := a.(Cons)
+			var (
+				cons = a.(Cons)
+				tail = cons.tail
+			)
 			if f(cons.head) {
-				return rec(cons.tail, NewCons(cons.head, b))
+				return rec(tail, NewCons(cons.head, b))
 			} else {
-				return rec(cons.tail, b)
+				return rec(tail, b)
 			}
 		})
 	}
