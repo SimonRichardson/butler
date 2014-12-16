@@ -1,12 +1,13 @@
 package main
 
 import (
+
+	//. "github.com/SimonRichardson/butler/butler"
+
 	"fmt"
 
-	. "github.com/SimonRichardson/butler/butler"
 	g "github.com/SimonRichardson/butler/generic"
-	"github.com/SimonRichardson/butler/io"
-	"github.com/SimonRichardson/butler/markdown"
+	"github.com/SimonRichardson/butler/http"
 )
 
 type User struct {
@@ -17,48 +18,65 @@ type User struct {
 
 func main() {
 
-	var (
-		hint   = User{}
-		create = func() g.Any {
-			return User{}
-		}
-	)
+	writer := g.Writer_.Of(g.Empty{})
 
-	request := Request().
-		Post().
-		Path("/name/:id").
-		ContentType("application/json").
-		AcceptLanguage("en").
-		QueryUint("offset").
-		QueryUint("limit").
-		Body(io.JsonDecoder(create))
-
-	response := Response().
-		ContentType("application/json").
-		Content(io.JsonEncoder{}, g.Constant(hint))
-
-	listEmployees := Service(request, response).Then(func() g.Any {
-		loadAllEmployees := func() g.Any {
-			return []g.Any{}
-		}
-		return loadAllEmployees()
-	})
-
-	server := Compile(listEmployees).AndThen(listEmployees).Run()
-
-	// You can also render the server to markdown, for up to
-	// date documentation
-	markdown.Output(server).Fold(
-		func(err g.Any) g.Any {
-			fmt.Println(err)
-			return err
+	header := http.NewHeader("Accept", "fuck")
+	header.Build().ExecState(writer).(g.Either).Fold(
+		func(x g.Any) g.Any {
+			return x
 		},
-		func(doc g.Any) g.Any {
-			// fmt.Println(doc)
-			return doc
+		func(x g.Any) g.Any {
+			header := make(http.Header)
+			header.Add("Accept", "fuck")
+
+			fmt.Println(x.(g.Writer).Run().(g.StateT).Run(header))
+			return x
 		},
 	)
+	/*
+		var (
+			hint   = User{}
+			create = func() g.Any {
+				return User{}
+			}
+		)
 
-	// Run the documentation
-	Remotely(server)("localhost", "8080")
+		request := Request().
+			Post().
+			Path("/name/:id").
+			ContentType("application/json").
+			AcceptLanguage("en").
+			QueryUint("offset").
+			QueryUint("limit").
+			Body(io.JsonDecoder(create))
+
+		response := Response().
+			ContentType("application/json").
+			Content(io.JsonEncoder{}, g.Constant(hint))
+
+		listEmployees := Service(request, response).Then(func() g.Any {
+			loadAllEmployees := func() g.Any {
+				return []g.Any{}
+			}
+			return loadAllEmployees()
+		})
+
+		server := Compile(listEmployees).AndThen(listEmployees).Run()
+
+		// You can also render the server to markdown, for up to
+		// date documentation
+		markdown.Output(server).Fold(
+			func(err g.Any) g.Any {
+				fmt.Println(err)
+				return err
+			},
+			func(doc g.Any) g.Any {
+				// fmt.Println(doc)
+				return doc
+			},
+		)
+
+		// Run the documentation
+		Remotely(server)("localhost", "8080")
+	*/
 }

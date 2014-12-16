@@ -49,8 +49,12 @@ func Merge(a StateT) func(Any) StateT {
 				Empty{},
 				AsWriter(b).Chain(
 					func(z Any) Writer {
-						x, y := AsWriter(c).Run()
-						return NewWriter(NewTuple2(z, x), y)
+						var (
+							exe = AsWriter(c).Run()
+							x   = exe.Fst()
+							y   = exe.Snd()
+						)
+						return NewWriter(NewTuple2(z, x), y.([]Any))
 					},
 				),
 			)

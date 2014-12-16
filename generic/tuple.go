@@ -1,5 +1,7 @@
 package generic
 
+import "fmt"
+
 type Tuple2 struct {
 	_1 Any
 	_2 Any
@@ -22,6 +24,10 @@ func (t Tuple2) Snd() Any {
 
 func (t Tuple2) Slice() []Any {
 	return []Any{t._1, t._2}
+}
+
+func (t Tuple2) String() string {
+	return fmt.Sprintf("(%s, %s)", t._1, t._2)
 }
 
 type Tuple3 struct {
@@ -52,4 +58,8 @@ func (t Tuple3) Trd() Any {
 
 func (t Tuple3) Slice() []Any {
 	return []Any{t._1, t._2, t._3}
+}
+
+func (t Tuple3) String() string {
+	return fmt.Sprintf("(%s, %s, %s)", t._1, t._2, t._3)
 }
