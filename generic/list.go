@@ -1,5 +1,7 @@
 package generic
 
+import "fmt"
+
 type List interface {
 	Head() Option
 	Last() Option
@@ -17,6 +19,7 @@ type List interface {
 	Reverse() List
 	Size() int
 	Zip(List) List
+	String() string
 }
 
 type Cons struct {
@@ -235,6 +238,13 @@ func (x Cons) Zip(y List) List {
 	return AsList(Trampoline(rec(x, y, NewNil())))
 }
 
+func (x Cons) String() string {
+	res := x.ReduceLeft(func(a, b Any) Any {
+		return fmt.Sprintf("%s, %s", a, b)
+	})
+	return fmt.Sprintf("List(%s)", res.GetOrElse(Constant("")))
+}
+
 type Nil struct{}
 
 func NewNil() Nil {
@@ -303,6 +313,10 @@ func (x Nil) Size() int {
 
 func (x Nil) Zip(a List) List {
 	return List_.Empty()
+}
+
+func (x Nil) String() string {
+	return "List()"
 }
 
 // Static methods

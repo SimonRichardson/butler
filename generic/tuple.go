@@ -27,7 +27,7 @@ func (t Tuple2) Slice() []Any {
 }
 
 func (t Tuple2) String() string {
-	return fmt.Sprintf("(%s, %s)", t._1, t._2)
+	return fmt.Sprintf("Tuple2(%s, %s)", t._1, t._2)
 }
 
 type Tuple3 struct {
@@ -61,5 +61,5 @@ func (t Tuple3) Slice() []Any {
 }
 
 func (t Tuple3) String() string {
-	return fmt.Sprintf("(%s, %s, %s)", t._1, t._2, t._3)
+	return fmt.Sprintf("Tuple3(%s, %s, %s)", t._1, t._2, t._3)
 }

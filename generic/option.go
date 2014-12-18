@@ -1,5 +1,7 @@
 package generic
 
+import "fmt"
+
 type Option interface {
 	Chain(func(Any) Option) Option
 	Map(func(Any) Any) Option
@@ -7,13 +9,7 @@ type Option interface {
 	Ap(Any) Option
 	Traverse(func(Any) Any) Option
 	GetOrElse(func() Any) Any
-}
-
-func ToOption(x Any) Option {
-	if x == nil {
-		return NewNone()
-	}
-	return NewSome(x)
+	String() string
 }
 
 type Some struct {
@@ -54,6 +50,10 @@ func (x Some) GetOrElse(v func() Any) Any {
 	return x.x
 }
 
+func (x Some) String() string {
+	return fmt.Sprintf("Some(%s)", x.x)
+}
+
 type None struct{}
 
 func NewNone() None {
@@ -82,6 +82,10 @@ func (x None) Traverse(f func(Any) Any) Option {
 
 func (x None) GetOrElse(v func() Any) Any {
 	return v()
+}
+
+func (x None) String() string {
+	return "None()"
 }
 
 // Static methods

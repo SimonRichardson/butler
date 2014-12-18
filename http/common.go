@@ -26,6 +26,10 @@ func asContentEncoder(x g.Any) ContentEncoder {
 	return x.(ContentEncoder)
 }
 
+func AsHeader(x g.Any) Header {
+	return x.(Header)
+}
+
 func asMethod(x g.Any) Method {
 	return x.(Method)
 }

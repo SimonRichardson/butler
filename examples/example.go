@@ -5,9 +5,10 @@ import (
 	//. "github.com/SimonRichardson/butler/butler"
 
 	"fmt"
+	"net/http"
 
 	g "github.com/SimonRichardson/butler/generic"
-	"github.com/SimonRichardson/butler/http"
+	h "github.com/SimonRichardson/butler/http"
 )
 
 type User struct {
@@ -20,16 +21,19 @@ func main() {
 
 	writer := g.Writer_.Of(g.Empty{})
 
-	header := http.NewHeader("Accept", "fuck")
+	header := h.NewHeader("Accept", "fuck")
 	header.Build().ExecState(writer).(g.Either).Fold(
 		func(x g.Any) g.Any {
 			return x
 		},
 		func(x g.Any) g.Any {
+
 			header := make(http.Header)
 			header.Add("Accept", "fuck")
 
-			fmt.Println(x.(g.Writer).Run().(g.StateT).Run(header))
+			set := g.Set_.HttpHeaderToSet(header)
+
+			fmt.Println("Fin > ", x.(g.Writer).Run().Fst().(g.StateT).ExecState(set))
 			return x
 		},
 	)

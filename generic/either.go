@@ -1,10 +1,13 @@
 package generic
 
+import "fmt"
+
 type Either interface {
 	Chain(f func(v Any) Either) Either
 	Map(f func(v Any) Any) Either
 	Bimap(f func(v Any) Any, g func(v Any) Any) Either
 	Fold(f func(v Any) Any, g func(v Any) Any) Any
+	String() string
 }
 
 type Right struct {
@@ -33,6 +36,10 @@ func (x Right) Bimap(f func(v Any) Any, g func(v Any) Any) Either {
 	return NewRight(g(x.x))
 }
 
+func (x Right) String() string {
+	return fmt.Sprintf("Right(%s)", x.x)
+}
+
 type Left struct {
 	x Any
 }
@@ -57,6 +64,10 @@ func (x Left) Fold(f func(v Any) Any, g func(v Any) Any) Any {
 
 func (x Left) Bimap(f func(v Any) Any, g func(v Any) Any) Either {
 	return NewLeft(f(x.x))
+}
+
+func (x Left) String() string {
+	return fmt.Sprintf("Left(%s)", x.x)
 }
 
 // Static methods

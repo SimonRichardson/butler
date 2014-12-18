@@ -44,13 +44,51 @@ func (h Header) Build() g.StateT {
 				}
 			}
 		}
+		matcher = func(a g.Any) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.AsWriter(b).Map(func(x g.Any) g.Any {
+
+					var (
+						match = func(a g.Any) func(g.Any) g.Any {
+							return func(b g.Any) g.Any {
+								var (
+									set    = g.AsSet(b)
+									header = AsHeader(a)
+									key    = header.name.String()
+									value  = header.value.String()
+								)
+								return set.Get(key).Chain(
+									func(x g.Any) g.Option {
+										return g.AsOption(g.AsList(x).Find(func(a g.Any) bool {
+											return a.(string) == value
+										})).Map(func(a g.Any) g.Any {
+											return g.NewTuple2(key, x)
+										})
+									},
+								)
+							}
+						}
+						combine = func(a g.Any) func(g.Any) g.Any {
+							return func(b g.Any) g.Any {
+								return g.NewTuple2(x, b)
+							}
+						}
+					)
+
+					return g.StateT_.Of(x).
+						Chain(modify(match)).
+						Chain(modify(combine))
+				})
+			}
+		}
 	)
 
 	return h.name.Build().
 		Chain(g.Get()).
 		Chain(g.Merge(h.value.Build())).
 		Chain(constant(g.StateT_.Of(h))).
-		Chain(modify(api(h.Api)))
+		Chain(modify(api(h.Api))).
+		Chain(modify(matcher))
 }
 
 func (h Header) Name() string {

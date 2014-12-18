@@ -16,6 +16,10 @@ func AsOption(x Any) Option {
 	return x.(Option)
 }
 
+func AsSet(x Any) Set {
+	return x.(Set)
+}
+
 func AsStateT(x Any) StateT {
 	return x.(StateT)
 }
