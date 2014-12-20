@@ -35,7 +35,7 @@ func (r Route) Build() g.StateT {
 					return g.AsWriter(b).Chain(func(a g.Any) g.Writer {
 						var (
 							tuple  = g.AsTuple2(a)
-							str    = asString(tuple.Fst())
+							str    = AsString(tuple.Fst())
 							parts  = g.Tree_.ToList(g.AsTree(tuple.Snd()))
 							single = append(singleton(str.value), g.List_.ToSlice(parts))
 							either = g.Either_.Of(single)
@@ -46,13 +46,24 @@ func (r Route) Build() g.StateT {
 				}
 			}
 		}
+		matcher = func(a g.Any) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.AsWriter(b).Map(func(x g.Any) g.Any {
+					var (
+						program = g.StateT_.Of(x)
+					)
+					return g.NewTuple2(b, program)
+				})
+			}
+		}
 	)
 
 	return r.path.Build().
 		Chain(g.Get()).
 		Chain(modify(compile)).
 		Chain(constant(g.StateT_.Of(r))).
-		Chain(modify(api(r.Api)))
+		Chain(modify(api(r.Api))).
+		Chain(modify(matcher))
 }
 
 func (r Route) Route() g.Tree {

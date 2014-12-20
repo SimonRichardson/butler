@@ -30,7 +30,7 @@ func (c ContentEncoder) Build() g.StateT {
 		always = func(x g.Any) func(g.Any) g.Any {
 			return func(b g.Any) g.Any {
 				var (
-					encoder = asContentEncoder(b)
+					encoder = AsContentEncoder(b)
 					name    = reflect.TypeOf(encoder.encoder).String()
 				)
 				return g.NewTuple2(encoder, name)

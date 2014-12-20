@@ -24,9 +24,6 @@ func NewHeader(name, value string) Header {
 	}
 }
 
-// Build up the state, so it runs this when required.
-// 1) Make sure the name is valid
-// 2) Make sure the value is valid
 func (h Header) Build() g.StateT {
 	var (
 		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
@@ -35,8 +32,8 @@ func (h Header) Build() g.StateT {
 					return g.AsWriter(b).Chain(func(a g.Any) g.Writer {
 						var (
 							t = g.AsTuple2(a)
-							x = t.Fst().(String).value
-							y = t.Snd().(String).value
+							x = AsString(t.Fst()).value
+							y = AsString(t.Snd()).value
 						)
 						str := g.Either_.Of(append(singleton(x), y))
 						return g.NewWriter(h, singleton(api.Run(str)))
@@ -54,8 +51,8 @@ func (h Header) Build() g.StateT {
 								var (
 									set    = g.AsSet(b)
 									header = AsHeader(a)
-									key    = header.name.String()
-									value  = header.value.String()
+									key    = header.Name()
+									value  = header.Value()
 								)
 								return set.Get(key).Chain(
 									func(x g.Any) g.Option {
@@ -68,16 +65,35 @@ func (h Header) Build() g.StateT {
 								)
 							}
 						}
-						combine = func(a g.Any) func(g.Any) g.Any {
-							return func(b g.Any) g.Any {
-								return g.NewTuple2(x, b)
+						norm = func(a g.Any) g.StateT {
+							return g.StateT{
+								Run: func(x g.Any) g.Either {
+									o := g.AsOption(x)
+									return g.AsEither(o.Fold(
+										func(x g.Any) g.Any {
+											return g.NewRight(g.NewTuple2(g.Empty{}, o))
+										},
+										func() g.Any {
+											return g.NewLeft(g.NewTuple2(g.Empty{}, o))
+										},
+									))
+								},
 							}
 						}
+						combine = func(a g.Any) func(g.Any) g.Any {
+							return func(b g.Any) g.Any {
+								return g.AsOption(b).Map(func(c g.Any) g.Any {
+									return g.NewTuple2(x, c)
+								})
+							}
+						}
+						program = g.StateT_.Of(x).
+							Chain(modify(match)).
+							Chain(norm).
+							Chain(modify(combine))
 					)
 
-					return g.StateT_.Of(x).
-						Chain(modify(match)).
-						Chain(modify(combine))
+					return g.NewTuple2(b, program)
 				})
 			}
 		}

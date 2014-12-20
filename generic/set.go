@@ -1,6 +1,10 @@
 package generic
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+	"strings"
+)
 
 type Set struct {
 	set map[Any]Any
@@ -15,7 +19,7 @@ func (s Set) Get(x Any) Option {
 
 func (s Set) Set(x, y Any) Set {
 	add := func() Any {
-		c := s.copy()
+		c := copy(s)
 		c[x] = y
 		return c
 	}
@@ -30,12 +34,12 @@ func (s Set) Set(x, y Any) Set {
 	))
 }
 
-func (s Set) copy() map[Any]Any {
-	r := make(map[Any]Any)
+func (s Set) String() string {
+	res := make([]string, 0)
 	for k, v := range s.set {
-		r[k] = v
+		res = append(res, fmt.Sprintf("%s: %s", k, v))
 	}
-	return r
+	return fmt.Sprintf("Set(%s)", strings.Join(res, ", "))
 }
 
 var (
@@ -58,4 +62,12 @@ func (s set) HttpHeaderToSet(m http.Header) Set {
 	return Set{
 		set: x,
 	}
+}
+
+func copy(s Set) map[Any]Any {
+	r := make(map[Any]Any)
+	for k, v := range s.set {
+		r[k] = v
+	}
+	return r
 }

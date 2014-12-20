@@ -18,11 +18,11 @@ func constant(a g.StateT) func(g.Any) g.StateT {
 
 // Common aliases
 
-func asContentDecoder(x g.Any) ContentDecoder {
+func AsContentDecoder(x g.Any) ContentDecoder {
 	return x.(ContentDecoder)
 }
 
-func asContentEncoder(x g.Any) ContentEncoder {
+func AsContentEncoder(x g.Any) ContentEncoder {
 	return x.(ContentEncoder)
 }
 
@@ -30,7 +30,7 @@ func AsHeader(x g.Any) Header {
 	return x.(Header)
 }
 
-func asMethod(x g.Any) Method {
+func AsMethod(x g.Any) Method {
 	return x.(Method)
 }
 
@@ -42,7 +42,7 @@ func AsRoute(x g.Any) Route {
 	return x.(Route)
 }
 
-func asString(x g.Any) String {
+func AsString(x g.Any) String {
 	return x.(String)
 }
 

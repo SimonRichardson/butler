@@ -33,7 +33,7 @@ func (w Writer) Map(f func(Any) Any) Writer {
 	return w.Chain(func(x Any) Writer {
 		return Writer{
 			Run: func() Tuple2 {
-				return NewTuple2(f(x), []Any{})
+				return NewTuple2(f(x), []Any{x})
 			},
 		}
 	})

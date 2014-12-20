@@ -28,7 +28,7 @@ func (c ContentDecoder) Build() g.StateT {
 		always = func(x g.Any) func(g.Any) g.Any {
 			return func(b g.Any) g.Any {
 				var (
-					decoder = asContentDecoder(b)
+					decoder = AsContentDecoder(b)
 					name    = reflect.TypeOf(decoder.decoder).String()
 				)
 				return g.NewTuple2(decoder, name)
@@ -38,7 +38,7 @@ func (c ContentDecoder) Build() g.StateT {
 			return func(b g.Any) g.Any {
 				var (
 					tup = g.AsTuple2(b)
-					fst = asContentDecoder(tup.Fst())
+					fst = AsContentDecoder(tup.Fst())
 				)
 				return fst.Keys().Bimap(
 					func(x g.Any) g.Any {

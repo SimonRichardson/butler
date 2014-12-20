@@ -67,7 +67,7 @@ func (m Method) Build() g.StateT {
 		validate = func(f func(t MethodType) g.Either) func(g.Any) func(g.Any) g.Any {
 			return func(x g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
-					return f(asMethod(b).method)
+					return f(AsMethod(b).method)
 				}
 			}
 		}
