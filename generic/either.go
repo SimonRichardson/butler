@@ -37,7 +37,7 @@ func (x Right) Bimap(f func(v Any) Any, g func(v Any) Any) Either {
 }
 
 func (x Right) String() string {
-	return fmt.Sprintf("Right(%s)", x.x)
+	return fmt.Sprintf("Right(%v)", x.x)
 }
 
 type Left struct {
@@ -67,7 +67,7 @@ func (x Left) Bimap(f func(v Any) Any, g func(v Any) Any) Either {
 }
 
 func (x Left) String() string {
-	return fmt.Sprintf("Left(%s)", x.x)
+	return fmt.Sprintf("Left(%v)", x.x)
 }
 
 // Static methods

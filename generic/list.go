@@ -240,7 +240,7 @@ func (x Cons) Zip(y List) List {
 
 func (x Cons) String() string {
 	res := x.ReduceLeft(func(a, b Any) Any {
-		return fmt.Sprintf("%s, %s", a, b)
+		return fmt.Sprintf("%v, %v", a, b)
 	})
 	return fmt.Sprintf("List(%s)", res.GetOrElse(Constant("")))
 }

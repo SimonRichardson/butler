@@ -52,54 +52,57 @@ func NewMethod(method MethodType) Method {
 	}
 }
 
-func (m Method) Build() g.StateT {
-	var (
-		contains = func(types []MethodType) func(t MethodType) g.Either {
-			return func(t MethodType) g.Either {
-				for _, v := range types {
-					if t == v {
-						return g.NewRight(t)
-					}
-				}
-				return g.NewLeft(t)
-			}
-		}
-		validate = func(f func(t MethodType) g.Either) func(g.Any) func(g.Any) g.Any {
-			return func(x g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					return f(AsMethod(b).method)
-				}
-			}
-		}
-		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
-			return func(g.Any) func(g.Any) g.Any {
-				return func(a g.Any) g.Any {
-					sum := func(a g.Any) g.Any {
-						return singleton(a)
-					}
-					return api.Run(g.AsEither(a).Bimap(sum, sum))
-				}
-			}
-		}
-		finalise = func(m Method) func(g.Any) g.StateT {
-			return func(g.Any) g.StateT {
-				return g.StateT{
-					Run: func(a g.Any) g.Either {
-						cast := func(b g.Any) g.Any {
-							x := g.NewWriter(m, singleton(a))
-							return g.NewTuple2(g.Empty{}, x)
+func (m Method) Build() g.WriterT {
+	return g.WriterT_.Of("Method(???)")
+	/*
+		var (
+			contains = func(types []MethodType) func(t MethodType) g.Either {
+				return func(t MethodType) g.Either {
+					for _, v := range types {
+						if t == v {
+							return g.NewRight(t)
 						}
-						return g.AsEither(a).Bimap(cast, cast)
-					},
+					}
+					return g.NewLeft(t)
 				}
 			}
-		}
-	)
-	return g.StateT_.Of(m).
-		Chain(modify(g.Constant1)).
-		Chain(modify(validate(contains(methodTypes)))).
-		Chain(modify(api(m.Api))).
-		Chain(finalise(m))
+			validate = func(f func(t MethodType) g.Either) func(g.Any) func(g.Any) g.Any {
+				return func(x g.Any) func(g.Any) g.Any {
+					return func(b g.Any) g.Any {
+						return f(AsMethod(b).method)
+					}
+				}
+			}
+			api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
+				return func(g.Any) func(g.Any) g.Any {
+					return func(a g.Any) g.Any {
+						sum := func(a g.Any) g.Any {
+							return singleton(a)
+						}
+						return api.Run(g.AsEither(a).Bimap(sum, sum))
+					}
+				}
+			}
+			finalise = func(m Method) func(g.Any) g.StateT {
+				return func(g.Any) g.StateT {
+					return g.StateT{
+						Run: func(a g.Any) g.Either {
+							cast := func(b g.Any) g.Any {
+								x := g.NewWriter(m, singleton(a))
+								return g.NewTuple2(g.Empty{}, x)
+							}
+							return g.AsEither(a).Bimap(cast, cast)
+						},
+					}
+				}
+			}
+		)
+		return g.StateT_.Of(m).
+			Chain(modify(g.Constant1)).
+			Chain(modify(validate(contains(methodTypes)))).
+			Chain(modify(api(m.Api))).
+			Chain(finalise(m))
+	*/
 }
 
 func (m Method) String() string {

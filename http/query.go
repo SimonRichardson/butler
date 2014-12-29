@@ -57,8 +57,9 @@ func NewQuery(name string, queryType QueryType, build func(g.Any) g.Any) Query {
 	}
 }
 
-func (q Query) Build() g.StateT {
-	var (
+func (q Query) Build() g.WriterT {
+	return g.WriterT_.Of("Query(???)")
+	/*var (
 		query = func(t QueryType) func(g.Any) func(g.Any) g.Any {
 			return func(g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
@@ -88,6 +89,7 @@ func (q Query) Build() g.StateT {
 		Chain(modify(query(q.queryType))).
 		Chain(constant(g.StateT_.Of(q))).
 		Chain(modify(api(q.Api)))
+	*/
 }
 
 func (q Query) Name() string {

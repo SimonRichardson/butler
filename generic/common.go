@@ -44,6 +44,14 @@ func AsWriter(x Any) Writer {
 	return x.(Writer)
 }
 
+func AsWriterTTuple(x Any) WriterTTuple {
+	return x.(WriterTTuple)
+}
+
+func AsWriterT(x Any) WriterT {
+	return x.(WriterT)
+}
+
 func Get() func(Any) StateT {
 	return func(Any) StateT {
 		return StateT_.Get()

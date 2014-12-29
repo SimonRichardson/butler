@@ -1,46 +1,51 @@
 package generic
 
 type WriterT struct {
-	Run func() WriterTuple
+	Run func() WriterTTuple
 }
 
 func NewWriterT(a Either, b []Any) WriterT {
 	return WriterT{
-		Run: func() WriterTuple {
-			return NewWriterTuple(a, b)
+		Run: func() WriterTTuple {
+			return NewWriterTTuple(a, b)
 		},
 	}
 }
 
 func (w WriterT) Chain(f func(Any) WriterT) WriterT {
 	return WriterT{
-		Run: func() WriterTuple {
+		Run: func() WriterTTuple {
 			var (
-				x = w.Run()
-				y = AsEither(x.Fst()).Chain(func(a Any) Either {
-					return AsEither(f(a).Run().Fst())
-				})
+				a = w.Run()
+				x = a.Fst().Fold(
+					func(a Any) Any {
+						return WriterT_.Of(a)
+					},
+					func(a Any) Any {
+						return f(a)
+					},
+				)
+				y = AsWriterT(x).Run()
 			)
-			return NewWriterTuple(y, x.Snd())
+			return NewWriterTTuple(y.Fst(), append(a.Snd(), y.Snd()...))
 		},
 	}
 }
 
 func (w WriterT) Map(f func(Any) Any) WriterT {
 	return w.Chain(func(a Any) WriterT {
-		var (
-			x = AsWriterTuple(a)
-			y = AsEither(x.Fst()).Map(f)
-		)
-		return NewWriterT(y, []Any{})
+		return WriterT_.Of(f(a))
 	})
 }
 
 func (w WriterT) Tell(x Any) WriterT {
 	return WriterT{
-		Run: func() WriterTuple {
-			b := w.Run().Snd()
-			return NewWriterTuple(Either_.Of(Empty{}), append(b, x))
+		Run: func() WriterTTuple {
+			var (
+				a = w.Run()
+				b = a.Snd()
+			)
+			return NewWriterTTuple(AsEither(a.Fst()), append(b, x))
 		},
 	}
 }
@@ -53,10 +58,14 @@ var (
 
 type writerT struct{}
 
-func (w writerT) Lift(e Either) WriterT {
-	return NewWriterT(e, []Any{})
+func (w writerT) Lift(x Either) WriterT {
+	return NewWriterT(x, []Any{})
 }
 
-func (w writerT) Of(a Any) WriterT {
-	return NewWriterT(Either_.Of(a), []Any{})
+func (w writerT) Of(x Any) WriterT {
+	return NewWriterT(Either_.Of(x), []Any{})
+}
+
+func (w writerT) Tell(x Any) WriterT {
+	return NewWriterT(Either_.Of(Empty{}), []Any{x})
 }

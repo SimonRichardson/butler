@@ -20,50 +20,52 @@ func NewRoute(path string) Route {
 	}
 }
 
-func (r Route) Build() g.StateT {
-	var (
-		compile = func(a g.Any) func(g.Any) g.Any {
-			return func(b g.Any) g.Any {
-				return g.AsWriter(b).Map(func(a g.Any) g.Any {
-					return g.NewTuple2(a, r.Route())
-				})
-			}
-		}
-		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
-			return func(a g.Any) func(g.Any) g.Any {
+func (r Route) Build() g.WriterT {
+	return g.WriterT_.Of("Route(???)")
+	/*	var (
+			compile = func(a g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
-					return g.AsWriter(b).Chain(func(a g.Any) g.Writer {
-						var (
-							tuple  = g.AsTuple2(a)
-							str    = AsString(tuple.Fst())
-							parts  = g.Tree_.ToList(g.AsTree(tuple.Snd()))
-							single = append(singleton(str.value), g.List_.ToSlice(parts))
-							either = g.Either_.Of(single)
-						)
-
-						return g.NewWriter(r, singleton(api.Run(either)))
+					return g.AsWriter(b).Map(func(a g.Any) g.Any {
+						return g.NewTuple2(a, r.Route())
 					})
 				}
 			}
-		}
-		matcher = func(a g.Any) func(g.Any) g.Any {
-			return func(b g.Any) g.Any {
-				return g.AsWriter(b).Map(func(x g.Any) g.Any {
-					var (
-						program = g.StateT_.Of(x)
-					)
-					return g.NewTuple2(b, program)
-				})
-			}
-		}
-	)
+			api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
+				return func(a g.Any) func(g.Any) g.Any {
+					return func(b g.Any) g.Any {
+						return g.AsWriter(b).Chain(func(a g.Any) g.Writer {
+							var (
+								tuple  = g.AsTuple2(a)
+								str    = AsString(tuple.Fst())
+								parts  = g.Tree_.ToList(g.AsTree(tuple.Snd()))
+								single = append(singleton(str.value), g.List_.ToSlice(parts))
+								either = g.Either_.Of(single)
+							)
 
-	return r.path.Build().
-		Chain(g.Get()).
-		Chain(modify(compile)).
-		Chain(constant(g.StateT_.Of(r))).
-		Chain(modify(api(r.Api))).
-		Chain(modify(matcher))
+							return g.NewWriter(r, singleton(api.Run(either)))
+						})
+					}
+				}
+			}
+			matcher = func(a g.Any) func(g.Any) g.Any {
+				return func(b g.Any) g.Any {
+					return g.AsWriter(b).Map(func(x g.Any) g.Any {
+						var (
+							program = g.StateT_.Of(x)
+						)
+						return g.NewTuple2(b, program)
+					})
+				}
+			}
+		)
+
+		return r.path.Build().
+			Chain(g.Get()).
+			Chain(modify(compile)).
+			Chain(constant(g.StateT_.Of(r))).
+			Chain(modify(api(r.Api))).
+			Chain(modify(matcher))
+	*/
 }
 
 func (r Route) Route() g.Tree {
