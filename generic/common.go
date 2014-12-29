@@ -36,6 +36,10 @@ func AsTuple3(x Any) Tuple3 {
 	return x.(Tuple3)
 }
 
+func AsWriterTuple(x Any) WriterTuple {
+	return x.(WriterTuple)
+}
+
 func AsWriter(x Any) Writer {
 	return x.(Writer)
 }
@@ -58,7 +62,7 @@ func Merge(a StateT) func(Any) StateT {
 							x   = exe.Fst()
 							y   = exe.Snd()
 						)
-						return NewWriter(NewTuple2(z, x), y.([]Any))
+						return NewWriter(NewTuple2(z, x), y)
 					},
 				),
 			)
