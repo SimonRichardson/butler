@@ -15,8 +15,20 @@ type User struct {
 
 func main() {
 
-	str := h.NewString("Hello", h.UrlChar())
+	str := h.NewString("hello", h.UrlChar())
 	fmt.Println(str.Build().Run())
+	str.Build().Run().Fst().Fold(
+		func(x g.Any) g.Any {
+			fmt.Println("FAIL > ", x)
+			return x
+		},
+		func(x g.Any) g.Any {
+			fmt.Println("WIN > ", x)
+			// run the matcher
+			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("hello"))
+			return x
+		},
+	)
 	fmt.Println()
 
 	header := h.NewHeader("Accept", "fuck")
@@ -28,6 +40,8 @@ func main() {
 		},
 		func(x g.Any) g.Any {
 			fmt.Println("WIN > ", x)
+			// run the matcher
+			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("Accepter: fucker"))
 			return x
 		},
 	)

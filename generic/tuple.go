@@ -34,6 +34,10 @@ func (t Tuple2) Bimap(f func(Any) Any, g func(Any) Any) Tuple2 {
 	return NewTuple2(f(t._1), g(t._2))
 }
 
+func (t Tuple2) Append(x Any) Tuple3 {
+	return NewTuple3(t._1, t._2, x)
+}
+
 func (t Tuple2) Slice() []Any {
 	return []Any{t._1, t._2}
 }

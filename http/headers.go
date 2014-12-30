@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
@@ -68,75 +69,81 @@ func (h Header) Build() g.WriterT {
 				return g.NewTuple2(a, b)
 			}
 		}
-		/*
-			matcher = func(a g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					return g.AsWriter(b).Map(func(x g.Any) g.Any {
-
-						var (
-							match = func(a g.Any) func(g.Any) g.Any {
-								return func(b g.Any) g.Any {
-									var (
-										set    = g.AsSet(b)
-										header = AsHeader(a)
-										key    = header.Name()
-										value  = header.Value()
-									)
-									return set.Get(key).Chain(
-										func(x g.Any) g.Option {
-											return g.AsOption(g.AsList(x).Find(func(a g.Any) bool {
-												return a.(string) == value
-											})).Map(func(a g.Any) g.Any {
-												return g.NewTuple2(key, x)
-											})
-										},
-									)
-								}
+		matcher = func(name, value g.WriterT) func(g.Any) g.Any {
+			return func(a g.Any) g.Any {
+				var (
+					norm = func(a g.Any) func(g.Any) g.Any {
+						return func(b g.Any) g.Any {
+							// This could be better!
+							var (
+								src = strings.Split(b.(string), ":")
+								dst = make([]string, len(src))
+							)
+							for k, v := range src {
+								dst[k] = strings.TrimSpace(v)
 							}
-							norm = func(a g.Any) g.StateT {
-								return g.StateT{
-									Run: func(x g.Any) g.Either {
-										o := g.AsOption(x)
-										return g.AsEither(o.Fold(
-											func(x g.Any) g.Any {
-												return g.NewRight(g.NewTuple2(g.Empty{}, o))
-											},
-											func() g.Any {
-												return g.NewLeft(g.NewTuple2(g.Empty{}, o))
-											},
-										))
-									},
+							return g.NewTuple2(a, dst)
+						}
+					}
+					match = func(a g.Any) func(g.Any) g.Any {
+						return func(b g.Any) g.Any {
+							var (
+								x     = name.Run().Fst()
+								y     = g.AsTuple2(b).Snd()
+								parts = y.([]string)
+								put   = func(_ g.Any) g.Any {
+									a := g.AsTuple2(a)
+									return g.NewTuple2(a.Fst(), a.Fst())
 								}
-							}
-							combine = func(a g.Any) func(g.Any) g.Any {
-								return func(b g.Any) g.Any {
-									return g.AsOption(b).Map(func(c g.Any) g.Any {
-										return g.NewTuple2(x, c)
+							)
+							return x.Chain(func(x g.Any) g.Either {
+								var (
+									c = g.AsTuple3(x).Trd()
+									d = g.Either_.FromBool(len(parts) > 0, c)
+								)
+								return d.Chain(func(a g.Any) g.Either {
+									s := g.AsStateT(a)
+									return s.EvalState(parts[0]).Chain(func(a g.Any) g.Either {
+										return value.Run().Fst().Chain(func(x g.Any) g.Either {
+											var (
+												t = g.AsTuple3(x).Trd()
+												s = g.AsStateT(t)
+											)
+											return s.EvalState(parts[1])
+										})
 									})
-								}
-							}
-							program = g.StateT_.Of(x).
-								Chain(modify(match)).
-								Chain(norm).
-								Chain(modify(combine))
-						)
-
-						return g.NewTuple2(b, program)
-					})
-				}
+								})
+							}).Bimap(put, put)
+						}
+					}
+					flatten = func(a g.Any) g.StateT {
+						b := g.AsEither(a)
+						return g.NewStateT(b)
+					}
+					program = g.StateT_.Of(a).
+						Chain(modify(norm)).
+						Chain(g.Get()).
+						Chain(modify(match)).
+						Chain(g.Get()).
+						Chain(flatten)
+				)
+				return g.AsTuple2(a).Append(program)
 			}
-		*/
+		}
 
-		program = h.name.Build().
+		name  = h.name.Build()
+		value = h.value.Build()
+
+		program = name.
 			Bimap(wrap, wrap).
-			Chain(combine(h.value.Build()))
+			Chain(combine(value))
 	)
 
 	return join(program, api(h.Api), func(x g.Any) []g.Any {
 		var (
 			unwrap = func(a g.Any) g.Any {
 				var (
-					x = g.AsTuple2(a).Fst()
+					x = g.AsTuple3(a).Fst()
 					y = AsString(x)
 				)
 				return y.String()
@@ -148,6 +155,9 @@ func (h Header) Build() g.WriterT {
 	}).Bimap(
 		finalize(h),
 		finalize(h),
+	).Bimap(
+		matcher(name, value),
+		matcher(name, value),
 	)
 }
 

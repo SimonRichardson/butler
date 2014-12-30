@@ -86,6 +86,32 @@ func (s String) Build() g.WriterT {
 				return g.NewTuple2(a, b)
 			}
 		}
+		matcher = func(a g.Any) g.Any {
+			var (
+				match = func(a g.Any) func(g.Any) g.Any {
+					var (
+						x = g.AsTuple2(a)
+						y = AsString(x.Fst())
+					)
+					return func(b g.Any) g.Any {
+						var (
+							c = y.String() == b
+							d = g.NewTuple2(g.Empty{}, x)
+						)
+						return g.Either_.FromBool(c, d)
+					}
+				}
+				flatten = func(a g.Any) g.StateT {
+					b := g.AsEither(a)
+					return g.NewStateT(b)
+				}
+				program = g.StateT_.Of(a).
+					Chain(modify(match)).
+					Chain(g.Get()).
+					Chain(flatten)
+			)
+			return g.AsTuple2(a).Append(program)
+		}
 		program = g.WriterT_.Of(s).
 			Chain(split).
 			Chain(first).
@@ -98,6 +124,9 @@ func (s String) Build() g.WriterT {
 	}).Bimap(
 		finalize(s),
 		finalize(s),
+	).Bimap(
+		matcher,
+		matcher,
 	)
 }
 
