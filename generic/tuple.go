@@ -30,6 +30,10 @@ func (t Tuple2) MapSnd(f func(Any) Any) Tuple2 {
 	return NewTuple2(t._1, f(t._2))
 }
 
+func (t Tuple2) Bimap(f func(Any) Any, g func(Any) Any) Tuple2 {
+	return NewTuple2(f(t._1), g(t._2))
+}
+
 func (t Tuple2) Slice() []Any {
 	return []Any{t._1, t._2}
 }

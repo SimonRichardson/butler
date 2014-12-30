@@ -27,7 +27,8 @@ func NewHeader(name, value string) Header {
 func (h Header) Build() g.WriterT {
 	var (
 		wrap = func(a g.Any) g.Any {
-			return g.NewTuple2(a, g.Empty{})
+			b := String_.Empty()
+			return g.NewTuple2(a, g.NewTuple2(b, b))
 		}
 		combine = func(x g.WriterT) func(g.Any) g.WriterT {
 			return func(y g.Any) g.WriterT {
@@ -60,6 +61,11 @@ func (h Header) Build() g.WriterT {
 			return func(y g.Either) g.WriterT {
 				return g.WriterT_.Lift(x.Run(y)).
 					Tell(fmt.Sprintf("Api `%v`", y))
+			}
+		}
+		finalize = func(a Header) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.NewTuple2(a, b)
 			}
 		}
 		/*
@@ -127,8 +133,22 @@ func (h Header) Build() g.WriterT {
 	)
 
 	return join(program, api(h.Api), func(x g.Any) []g.Any {
-		return g.AsTuple2(x).Slice()
-	})
+		var (
+			unwrap = func(a g.Any) g.Any {
+				var (
+					x = g.AsTuple2(a).Fst()
+					y = AsString(x)
+				)
+				return y.String()
+			}
+		)
+		return g.AsTuple2(x).
+			Bimap(unwrap, unwrap).
+			Slice()
+	}).Bimap(
+		finalize(h),
+		finalize(h),
+	)
 }
 
 func (h Header) Name() string {

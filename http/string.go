@@ -81,6 +81,11 @@ func (s String) Build() g.WriterT {
 					Tell(fmt.Sprintf("Api `%v`", y))
 			}
 		}
+		finalize = func(a String) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.NewTuple2(a, b)
+			}
+		}
 		program = g.WriterT_.Of(s).
 			Chain(split).
 			Chain(first).
@@ -90,9 +95,28 @@ func (s String) Build() g.WriterT {
 
 	return join(program, api(s.Api), func(x g.Any) []g.Any {
 		return singleton(x)
-	})
+	}).Bimap(
+		finalize(s),
+		finalize(s),
+	)
 }
 
 func (s String) String() string {
 	return s.value
+}
+
+// Static methods
+
+var (
+	String_ = string_{}
+)
+
+type string_ struct{}
+
+func (x string_) Of(v g.Any) String {
+	return NewString(v.(string), AnyChar())
+}
+
+func (x string_) Empty() String {
+	return NewString("", AnyChar())
 }
