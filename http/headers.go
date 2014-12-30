@@ -38,7 +38,7 @@ func (h Header) Build() g.WriterT {
 					d   = g.AsTuple2(y)
 					run = func(f func(g.Any) g.Either) func(g.Any) g.Any {
 						return func(a g.Any) g.Any {
-							x := d.Map2(func(b g.Any) g.Any {
+							x := d.MapSnd(func(b g.Any) g.Any {
 								return a
 							})
 							return g.NewWriterT(f(x), c).

@@ -19,7 +19,7 @@ func main() {
 	fmt.Println(str.Build().Run())
 	fmt.Println()
 
-	header := h.NewHeader("Ac£cept", "fu£ck")
+	header := h.NewHeader("Accept", "fuck")
 	fmt.Println(header.Build().Run())
 	header.Build().Run().Fst().Fold(
 		func(x g.Any) g.Any {

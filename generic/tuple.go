@@ -22,11 +22,11 @@ func (t Tuple2) Snd() Any {
 	return t._2
 }
 
-func (t Tuple2) Map1(f func(Any) Any) Tuple2 {
+func (t Tuple2) MapFst(f func(Any) Any) Tuple2 {
 	return NewTuple2(f(t._1), t._2)
 }
 
-func (t Tuple2) Map2(f func(Any) Any) Tuple2 {
+func (t Tuple2) MapSnd(f func(Any) Any) Tuple2 {
 	return NewTuple2(t._1, f(t._2))
 }
 
