@@ -17,7 +17,7 @@ func NewHeader(name, value string) Header {
 	return Header{
 		Api: doc.NewApi(doc.NewDocTypes(
 			doc.NewInlineText("Expected header `%s` with value `%s`"),
-			doc.NewInlineText("Unexpected header with `%s`"),
+			doc.NewInlineText("Unexpected header with `%s` with value `%s`"),
 		)),
 		name:  NewString(name, HeaderNameChar()),
 		value: NewString(value, HeaderValueChar()),
@@ -25,24 +25,44 @@ func NewHeader(name, value string) Header {
 }
 
 func (h Header) Build() g.WriterT {
-	return g.WriterT_.Of("Header(???)")
-	/*
-		var (
-			api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
-				return func(a g.Any) func(g.Any) g.Any {
-					return func(b g.Any) g.Any {
-						return g.AsWriter(b).Chain(func(a g.Any) g.Writer {
-							var (
-								t = g.AsTuple2(a)
-								x = AsString(t.Fst()).value
-								y = AsString(t.Snd()).value
-							)
-							str := g.Either_.Of(append(singleton(x), y))
-							return g.NewWriter(h, singleton(api.Run(str)))
-						})
+	var (
+		wrap = func(a g.Any) g.Any {
+			return g.NewTuple2(a, g.Empty{})
+		}
+		combine = func(x g.WriterT) func(g.Any) g.WriterT {
+			return func(y g.Any) g.WriterT {
+				var (
+					a   = x.Run()
+					b   = a.Fst()
+					c   = a.Snd()
+					d   = g.AsTuple2(y)
+					run = func(f func(g.Any) g.Either) func(g.Any) g.Any {
+						return func(a g.Any) g.Any {
+							x := d.Map2(func(b g.Any) g.Any {
+								return a
+							})
+							return g.NewWriterT(f(x), c).
+								Tell(fmt.Sprintf("Combine %v, %v", y, a))
+						}
 					}
-				}
+				)
+				return g.AsWriterT(b.Fold(
+					run(func(x g.Any) g.Either {
+						return g.NewLeft(x)
+					}),
+					run(func(x g.Any) g.Either {
+						return g.NewRight(x)
+					}),
+				))
 			}
+		}
+		api = func(x doc.Api) func(g.Either) g.WriterT {
+			return func(y g.Either) g.WriterT {
+				return g.WriterT_.Lift(x.Run(y)).
+					Tell(fmt.Sprintf("Api `%v`", y))
+			}
+		}
+		/*
 			matcher = func(a g.Any) func(g.Any) g.Any {
 				return func(b g.Any) g.Any {
 					return g.AsWriter(b).Map(func(x g.Any) g.Any {
@@ -99,15 +119,16 @@ func (h Header) Build() g.WriterT {
 					})
 				}
 			}
-		)
+		*/
 
-		return h.name.Build().
-			Chain(g.Get()).
-			Chain(g.Merge(h.value.Build())).
-			Chain(constant(g.StateT_.Of(h))).
-			Chain(modify(api(h.Api))).
-			Chain(modify(matcher))
-	*/
+		program = h.name.Build().
+			Bimap(wrap, wrap).
+			Chain(combine(h.value.Build()))
+	)
+
+	return join(program, api(h.Api), func(x g.Any) []g.Any {
+		return g.AsTuple2(x).Slice()
+	})
 }
 
 func (h Header) Name() string {

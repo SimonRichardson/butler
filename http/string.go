@@ -75,30 +75,12 @@ func (s String) Build() g.WriterT {
 			return g.WriterT_.Lift(a).
 				Tell(fmt.Sprintf("Flatten %v", x))
 		}
-		/*
-			api = func(x doc.Api) func(g.Any) g.WriterT {
-				return func(y g.Any) g.WriterT {
-					var (
-						a = x.Run(g.Either_.Of(singleton(y)))
-					)
-					return g.WriterT_.Lift(a).
-						Tell(fmt.Sprintf("Api `%v`", y))
-				}
+		api = func(x doc.Api) func(g.Either) g.WriterT {
+			return func(y g.Either) g.WriterT {
+				return g.WriterT_.Lift(x.Run(y)).
+					Tell(fmt.Sprintf("Api `%v`", y))
 			}
-
-				finalise = func(s String) func(g.Any) g.StateT {
-					return func(g.Any) g.StateT {
-						return g.StateT{
-							Run: func(a g.Any) g.Either {
-								cast := func(b g.Any) g.Any {
-									x := g.NewWriter(s, singleton(a))
-									return g.NewTuple2(g.Empty{}, x)
-								}
-								return g.AsEither(a).Bimap(cast, cast)
-							},
-						}
-					}
-				}*/
+		}
 		program = g.WriterT_.Of(s).
 			Chain(split).
 			Chain(first).
@@ -106,9 +88,9 @@ func (s String) Build() g.WriterT {
 			Chain(flatten)
 	)
 
-	return program
-
-	//Map(finalise(s))
+	return join(program, api(s.Api), func(x g.Any) []g.Any {
+		return singleton(x)
+	})
 }
 
 func (s String) String() string {

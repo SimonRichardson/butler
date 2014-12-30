@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/SimonRichardson/butler/http"
+	g "github.com/SimonRichardson/butler/generic"
+	h "github.com/SimonRichardson/butler/http"
 )
 
 type User struct {
@@ -14,38 +15,24 @@ type User struct {
 
 func main() {
 
-	str := http.NewString("Hello", http.UrlChar())
+	str := h.NewString("Hello", h.UrlChar())
 	fmt.Println(str.Build().Run())
+	fmt.Println()
+
+	header := h.NewHeader("Ac£cept", "fu£ck")
+	fmt.Println(header.Build().Run())
+	header.Build().Run().Fst().Fold(
+		func(x g.Any) g.Any {
+			fmt.Println("FAIL > ", x)
+			return x
+		},
+		func(x g.Any) g.Any {
+			fmt.Println("WIN > ", x)
+			return x
+		},
+	)
 
 	/*
-		writer := g.Writer_.Of(g.Empty{})
-
-		run := func(x g.Writer) func(g.Any) g.Any {
-			return func(y g.Any) g.Any {
-				var (
-					state   = g.AsTuple2(x.Run().Fst())
-					matcher = g.AsStateT(state.Snd())
-				)
-
-				return matcher.ExecState(y)
-			}
-		}
-
-		header := h.NewHeader("Accept", "fuck")
-		header.Build().ExecState(writer).(g.Either).Fold(
-			g.Identity(),
-			func(x g.Any) g.Any {
-
-				header := make(http.Header)
-				header.Add("Accept", "fuck")
-
-				set := g.Set_.HttpHeaderToSet(header)
-
-				fmt.Println("Fin > ", run(g.AsWriter(x))(set))
-				return x
-			},
-		)
-
 		path := h.NewRoute("/user/name/:id")
 		path.Build().ExecState(writer).(g.Either).Fold(
 			g.Identity(),

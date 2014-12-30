@@ -404,3 +404,11 @@ func (x list) StringSliceToList(s []string) List {
 	}
 	return AsList(Trampoline(rec(NewNil(), s)))
 }
+
+func (x list) Cons(v Any) Any {
+	return x.Of(v)
+}
+
+func (x list) Nil(v Any) Any {
+	return x.Empty()
+}

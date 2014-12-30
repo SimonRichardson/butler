@@ -16,6 +16,29 @@ func constant(a g.StateT) func(g.Any) g.StateT {
 	}
 }
 
+func join(a g.WriterT, f func(g.Either) g.WriterT, h func(g.Any) []g.Any) g.WriterT {
+	var (
+		x   = a.Run()
+		y   = x.Snd()
+		run = func(x func(g.Any) g.Either) func(g.Any) g.Any {
+			return func(a g.Any) g.Any {
+				// We could use compose, if we had the right signatures!
+				b := f(x(h(a))).Run()
+				return g.NewWriterT(b.Fst(), append(y, b.Snd()...)).
+					Tell("Join")
+			}
+		}
+	)
+	return g.AsWriterT(x.Fst().Fold(
+		run(func(x g.Any) g.Either {
+			return g.NewLeft(x)
+		}),
+		run(func(x g.Any) g.Either {
+			return g.NewRight(x)
+		}),
+	))
+}
+
 // Common aliases
 
 func AsContentDecoder(x g.Any) ContentDecoder {

@@ -99,3 +99,11 @@ func (x either) ToOption(a Either) Option {
 		},
 	))
 }
+
+func (x either) Left(v Any) Any {
+	return NewLeft(v)
+}
+
+func (x either) Right(v Any) Any {
+	return NewRight(v)
+}

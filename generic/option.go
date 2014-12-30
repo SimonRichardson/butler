@@ -128,3 +128,11 @@ func (x option) Equals(a, b Option) bool {
 		Constant(false),
 	).(bool)
 }
+
+func (x option) Some(v Any) Any {
+	return x.Of(v)
+}
+
+func (x option) None(v Any) Any {
+	return x.Empty()
+}

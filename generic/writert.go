@@ -17,17 +17,18 @@ func (w WriterT) Chain(f func(Any) WriterT) WriterT {
 		Run: func() WriterTTuple {
 			var (
 				a = w.Run()
-				x = a.Fst().Fold(
+				b = a.Fst().Fold(
 					func(a Any) Any {
-						return WriterT_.Of(a)
+						// Should always fail!
+						return NewWriterT(NewLeft(a), []Any{})
 					},
 					func(a Any) Any {
 						return f(a)
 					},
 				)
-				y = AsWriterT(x).Run()
+				c = AsWriterT(b).Run()
 			)
-			return NewWriterTTuple(y.Fst(), append(a.Snd(), y.Snd()...))
+			return NewWriterTTuple(c.Fst(), append(a.Snd(), c.Snd()...))
 		},
 	}
 }
@@ -36,6 +37,26 @@ func (w WriterT) Map(f func(Any) Any) WriterT {
 	return w.Chain(func(a Any) WriterT {
 		return WriterT_.Of(f(a))
 	})
+}
+
+func (w WriterT) Bimap(f func(Any) Any, g func(Any) Any) WriterT {
+	return WriterT{
+		Run: func() WriterTTuple {
+			var (
+				a = w.Run()
+				b = a.Fst().Fold(
+					func(a Any) Any {
+						return NewWriterT(NewLeft(f(a)), []Any{})
+					},
+					func(a Any) Any {
+						return NewWriterT(NewRight(f(a)), []Any{})
+					},
+				)
+				c = AsWriterT(b).Run()
+			)
+			return NewWriterTTuple(c.Fst(), append(a.Snd(), c.Snd()...))
+		},
+	}
 }
 
 func (w WriterT) Tell(x Any) WriterT {
