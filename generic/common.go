@@ -4,6 +4,10 @@ func AsEither(x Any) Either {
 	return x.(Either)
 }
 
+func AsFree(x Any) Free {
+	return x.(Free)
+}
+
 func AsIO(x Any) IO {
 	return x.(IO)
 }

@@ -15,6 +15,10 @@ type User struct {
 
 func main() {
 
+	x := g.Free_.Lift(g.Functor_.Either(g.Either_.Of("FUCK")))
+	fmt.Println(x.Run())
+
+	fmt.Println()
 	str := h.NewString("hello", h.UrlChar())
 	fmt.Println(str.Build().Run())
 	str.Build().Run().Fst().Fold(
