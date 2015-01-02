@@ -61,6 +61,10 @@ var (
 
 type free struct{}
 
+func (f free) Of(x Any) Free {
+	return NewReturn(x)
+}
+
 func (f free) Lift(x Functor) Free {
 	return NewSuspend(x.Map(Free_.Return))
 }
