@@ -66,17 +66,24 @@ func main() {
 			return x
 		},
 	)
+	fmt.Println()
+
+	path := h.NewRoute("/user/name/:id")
+	fmt.Println(path.Build().Run())
+	path.Build().Run().Fst().Fold(
+		func(x g.Any) g.Any {
+			fmt.Println("FAIL > ", x)
+			return x
+		},
+		func(x g.Any) g.Any {
+			fmt.Println("WIN > ", x)
+			// run the matcher
+			//fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("Accept: fuck"))
+			return x
+		},
+	)
 
 	/*
-		path := h.NewRoute("/user/name/:id")
-		path.Build().ExecState(writer).(g.Either).Fold(
-			g.Identity(),
-			func(x g.Any) g.Any {
-				fmt.Println("Fin > ", run(g.AsWriter(x))("???"))
-				return x
-			},
-		)
-
 		var (
 			hint   = User{}
 			create = func() g.Any {

@@ -1,6 +1,8 @@
 package http
 
 import (
+	"fmt"
+
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
 )
@@ -13,59 +15,44 @@ type Route struct {
 func NewRoute(path string) Route {
 	return Route{
 		Api: doc.NewApi(doc.NewDocTypes(
-			doc.NewInlineText("Expected route `%s` parts `%s`"),
-			doc.NewInlineText("Unexpected route `%s` parts `%s`"),
+			doc.NewInlineText("Expected route `%s`"),
+			doc.NewInlineText("Unexpected route `%s`"),
 		)),
 		path: NewString(path, PathChar()),
 	}
 }
 
 func (r Route) Build() g.WriterT {
-	return g.WriterT_.Of("Route(???)")
-	/*	var (
-			compile = func(a g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					return g.AsWriter(b).Map(func(a g.Any) g.Any {
-						return g.NewTuple2(a, r.Route())
-					})
-				}
+	var (
+		extract = func(a g.Any) g.WriterT {
+			var (
+				x = g.AsTuple3(a)
+				y = AsString(x.Fst())
+			)
+			return g.WriterT_.Of(y.String()).
+				Tell(fmt.Sprintf("Extract `%v`", y))
+		}
+		api = func(x doc.Api) func(g.Either) g.WriterT {
+			return func(y g.Either) g.WriterT {
+				return g.WriterT_.Lift(x.Run(y)).
+					Tell(fmt.Sprintf("Api `%v`", y))
 			}
-			api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
-				return func(a g.Any) func(g.Any) g.Any {
-					return func(b g.Any) g.Any {
-						return g.AsWriter(b).Chain(func(a g.Any) g.Writer {
-							var (
-								tuple  = g.AsTuple2(a)
-								str    = AsString(tuple.Fst())
-								parts  = g.Tree_.ToList(g.AsTree(tuple.Snd()))
-								single = append(singleton(str.value), g.List_.ToSlice(parts))
-								either = g.Either_.Of(single)
-							)
+		}
+		finalize = func(a Route) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.NewTuple2(a, b)
+			}
+		}
+		program = r.path.Build().
+			Chain(extract)
+	)
 
-							return g.NewWriter(r, singleton(api.Run(either)))
-						})
-					}
-				}
-			}
-			matcher = func(a g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					return g.AsWriter(b).Map(func(x g.Any) g.Any {
-						var (
-							program = g.StateT_.Of(x)
-						)
-						return g.NewTuple2(b, program)
-					})
-				}
-			}
-		)
-
-		return r.path.Build().
-			Chain(g.Get()).
-			Chain(modify(compile)).
-			Chain(constant(g.StateT_.Of(r))).
-			Chain(modify(api(r.Api))).
-			Chain(modify(matcher))
-	*/
+	return join(program, api(r.Api), func(x g.Any) []g.Any {
+		return singleton(x)
+	}).Bimap(
+		finalize(r),
+		finalize(r),
+	)
 }
 
 func (r Route) Route() g.Tree {

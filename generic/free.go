@@ -129,6 +129,12 @@ func (f functor) LiftFunc(x func() Free) Functor {
 	}
 }
 
+func (f functor) LiftOption(x Option) Functor {
+	return optionF{
+		val: x,
+	}
+}
+
 type eitherF struct {
 	val Either
 }
@@ -165,4 +171,22 @@ func (x funcF) Run() Free {
 
 func (x funcF) String() string {
 	return "FuncF"
+}
+
+type optionF struct {
+	val Option
+}
+
+func (x optionF) Map(f func(Any) Any) Functor {
+	return optionF{
+		val: x.val.Map(f),
+	}
+}
+
+func (x optionF) Run() Free {
+	return NewReturn(x.val)
+}
+
+func (x optionF) String() string {
+	return x.val.String()
 }
