@@ -1,7 +1,11 @@
 package generic
 
+import "fmt"
+
 type Free interface {
 	Chain(f func(Any) Free) Free
+	Map(f func(Any) Any) Free
+
 	Run() Any
 }
 
@@ -19,8 +23,18 @@ func (r Return) Chain(f func(Any) Free) Free {
 	return f(r.val)
 }
 
+func (r Return) Map(f func(Any) Any) Free {
+	return r.Chain(func(x Any) Free {
+		return Free_.Of(f(x))
+	})
+}
+
 func (r Return) Run() Any {
 	return r.val
+}
+
+func (r Return) String() string {
+	return fmt.Sprintf("Return(%v)", r.val)
 }
 
 type Suspend struct {
@@ -41,18 +55,25 @@ func (s Suspend) Chain(f func(Any) Free) Free {
 	}
 }
 
+func (s Suspend) Map(f func(Any) Any) Free {
+	return s.Chain(func(x Any) Free {
+		return Free_.Of(f(x))
+	})
+}
+
 func (s Suspend) Run() Any {
-	var rec func(x Free) Result
-	rec = func(x Free) Result {
-		if r, ok := x.(Return); ok {
-			return Done(r.val)
+	var x Free = s
+	for {
+		if _, ok := x.(Return); ok {
+			break
 		}
-		return Cont(func() Result {
-			s := x.(Suspend)
-			return rec(s.functor.Run())
-		})
+		x = x.(Suspend).functor.Run()
 	}
-	return Trampoline(rec(s))
+	return x.(Return).Run()
+}
+
+func (s Suspend) String() string {
+	return "Suspend"
 }
 
 var (
@@ -88,6 +109,26 @@ type Functor interface {
 
 type functor struct{}
 
+func (f functor) LiftEither(x Either) Functor {
+	return eitherF{
+		val: x,
+	}
+}
+
+func (f functor) LiftFuncAny(x func() Any) Functor {
+	return funcF{
+		val: x,
+	}
+}
+
+func (f functor) LiftFunc(x func() Free) Functor {
+	return funcF{
+		val: func() Any {
+			return x()
+		},
+	}
+}
+
 type eitherF struct {
 	val Either
 }
@@ -102,8 +143,26 @@ func (x eitherF) Run() Free {
 	return NewReturn(x.val)
 }
 
-func (f functor) Either(x Either) Functor {
-	return eitherF{
-		val: x,
+func (x eitherF) String() string {
+	return x.val.String()
+}
+
+type funcF struct {
+	val func() Any
+}
+
+func (x funcF) Map(f func(Any) Any) Functor {
+	return funcF{
+		val: func() Any {
+			return f(x.val())
+		},
 	}
+}
+
+func (x funcF) Run() Free {
+	return x.val().(Free)
+}
+
+func (x funcF) String() string {
+	return "FuncF"
 }

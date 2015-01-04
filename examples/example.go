@@ -15,8 +15,25 @@ type User struct {
 
 func main() {
 
-	x := g.Free_.Lift(g.Functor_.Either(g.Either_.Of("FUCK")))
+	x := g.Free_.Of(g.Functor_.LiftEither(g.Either_.Of("FUCK")))
 	fmt.Println(x.Run())
+
+	y := g.List_.FromString("1234").FoldRight("", func(a, b g.Any) g.Any {
+		return a.(string) + b.(string)
+	})
+	fmt.Println(">>", g.List_.FromString("1234").Zip(g.List_.FromString("abcd")), y)
+
+	var rec func(g.Any) g.Free
+	rec = func(x g.Any) g.Free {
+		y := x.(int)
+		if y < 10 {
+			return g.Cont(func() g.Free {
+				return rec(y + 1)
+			})
+		}
+		return g.Done(y)
+	}
+	fmt.Println(g.Trampoline(rec(1)))
 
 	fmt.Println()
 	str := h.NewString("hello", h.UrlChar())
@@ -45,7 +62,7 @@ func main() {
 		func(x g.Any) g.Any {
 			fmt.Println("WIN > ", x)
 			// run the matcher
-			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("Accepter: fucker"))
+			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("Accept: fuck"))
 			return x
 		},
 	)

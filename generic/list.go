@@ -12,6 +12,7 @@ type List interface {
 	Filter(func(Any) bool) List
 	Find(func(Any) bool) Option
 	FoldLeft(Any, func(Any, Any) Any) Any
+	FoldRight(Any, func(Any, Any) Any) Any
 	GroupBy(func(Any) Any) List
 	Index(uint) Option
 	Partition(func(Any) bool) Tuple2
@@ -47,20 +48,20 @@ func (x Cons) Tail() List {
 }
 
 func (x Cons) Chain(f func(Any) List) List {
-	var rec func(List, List) Result
-	rec = func(a List, b List) Result {
+	var rec func(List, List) Free
+	rec = func(a List, b List) Free {
 		if _, ok := a.(Nil); ok {
-			return Done(b)
+			return NewReturn(b)
 		}
-		return Cont(func() Result {
+		return NewSuspend(Functor_.LiftFuncAny(func() Any {
 			cons := a.(Cons)
 			list := f(cons.head).FoldLeft(b, func(x, y Any) Any {
-				return NewCons(y, x.(List))
+				return NewCons(y, AsList(x))
 			})
-			return rec(cons.tail, list.(List))
-		})
+			return rec(cons.tail, AsList(list))
+		}))
 	}
-	return Trampoline(rec(x, NewNil())).(List)
+	return AsList(rec(x, NewNil()).Run())
 }
 
 func (x Cons) Map(f func(Any) Any) List {
@@ -70,26 +71,26 @@ func (x Cons) Map(f func(Any) Any) List {
 }
 
 func (x Cons) Concat(y List) List {
-	var rec func(List, List) Result
-	rec = func(a, b List) Result {
+	var rec func(List, List) Free
+	rec = func(a, b List) Free {
 		if _, ok := b.(Nil); ok {
-			return Done(a)
+			return NewReturn(a)
 		}
-		return Cont(func() Result {
+		return NewSuspend(Functor_.LiftFuncAny(func() Any {
 			cons := b.(Cons)
 			return rec(NewCons(cons.head, a), cons.tail)
-		})
+		}))
 	}
-	return Trampoline(rec(x, y)).(List)
+	return AsList(rec(x, y).Run())
 }
 
 func (x Cons) Filter(f func(Any) bool) List {
-	var rec func(List, List) Result
-	rec = func(a, b List) Result {
+	var rec func(List, List) Free
+	rec = func(a, b List) Free {
 		if _, ok := a.(Nil); ok {
-			return Done(b)
+			return NewReturn(b)
 		}
-		return Cont(func() Result {
+		return NewSuspend(Functor_.LiftFuncAny(func() Any {
 			var (
 				cons = a.(Cons)
 				tail = cons.tail
@@ -99,20 +100,20 @@ func (x Cons) Filter(f func(Any) bool) List {
 			} else {
 				return rec(tail, b)
 			}
-		})
+		}))
 	}
-	return Trampoline(rec(x, List_.Empty())).(List)
+	return AsList(rec(x, List_.Empty()).Run())
 }
 
 func (x Cons) Find(f func(Any) bool) Option {
-	var rec func(List, Option) Result
-	rec = func(a List, b Option) Result {
+	var rec func(List, Option) Free
+	rec = func(a List, b Option) Free {
 		if _, ok := a.(Nil); ok {
-			return Done(b)
+			return NewReturn(b)
 		}
 		return b.Fold(
 			func(x Any) Any {
-				return Done(Option_.Of(x))
+				return NewReturn(Option_.Of(x))
 			},
 			func() Any {
 				var (
@@ -120,27 +121,43 @@ func (x Cons) Find(f func(Any) bool) Option {
 					val  = cons.head
 					opt  = Option_.FromBool(f(val), val)
 				)
-				return Cont(func() Result {
+				return NewSuspend(Functor_.LiftFuncAny(func() Any {
 					return rec(cons.tail, opt)
-				})
+				}))
 			},
-		).(Result)
+		).(Free)
 	}
-	return Trampoline(rec(x, Option_.Empty())).(Option)
+	return AsOption(rec(x, Option_.Empty()).Run())
 }
 
 func (x Cons) FoldLeft(v Any, f func(Any, Any) Any) Any {
-	var rec func(List, Any) Result
-	rec = func(a List, b Any) Result {
+	var rec func(List, Any) Free
+	rec = func(a List, b Any) Free {
 		if _, ok := a.(Nil); ok {
-			return Done(b)
+			return NewReturn(b)
 		}
-		return Cont(func() Result {
+		return NewSuspend(Functor_.LiftFuncAny(func() Any {
 			cons := a.(Cons)
 			return rec(cons.tail, f(b, cons.head))
+		}))
+	}
+	return rec(x, v).Run()
+}
+
+func (x Cons) FoldRight(v Any, f func(Any, Any) Any) Any {
+	var rec func(List, Any) Free
+	rec = func(a List, b Any) Free {
+		if _, ok := a.(Nil); ok {
+			return NewReturn(b)
+		}
+		cons := a.(Cons)
+		return NewSuspend(Functor_.LiftFuncAny(func() Any {
+			return rec(cons.tail, v)
+		})).Map(func(x Any) Any {
+			return f(x, cons.head)
 		})
 	}
-	return Trampoline(rec(x, v))
+	return rec(x, v).Run()
 }
 
 func (x Cons) GroupBy(f func(Any) Any) List {
@@ -156,7 +173,7 @@ func (x Cons) GroupBy(f func(Any) Any) List {
 			}
 		}
 	)
-	return x.FoldLeft(NewNil(), func(a, b Any) Any {
+	return AsList(x.FoldLeft(NewNil(), func(a, b Any) Any {
 		var (
 			id   = f(b)
 			list = AsList(a)
@@ -170,25 +187,25 @@ func (x Cons) GroupBy(f func(Any) Any) List {
 				return NewCons(NewTuple2(id, List_.Of(b)), list)
 			},
 		)
-	}).(List)
+	}))
 }
 
 func (x Cons) Index(index uint) Option {
-	var rec func(List, uint) Result
-	rec = func(a List, b uint) Result {
+	var rec func(List, uint) Free
+	rec = func(a List, b uint) Free {
 		if _, ok := a.(Nil); ok {
-			return Done(Option_.Empty())
+			return NewReturn(Option_.Empty())
 		}
 
 		cons := a.(Cons)
 		if b == 0 {
-			return Done(Option_.Of(cons.head))
+			return NewReturn(Option_.Of(cons.head))
 		}
-		return Cont(func() Result {
+		return NewSuspend(Functor_.LiftFuncAny(func() Any {
 			return rec(cons.tail, b-1)
-		})
+		}))
 	}
-	return AsOption(Trampoline(rec(x, index)))
+	return AsOption(rec(x, index).Run())
 }
 
 func (x Cons) Partition(f func(Any) bool) Tuple2 {
@@ -218,24 +235,23 @@ func (x Cons) Size() int {
 }
 
 func (x Cons) Zip(y List) List {
-	var rec func(a, b, c List) Result
-	rec = func(a, b, c List) Result {
+	var rec func(a, b, c List) Free
+	rec = func(a, b, c List) Free {
 		_, ok1 := a.(Nil)
 		_, ok2 := b.(Nil)
 
 		if ok1 || ok2 {
-			return Done(c)
+			return NewReturn(c)
 		}
-
-		return Cont(func() Result {
+		return NewSuspend(Functor_.LiftFuncAny(func() Any {
 			var (
 				x = a.(Cons)
 				y = b.(Cons)
 			)
 			return rec(x.tail, y.tail, NewCons(NewTuple2(x.head, y.head), c))
-		})
+		}))
 	}
-	return AsList(Trampoline(rec(x, y, NewNil())))
+	return AsList(rec(x, y, NewNil()).Run())
 }
 
 func (x Cons) String() string {
@@ -284,6 +300,10 @@ func (x Nil) Find(f func(Any) bool) Option {
 }
 
 func (x Nil) FoldLeft(v Any, f func(Any, Any) Any) Any {
+	return v
+}
+
+func (x Nil) FoldRight(v Any, f func(Any, Any) Any) Any {
 	return v
 }
 
@@ -391,18 +411,17 @@ func (x list) FromString(s string) List {
 }
 
 func (x list) StringSliceToList(s []string) List {
-	var rec func(List, []string) Result
-	rec = func(l List, v []string) Result {
+	var rec func(List, []string) Free
+	rec = func(l List, v []string) Free {
 		num := len(v)
 		if num < 1 {
-			return Done(l)
+			return NewReturn(l)
 		}
-		return Cont(func() Result {
+		return NewSuspend(Functor_.LiftFuncAny(func() Any {
 			return rec(NewCons(v[num-1], l), v[:num-1])
-		})
-
+		}))
 	}
-	return AsList(Trampoline(rec(NewNil(), s)))
+	return AsList(rec(NewNil(), s).Run())
 }
 
 func (x list) Cons(v Any) Any {

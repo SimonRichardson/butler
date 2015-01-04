@@ -1,44 +1,13 @@
 package generic
 
-type Result interface {
-	IsDone() bool
+func Done(x Any) Free {
+	return NewReturn(x)
 }
 
-type done struct {
-	result Any
+func Cont(f func() Free) Free {
+	return NewSuspend(Functor_.LiftFunc(f))
 }
 
-func Done(result Any) Result {
-	return done{
-		result: result,
-	}
-}
-
-func (d done) IsDone() bool {
-	return true
-}
-
-type cont struct {
-	thunk func() Result
-}
-
-func Cont(thunk func() Result) cont {
-	return cont{
-		thunk: thunk,
-	}
-}
-
-func (d cont) IsDone() bool {
-	return false
-}
-
-func Trampoline(bounce Result) Any {
-	for {
-		if bounce.IsDone() {
-			break
-		} else {
-			bounce = bounce.(cont).thunk()
-		}
-	}
-	return bounce.(done).result
+func Trampoline(x Free) Any {
+	return x.Run()
 }
