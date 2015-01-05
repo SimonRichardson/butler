@@ -78,7 +78,7 @@ func main() {
 		func(x g.Any) g.Any {
 			fmt.Println("WIN > ", x)
 			// run the matcher
-			//fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("Accept: fuck"))
+			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("/user/name/_/1"))
 			return x
 		},
 	)

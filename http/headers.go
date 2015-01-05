@@ -91,9 +91,9 @@ func (h Header) Build() g.WriterT {
 								x     = name.Run().Fst()
 								y     = g.AsTuple2(b).Snd()
 								parts = y.([]string)
-								put   = func(_ g.Any) g.Any {
-									a := g.AsTuple2(a)
-									return g.NewTuple2(a.Fst(), a.Fst())
+								put   = func(c g.Any) g.Any {
+									x := g.AsTuple2(a)
+									return g.NewTuple2(x.Fst(), x.Fst())
 								}
 							)
 							return x.Chain(func(x g.Any) g.Either {
@@ -117,8 +117,7 @@ func (h Header) Build() g.WriterT {
 						}
 					}
 					flatten = func(a g.Any) g.StateT {
-						b := g.AsEither(a)
-						return g.NewStateT(b)
+						return g.NewStateT(g.AsEither(a))
 					}
 					program = g.StateT_.Of(a).
 						Chain(modify(norm)).
