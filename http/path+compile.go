@@ -95,7 +95,7 @@ func toNode(a string) g.Either {
 	}
 }
 
-func compilePath(a string) g.List {
+func compilePath(a string) g.Either {
 	var (
 		x      = g.List_.StringSliceToList(strings.Split(a, "/")).Reverse()
 		option = func(a g.Any) g.Any {
@@ -119,19 +119,38 @@ func compilePath(a string) g.List {
 				},
 			).(bool)
 		}
-		extract = func(a g.Any) g.Any {
-			return g.AsEither(a).Fold(
-				g.Constant1(newEmpty()),
-				func(a g.Any) g.Any {
-					return g.AsOption(a).GetOrElse(g.Constant(newEmpty()))
-				},
-			).(PathNode)
+		traverse = func(a g.List) g.Either {
+			// TODO : If list & either implemented traverse, this would be easy!
+			var (
+				x = g.NewTuple2(g.Either_.Right, g.List_.Empty())
+				y = a.FoldLeft(x, func(a, b g.Any) g.Any {
+					return g.AsEither(b).Fold(
+						func(c g.Any) g.Any {
+							var (
+								x = g.AsTuple2(a)
+								y = g.AsList(x.Snd())
+							)
+							return g.NewTuple2(g.Either_.Left, g.NewCons(c, y))
+						},
+						func(c g.Any) g.Any {
+							var (
+								x = g.AsTuple2(a)
+								y = g.AsList(x.Snd())
+							)
+							return g.NewTuple2(x.Fst(), g.NewCons(c, y))
+						},
+					)
+				})
+				z = g.AsTuple2(y)
+				f = z.Fst().(func(g.Any) g.Any)
+			)
+			return g.AsEither(f(z.Snd()))
 		}
+		program = x.
+			Map(option).
+			Map(nodes).
+			Filter(nones)
 	)
 
-	return x.
-		Map(option).
-		Map(nodes).
-		Filter(nones).
-		Map(extract)
+	return traverse(program)
 }

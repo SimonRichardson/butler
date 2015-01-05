@@ -32,6 +32,10 @@ func (r Route) Build() g.WriterT {
 			return g.WriterT_.Of(y.String()).
 				Tell(fmt.Sprintf("Extract `%v`", y))
 		}
+		compile = func(a g.Any) g.WriterT {
+			return g.WriterT_.Lift(r.Route()).
+				Tell(fmt.Sprintf("Compile `%v`", a))
+		}
 		api = func(x doc.Api) func(g.Either) g.WriterT {
 			return func(y g.Either) g.WriterT {
 				return g.WriterT_.Lift(x.Run(y)).
@@ -44,7 +48,8 @@ func (r Route) Build() g.WriterT {
 			}
 		}
 		program = r.path.Build().
-			Chain(extract)
+			Chain(extract).
+			Chain(compile)
 	)
 
 	return join(program, api(r.Api), func(x g.Any) []g.Any {
@@ -55,9 +60,15 @@ func (r Route) Build() g.WriterT {
 	)
 }
 
-func (r Route) Route() g.Tree {
-	result := compilePath(r.String())
-	return g.Tree_.FromList(result)
+func (r Route) Route() g.Either {
+	return compilePath(r.String()).Bimap(
+		func(x g.Any) g.Any {
+			return g.Tree_.Empty()
+		},
+		func(x g.Any) g.Any {
+			return g.Tree_.FromList(g.AsList(x))
+		},
+	)
 }
 
 func (r Route) String() string {
