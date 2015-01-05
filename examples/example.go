@@ -68,7 +68,7 @@ func main() {
 	)
 	fmt.Println()
 
-	path := h.NewRoute("/user/name/:id")
+	path := h.NewRoute("/user/name/*/:id")
 	fmt.Println(path.Build().Run())
 	path.Build().Run().Fst().Fold(
 		func(x g.Any) g.Any {

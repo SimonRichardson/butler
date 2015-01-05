@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"strings"
 
 	g "github.com/SimonRichardson/butler/generic"
@@ -18,6 +19,7 @@ var (
 type PathNode interface {
 	Match(string) bool
 	Type() nodeType
+	String() string
 }
 
 type named struct {
@@ -38,6 +40,10 @@ func (n named) Type() nodeType {
 	return Named
 }
 
+func (n named) String() string {
+	return fmt.Sprintf("Named(%v)", n.name)
+}
+
 type variable struct {
 	name string
 }
@@ -56,6 +62,10 @@ func (n variable) Type() nodeType {
 	return Variable
 }
 
+func (n variable) String() string {
+	return fmt.Sprintf("Variable(%v)", n.name)
+}
+
 type wildcard struct{}
 
 func newWildcard() wildcard {
@@ -68,6 +78,10 @@ func (n wildcard) Match(x string) bool {
 
 func (n wildcard) Type() nodeType {
 	return Wildcard
+}
+
+func (n wildcard) String() string {
+	return "Wildcard"
 }
 
 type empty struct{}

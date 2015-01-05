@@ -9,7 +9,7 @@ import (
 var (
 	headerNameChar  *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z0-9\-!"#$%&'^*+| ]$`)
 	headerValueChar *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z0-9\-!"#$%&'^*+| /]$`)
-	pathChar        *regexp.Regexp = regexp.MustCompile(`^[a-z0-9/:]$`)
+	pathChar        *regexp.Regexp = regexp.MustCompile(`^[a-z0-9/:*]$`)
 	urlChar         *regexp.Regexp = regexp.MustCompile(`^[a-z0-9]$`)
 )
 
