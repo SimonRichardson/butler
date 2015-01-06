@@ -82,6 +82,22 @@ func main() {
 			return x
 		},
 	)
+	fmt.Println()
+
+	query := h.QueryString("user_name")
+	fmt.Println(query.Build().Run())
+	query.Build().Run().Fst().Fold(
+		func(x g.Any) g.Any {
+			fmt.Println("FAIL > ", x)
+			return x
+		},
+		func(x g.Any) g.Any {
+			fmt.Println("WIN > ", x)
+			// run the matcher
+			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("user_name=fred"))
+			return x
+		},
+	)
 
 	/*
 		var (

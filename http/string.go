@@ -101,14 +101,10 @@ func (s String) Build() g.WriterT {
 						return g.Either_.FromBool(c, d)
 					}
 				}
-				flatten = func(a g.Any) g.StateT {
-					b := g.AsEither(a)
-					return g.NewStateT(b)
-				}
 				program = g.StateT_.Of(a).
 					Chain(modify(match)).
 					Chain(g.Get()).
-					Chain(flatten)
+					Chain(matchFlatten)
 			)
 			return g.AsTuple2(a).Append(program)
 		}

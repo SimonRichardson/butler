@@ -112,9 +112,6 @@ func (r Route) Build() g.WriterT {
 							)).Bimap(put, put)
 						}
 					}
-					flatten = func(a g.Any) g.StateT {
-						return g.NewStateT(g.AsEither(a))
-					}
 					program = g.StateT_.Of(a).
 						Chain(modify(split)).
 						Chain(g.Get()).
@@ -124,7 +121,7 @@ func (r Route) Build() g.WriterT {
 						Chain(g.Get()).
 						Chain(modify(correct)).
 						Chain(g.Get()).
-						Chain(flatten)
+						Chain(matchFlatten)
 				)
 				return g.AsTuple2(a).Append(program)
 			}

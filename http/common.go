@@ -1,6 +1,10 @@
 package http
 
-import g "github.com/SimonRichardson/butler/generic"
+import (
+	"strings"
+
+	g "github.com/SimonRichardson/butler/generic"
+)
 
 func compose(a func(func(g.Any) g.Any) g.StateT) func(func(g.Any) func(g.Any) g.Any) func(g.Any) g.StateT {
 	return func(b func(g.Any) func(g.Any) g.Any) func(g.Any) g.StateT {
@@ -37,6 +41,32 @@ func join(a g.WriterT, f func(g.Either) g.WriterT, h func(g.Any) []g.Any) g.Writ
 			return g.NewRight(x)
 		}),
 	))
+}
+
+func matchSplit(s string) func(a g.Any) func(g.Any) g.Any {
+	return func(a g.Any) func(g.Any) g.Any {
+		return func(b g.Any) g.Any {
+			var (
+				src = strings.Split(b.(string), s)
+				dst = make([]string, len(src))
+			)
+			for k, v := range src {
+				dst[k] = strings.TrimSpace(v)
+			}
+			return g.NewTuple2(a, dst)
+		}
+	}
+}
+
+func matchPut(a g.Any) func(g.Any) g.Any {
+	return func(b g.Any) g.Any {
+		c := g.AsTuple2(a)
+		return g.NewTuple2(c.Fst(), c.Fst())
+	}
+}
+
+func matchFlatten(a g.Any) g.StateT {
+	return g.NewStateT(g.AsEither(a))
 }
 
 // Common aliases

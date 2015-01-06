@@ -2,7 +2,6 @@ package http
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
@@ -72,29 +71,12 @@ func (h Header) Build() g.WriterT {
 		matcher = func(name, value g.WriterT) func(g.Any) g.Any {
 			return func(a g.Any) g.Any {
 				var (
-					norm = func(a g.Any) func(g.Any) g.Any {
-						return func(b g.Any) g.Any {
-							// This could be better!
-							var (
-								src = strings.Split(b.(string), ":")
-								dst = make([]string, len(src))
-							)
-							for k, v := range src {
-								dst[k] = strings.TrimSpace(v)
-							}
-							return g.NewTuple2(a, dst)
-						}
-					}
 					match = func(a g.Any) func(g.Any) g.Any {
 						return func(b g.Any) g.Any {
 							var (
 								x     = name.Run().Fst()
 								y     = g.AsTuple2(b).Snd()
 								parts = y.([]string)
-								put   = func(c g.Any) g.Any {
-									x := g.AsTuple2(a)
-									return g.NewTuple2(x.Fst(), x.Fst())
-								}
 							)
 							return x.Chain(func(x g.Any) g.Either {
 								var (
@@ -113,18 +95,15 @@ func (h Header) Build() g.WriterT {
 										})
 									})
 								})
-							}).Bimap(put, put)
+							}).Bimap(matchPut(a), matchPut(a))
 						}
 					}
-					flatten = func(a g.Any) g.StateT {
-						return g.NewStateT(g.AsEither(a))
-					}
 					program = g.StateT_.Of(a).
-						Chain(modify(norm)).
+						Chain(modify(matchSplit(":"))).
 						Chain(g.Get()).
 						Chain(modify(match)).
 						Chain(g.Get()).
-						Chain(flatten)
+						Chain(matchFlatten)
 				)
 				return g.AsTuple2(a).Append(program)
 			}
