@@ -84,10 +84,19 @@ func (q Query) Build() g.WriterT {
 					match = func(a g.Any) func(g.Any) g.Any {
 						return func(b g.Any) g.Any {
 							var (
-								x = name.Run().Fst()
+								x     = name.Run().Fst()
+								y     = g.AsTuple2(b).Snd()
+								parts = y.([]string)[0]
 							)
 							return x.Chain(func(x g.Any) g.Either {
-								return g.Either_.Of(x)
+								var (
+									c = g.AsTuple3(x).Trd()
+									d = g.Either_.FromBool(len(parts) > 0, c)
+								)
+								return d.Chain(func(a g.Any) g.Either {
+									s := g.AsStateT(a)
+									return s.EvalState(parts)
+								})
 							}).Bimap(matchPut(a), matchPut(a))
 						}
 					}
