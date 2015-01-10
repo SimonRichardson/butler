@@ -58,6 +58,12 @@ func matchSplit(s string) func(a g.Any) func(g.Any) g.Any {
 	}
 }
 
+func matchGet(a g.Any) func(g.Any) g.Any {
+	return func(b g.Any) g.Any {
+		return g.NewTuple2(a, b)
+	}
+}
+
 func matchPut(a g.Any) func(g.Any) g.Any {
 	return func(b g.Any) g.Any {
 		c := g.AsTuple2(a)

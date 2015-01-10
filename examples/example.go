@@ -98,6 +98,22 @@ func main() {
 			return x
 		},
 	)
+	fmt.Println()
+
+	method := h.Get()
+	fmt.Println(method.Build().Run())
+	method.Build().Run().Fst().Fold(
+		func(x g.Any) g.Any {
+			fmt.Println("FAIL > ", x)
+			return x
+		},
+		func(x g.Any) g.Any {
+			fmt.Println("WIN > ", x)
+			// run the matcher
+			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("get"))
+			return x
+		},
+	)
 
 	/*
 		var (
