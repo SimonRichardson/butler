@@ -5,6 +5,7 @@ import (
 
 	g "github.com/SimonRichardson/butler/generic"
 	h "github.com/SimonRichardson/butler/http"
+	"github.com/SimonRichardson/butler/io"
 )
 
 type User struct {
@@ -111,6 +112,22 @@ func main() {
 			fmt.Println("WIN > ", x)
 			// run the matcher
 			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("get"))
+			return x
+		},
+	)
+	fmt.Println()
+
+	decoder := h.Body(io.JsonDecoder(g.Constant(User{})))
+	fmt.Println(decoder.Build().Run())
+	decoder.Build().Run().Fst().Fold(
+		func(x g.Any) g.Any {
+			fmt.Println("FAIL > ", x)
+			return x
+		},
+		func(x g.Any) g.Any {
+			fmt.Println("WIN > ", x)
+			// run the matcher
+			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("{\"age\":1, \"last_name\":\"xxx\", \"first_name\":\"yyy\"}"))
 			return x
 		},
 	)
