@@ -66,8 +66,12 @@ func matchGet(a g.Any) func(g.Any) g.Any {
 
 func matchPut(a g.Any) func(g.Any) g.Any {
 	return func(b g.Any) g.Any {
-		c := g.AsTuple2(a)
-		return g.NewTuple2(c.Fst(), c.Fst())
+		var (
+			x = g.AsTuple2(a)
+			y = g.AsTuple2(x.Fst())
+			z = y.Append(b)
+		)
+		return g.NewTuple2(z, z)
 	}
 }
 
