@@ -7,4 +7,5 @@ import (
 type Decoder interface {
 	Keys() g.Either
 	Decode(a []byte) g.Either
+	String() string
 }

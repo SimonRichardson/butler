@@ -27,3 +27,7 @@ func (e jsonDecoder) Decode(a []byte) g.Either {
 	}
 	return g.NewRight(b)
 }
+
+func (e jsonDecoder) String() string {
+	return "JsonDecoder"
+}

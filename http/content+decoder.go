@@ -2,7 +2,6 @@ package http
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
@@ -29,7 +28,7 @@ func (c ContentDecoder) Build() g.WriterT {
 		name = func(a g.Any) g.WriterT {
 			var (
 				x = AsContentDecoder(a)
-				y = reflect.TypeOf(x.decoder).String()
+				y = x.decoder.String()
 			)
 			return g.WriterT_.Of(g.NewTuple2(x, y)).
 				Tell(fmt.Sprintf("Name `%v`", y))
@@ -64,8 +63,9 @@ func (c ContentDecoder) Build() g.WriterT {
 				var (
 					match = func(a g.Any) func(g.Any) g.Any {
 						return func(b g.Any) g.Any {
+							x := g.NewTuple2(a, a)
 							return decoder.Decode([]byte(b.(string))).
-								Bimap(matchPut(a), matchPut(a))
+								Bimap(matchPut(x), matchPut(x))
 						}
 					}
 					program = g.StateT_.Of(a).
@@ -110,4 +110,8 @@ func (c ContentDecoder) Build() g.WriterT {
 
 func (c ContentDecoder) Keys() g.Either {
 	return c.decoder.Keys()
+}
+
+func (c ContentDecoder) String() string {
+	return c.decoder.String()
 }
