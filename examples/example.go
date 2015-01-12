@@ -11,7 +11,7 @@ import (
 type User struct {
 	FirstName string `json:"first-name"`
 	LastName  string `json:"last-name"`
-	Age       int    `json:"age"`
+	Age       uint   `json:"age"`
 }
 
 func main() {
@@ -128,6 +128,22 @@ func main() {
 			fmt.Println("WIN > ", x)
 			// run the matcher
 			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("{\"age\":1, \"last_name\":\"xxx\", \"first_name\":\"yyy\"}"))
+			return x
+		},
+	)
+	fmt.Println()
+
+	encoder := h.Content(io.JsonEncoder{}, g.Constant(User{}))
+	fmt.Println(encoder.Build().Run())
+	encoder.Build().Run().Fst().Fold(
+		func(x g.Any) g.Any {
+			fmt.Println("FAIL > ", x)
+			return x
+		},
+		func(x g.Any) g.Any {
+			fmt.Println("WIN > ", x)
+			// run the matcher
+			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState(User{}))
 			return x
 		},
 	)

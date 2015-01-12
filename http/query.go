@@ -136,5 +136,5 @@ func (q Query) Type() string {
 }
 
 func (q Query) String() string {
-	return fmt.Sprintf("%s [%s]", q.name, q.Type())
+	return fmt.Sprintf("%s[%s]", q.name, q.Type())
 }

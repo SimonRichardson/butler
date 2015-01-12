@@ -63,9 +63,22 @@ func (c ContentDecoder) Build() g.WriterT {
 				var (
 					match = func(a g.Any) func(g.Any) g.Any {
 						return func(b g.Any) g.Any {
-							x := g.NewTuple2(a, a)
-							return decoder.Decode([]byte(b.(string))).
-								Bimap(matchPut(x), matchPut(x))
+							var (
+								get = func(x g.Any) g.Either {
+									if a, ok := x.([]byte); ok {
+										return g.Either_.Of(a)
+									}
+									if b, ok := x.(string); ok {
+										return g.Either_.Of([]byte(b))
+									}
+									return g.NewLeft(x)
+								}
+								x = g.NewTuple2(a, a)
+							)
+							return get(b).Chain(func(z g.Any) g.Either {
+								return decoder.Decode(z.([]byte)).
+									Bimap(matchPut(x), matchPut(x))
+							})
 						}
 					}
 					program = g.StateT_.Of(a).

@@ -19,3 +19,7 @@ func (e XmlEncoder) Keys(a g.Any) g.Either {
 func (e XmlEncoder) Generate(x g.Any) g.Either {
 	return generate(e)(x)
 }
+
+func (e XmlEncoder) String() string {
+	return "XmlEncoder"
+}

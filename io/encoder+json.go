@@ -19,3 +19,7 @@ func (e JsonEncoder) Keys(a g.Any) g.Either {
 func (e JsonEncoder) Generate(x g.Any) g.Either {
 	return generate(e)(x)
 }
+
+func (e JsonEncoder) String() string {
+	return "JsonEncoder"
+}

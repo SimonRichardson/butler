@@ -1,7 +1,7 @@
 package http
 
 import (
-	"reflect"
+	"fmt"
 
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
@@ -25,64 +25,73 @@ func Content(encoder io.Encoder, hint func() g.Any) ContentEncoder {
 	}
 }
 
-func (c ContentEncoder) Build() g.StateT {
+func (c ContentEncoder) Build() g.WriterT {
 	var (
-		always = func(x g.Any) func(g.Any) g.Any {
-			return func(b g.Any) g.Any {
-				var (
-					encoder = AsContentEncoder(b)
-					name    = reflect.TypeOf(encoder.encoder).String()
-				)
-				return g.NewTuple2(encoder, name)
-			}
+		name = func(a g.Any) g.WriterT {
+			var (
+				x = AsContentEncoder(a)
+				y = x.encoder.String()
+			)
+			return g.WriterT_.Of(g.NewTuple2(x, y)).
+				Tell(fmt.Sprintf("Name `%v`", y))
 		}
-		values = func(x g.Any) func(g.Any) g.Any {
-			return func(b g.Any) g.Any {
-				var (
-					tup = g.AsTuple2(b)
-					fst = tup.Fst().(ContentEncoder)
-				)
-				return fst.Generate().Bimap(
-					func(x g.Any) g.Any {
-						return g.NewTuple2(tup.Snd(), "")
-					},
-					func(x g.Any) g.Any {
-						return g.NewTuple2(tup.Snd(), x)
-					},
-				)
-			}
-		}
-		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
-			return func(g.Any) func(g.Any) g.Any {
-				return func(a g.Any) g.Any {
-					sum := func(a g.Any) g.Any {
-						return g.AsTuple2(a).Slice()
+		keys = func(a g.Any) g.WriterT {
+			var (
+				run = func(a g.Tuple2) func(g.Any) g.Any {
+					return func(b g.Any) g.Any {
+						return a.Append(b)
 					}
-					return api.Run(g.AsEither(a).Bimap(sum, sum))
 				}
+				x = g.AsTuple2(a)
+				y = AsContentEncoder(x.Fst())
+				z = y.Generate().Bimap(run(x), run(x))
+			)
+			return g.WriterT_.Lift(z).
+				Tell(fmt.Sprintf("Key `%v`", z))
+		}
+		api = func(x doc.Api) func(g.Either) g.WriterT {
+			return func(y g.Either) g.WriterT {
+				return g.WriterT_.Lift(x.Run(y)).
+					Tell(fmt.Sprintf("Api `%v`", y))
 			}
 		}
-		finalise = func(c ContentEncoder) func(g.Any) g.StateT {
-			return func(g.Any) g.StateT {
-				return g.StateT{
-					Run: func(a g.Any) g.Either {
-						cast := func(b g.Any) g.Any {
-							x := g.NewWriter(c, singleton(a))
-							return g.NewTuple2(g.Empty{}, x)
+		finalize = func(a ContentEncoder) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.NewTuple2(a, b)
+			}
+		}
+		matcher = func(encoder io.Encoder) func(g.Any) g.Any {
+			return func(a g.Any) g.Any {
+				var (
+					match = func(a g.Any) func(g.Any) g.Any {
+						return func(b g.Any) g.Any {
+							x := g.NewTuple2(a, a)
+							return encoder.Encode(b).
+								Bimap(matchPut(x), matchPut(x))
 						}
-						return g.AsEither(a).Bimap(cast, cast)
-					},
-				}
+					}
+					program = g.StateT_.Of(a).
+						Chain(modify(match)).
+						Chain(g.Get()).
+						Chain(matchFlatten)
+				)
+				return g.AsTuple2(a).Append(program)
 			}
 		}
+
+		program = g.WriterT_.Of(c).
+			Chain(name).
+			Chain(keys)
 	)
-	return g.StateT_.Of(c).
-		Chain(modify(g.Constant1)).
-		Chain(modify(always)).
-		Chain(g.Get()).
-		Chain(modify(values)).
-		Chain(modify(api(c.Api))).
-		Chain(finalise(c))
+	return join(program, api(c.Api), func(x g.Any) []g.Any {
+		return g.AsTuple3(x).Slice()[1:]
+	}).Bimap(
+		finalize(c),
+		finalize(c),
+	).Bimap(
+		matcher(c.encoder),
+		matcher(c.encoder),
+	)
 }
 
 func (c ContentEncoder) Keys() g.Either {
@@ -91,4 +100,8 @@ func (c ContentEncoder) Keys() g.Either {
 
 func (c ContentEncoder) Generate() g.Either {
 	return c.encoder.Generate(c.hint())
+}
+
+func (c ContentEncoder) String() string {
+	return c.encoder.String()
 }
