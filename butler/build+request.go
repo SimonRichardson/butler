@@ -21,18 +21,29 @@ func (b req) List() g.List {
 }
 
 func (b req) add(x g.Any) req {
+	return b.Extend(func(y req) g.List {
+		return g.NewCons(x, y.Extract())
+	})
+}
+
+func (b req) Extract() g.List {
+	return b.list
+}
+
+func (b req) Extend(f func(req) g.List) req {
 	return req{
-		list: g.NewCons(x, b.list),
+		list: f(b.list),
 	}
 }
 
 // Body
 
-func (b req) Body(encoder io.Decoder) req {
-	return b.add(http.Body(encoder))
+func (b req) Body(decoder io.Decoder) req {
+	return b.add(http.Body(decoder))
 }
 
 // Headers
+
 func (b req) Accept(value string) req {
 	return b.add(http.Accept(value))
 }
