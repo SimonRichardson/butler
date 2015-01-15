@@ -8,7 +8,7 @@ import (
 
 func QueryInt(name string) Query {
 	return NewQuery(name, QInt, func(x g.Any) g.Any {
-		if y, err := strconv.Atoi(x.(string)); err != nil {
+		if y, err := strconv.Atoi(x.(string)); err == nil {
 			return y
 		} else {
 			return -1
@@ -22,7 +22,7 @@ func QueryUint(name string) Query {
 		return uint(u64), err
 	}
 	return NewQuery(name, QUint, func(x g.Any) g.Any {
-		if y, err := atou(x.(string)); err != nil {
+		if y, err := atou(x.(string)); err == nil {
 			return y
 		} else {
 			return 0

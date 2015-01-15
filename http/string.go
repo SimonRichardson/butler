@@ -96,7 +96,7 @@ func (s String) Build() g.WriterT {
 					return func(b g.Any) g.Any {
 						var (
 							c = y.String() == b
-							d = g.NewTuple2(g.Empty{}, x)
+							d = g.NewTuple2(g.Empty{}, x.Append(b))
 						)
 						return g.Either_.FromBool(c, d)
 					}
@@ -106,7 +106,7 @@ func (s String) Build() g.WriterT {
 					Chain(g.Get()).
 					Chain(matchFlatten)
 			)
-			return g.AsTuple2(a).Append(program)
+			return Result_.FromTuple3(g.AsTuple2(a).Append(program))
 		}
 		program = g.WriterT_.Of(s).
 			Chain(split).

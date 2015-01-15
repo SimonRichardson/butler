@@ -61,8 +61,8 @@ func (q Query) Build() g.WriterT {
 	var (
 		extract = func(a g.Any) g.WriterT {
 			var (
-				x = g.AsTuple3(a)
-				y = AsString(x.Fst())
+				x = AsResult(a)
+				y = AsString(x.Builder())
 			)
 			return g.WriterT_.Of(y.String()).
 				Tell(fmt.Sprintf("Extract `%v`", y))
@@ -84,20 +84,27 @@ func (q Query) Build() g.WriterT {
 					match = func(a g.Any) func(g.Any) g.Any {
 						return func(b g.Any) g.Any {
 							var (
-								x     = name.Run().Fst()
-								y     = g.AsTuple2(b).Snd()
-								parts = y.([]string)[0]
+								x          = name.Run().Fst()
+								y          = g.AsTuple2(b).Snd()
+								parts      = y.([]string)
+								paramName  = parts[0]
+								paramValue = parts[1]
+								build      = func(a g.Any) g.Any {
+									return q.build(paramValue)
+								}
 							)
 							return x.Chain(func(x g.Any) g.Either {
 								var (
-									c = g.AsTuple3(x).Trd()
-									d = g.Either_.FromBool(len(parts) > 0, c)
+									c = AsResult(x).Matcher()
+									d = g.Either_.FromBool(len(paramName) > 0, c)
 								)
 								return d.Chain(func(a g.Any) g.Either {
 									s := g.AsStateT(a)
-									return s.EvalState(parts)
+									return s.EvalState(paramName)
 								})
-							}).Bimap(matchPut(a), matchPut(a))
+							}).
+								Map(build).
+								Bimap(matchPut(a), matchPut(a))
 						}
 					}
 					program = g.StateT_.Of(a).
@@ -107,7 +114,7 @@ func (q Query) Build() g.WriterT {
 						Chain(g.Get()).
 						Chain(matchFlatten)
 				)
-				return g.AsTuple2(a).Append(program)
+				return Result_.FromTuple3(g.AsTuple2(a).Append(program))
 			}
 		}
 

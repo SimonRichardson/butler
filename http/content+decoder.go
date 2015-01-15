@@ -86,7 +86,7 @@ func (c ContentDecoder) Build() g.WriterT {
 						Chain(g.Get()).
 						Chain(matchFlatten)
 				)
-				return g.AsTuple2(a).Append(program)
+				return Result_.FromTuple3(g.AsTuple2(a).Append(program))
 			}
 		}
 

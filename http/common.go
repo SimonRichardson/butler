@@ -101,6 +101,10 @@ func AsPathNode(x g.Any) PathNode {
 	return x.(PathNode)
 }
 
+func AsResult(x g.Any) Result {
+	return x.(Result)
+}
+
 func AsRoute(x g.Any) Route {
 	return x.(Route)
 }

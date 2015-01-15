@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
@@ -80,7 +81,7 @@ func (h Header) Build() g.WriterT {
 							)
 							return x.Chain(func(x g.Any) g.Either {
 								var (
-									c = g.AsTuple3(x).Trd()
+									c = AsResult(x).Matcher()
 									d = g.Either_.FromBool(len(parts) > 0, c)
 								)
 								return d.Chain(func(a g.Any) g.Either {
@@ -88,10 +89,25 @@ func (h Header) Build() g.WriterT {
 									return s.EvalState(parts[0]).Chain(func(a g.Any) g.Either {
 										return value.Run().Fst().Chain(func(x g.Any) g.Either {
 											var (
-												t = g.AsTuple3(x).Trd()
-												s = g.AsStateT(t)
+												sec = strings.Split(parts[1], ",")
+												mat = AsResult(x).Matcher()
+												res = g.List_.StringSliceToList(sec).Map(func(y g.Any) g.Any {
+													return mat.EvalState(y)
+												})
+												success = func(x g.Any) bool {
+													return g.AsEither(x).Fold(
+														g.Constant1(false),
+														g.Constant1(true),
+													).(bool)
+												}
+												program = res.
+													Find(success).
+													Fold(
+													g.Constant1(g.Either_.Right(y)),
+													g.Constant(g.Either_.Left(y)),
+												)
 											)
-											return s.EvalState(parts[1])
+											return g.AsEither(program)
 										})
 									})
 								})
@@ -105,7 +121,7 @@ func (h Header) Build() g.WriterT {
 						Chain(g.Get()).
 						Chain(matchFlatten)
 				)
-				return g.AsTuple2(a).Append(program)
+				return Result_.FromTuple3(g.AsTuple2(a).Append(program))
 			}
 		}
 
@@ -121,7 +137,7 @@ func (h Header) Build() g.WriterT {
 		var (
 			unwrap = func(a g.Any) g.Any {
 				var (
-					x = g.AsTuple3(a).Fst()
+					x = AsResult(a).Builder()
 					y = AsString(x)
 				)
 				return y.String()

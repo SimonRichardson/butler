@@ -27,8 +27,8 @@ func (r Route) Build() g.WriterT {
 	var (
 		extract = func(a g.Any) g.WriterT {
 			var (
-				x = g.AsTuple3(a)
-				y = AsString(x.Fst())
+				x = AsResult(a)
+				y = AsString(x.Builder())
 			)
 			return g.WriterT_.Of(y.String()).
 				Tell(fmt.Sprintf("Extract `%v`", y))
@@ -79,7 +79,7 @@ func (r Route) Build() g.WriterT {
 						return func(y g.Any) g.Any {
 							return r.Route().Bimap(
 								func(x g.Any) g.Any {
-									return g.List_.Empty()
+									return g.NewTuple2(y, g.List_.Empty())
 								},
 								func(x g.Any) g.Any {
 									var (
@@ -95,7 +95,8 @@ func (r Route) Build() g.WriterT {
 						return func(y g.Any) g.Any {
 							var (
 								put = func(z g.Any) g.Any {
-									return g.NewTuple2(a, a)
+									b := g.AsTuple2(a).Append(z)
+									return g.NewTuple2(b, b)
 								}
 								a = g.AsEither(y)
 							)
@@ -123,7 +124,7 @@ func (r Route) Build() g.WriterT {
 						Chain(g.Get()).
 						Chain(matchFlatten)
 				)
-				return g.AsTuple2(a).Append(program)
+				return Result_.FromTuple3(g.AsTuple2(a).Append(program))
 			}
 		}
 

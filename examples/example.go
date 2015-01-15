@@ -47,7 +47,7 @@ func main() {
 		func(x g.Any) g.Any {
 			fmt.Println("WIN > ", x)
 			// run the matcher
-			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("hello"))
+			fmt.Println("WAT > ", h.AsResult(x).Matcher().ExecState("hello"))
 			return x
 		},
 	)
@@ -63,13 +63,13 @@ func main() {
 		func(x g.Any) g.Any {
 			fmt.Println("WIN > ", x)
 			// run the matcher
-			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("Accept: fuck"))
+			fmt.Println("WAT > ", h.AsResult(x).Matcher().ExecState("Accept: fuck, fucker"))
 			return x
 		},
 	)
 	fmt.Println()
 
-	path := h.NewRoute("/user/name/*/:id")
+	path := h.NewRoute("/user/name/:id")
 	fmt.Println(path.Build().Run())
 	path.Build().Run().Fst().Fold(
 		func(x g.Any) g.Any {
@@ -79,13 +79,13 @@ func main() {
 		func(x g.Any) g.Any {
 			fmt.Println("WIN > ", x)
 			// run the matcher
-			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("/user/name/_/1"))
+			fmt.Println("WAT > ", h.AsResult(x).Matcher().ExecState("/user/name/1"))
 			return x
 		},
 	)
 	fmt.Println()
 
-	query := h.QueryString("user_name")
+	query := h.QueryInt("user_name")
 	fmt.Println(query.Build().Run())
 	query.Build().Run().Fst().Fold(
 		func(x g.Any) g.Any {
@@ -95,7 +95,7 @@ func main() {
 		func(x g.Any) g.Any {
 			fmt.Println("WIN > ", x)
 			// run the matcher
-			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("user_name=fred"))
+			fmt.Println("WAT > ", h.AsResult(x).Matcher().ExecState("user_name=1"))
 			return x
 		},
 	)
@@ -111,7 +111,7 @@ func main() {
 		func(x g.Any) g.Any {
 			fmt.Println("WIN > ", x)
 			// run the matcher
-			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("get"))
+			fmt.Println("WAT > ", h.AsResult(x).Matcher().ExecState("get"))
 			return x
 		},
 	)
@@ -127,7 +127,7 @@ func main() {
 		func(x g.Any) g.Any {
 			fmt.Println("WIN > ", x)
 			// run the matcher
-			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState("{\"age\":1, \"last_name\":\"xxx\", \"first_name\":\"yyy\"}"))
+			fmt.Println("WAT > ", h.AsResult(x).Matcher().ExecState("{\"age\":1, \"last_name\":\"xxx\", \"first_name\":\"yyy\"}"))
 			return x
 		},
 	)
@@ -143,7 +143,7 @@ func main() {
 		func(x g.Any) g.Any {
 			fmt.Println("WIN > ", x)
 			// run the matcher
-			fmt.Println("WAT > ", g.AsStateT(g.AsTuple3(x).Trd()).ExecState(User{}))
+			fmt.Println("WAT > ", h.AsResult(x).Matcher().ExecState(User{}))
 			return x
 		},
 	)
