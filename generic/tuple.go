@@ -72,6 +72,18 @@ func (t Tuple3) Trd() Any {
 	return t._3
 }
 
+func (t Tuple3) MapFst(f func(Any) Any) Tuple3 {
+	return NewTuple3(f(t._1), t._2, t._3)
+}
+
+func (t Tuple3) MapSnd(f func(Any) Any) Tuple3 {
+	return NewTuple3(t._1, f(t._2), t._3)
+}
+
+func (t Tuple3) MapTrd(f func(Any) Any) Tuple3 {
+	return NewTuple3(t._1, t._2, f(t._3))
+}
+
 func (t Tuple3) Slice() []Any {
 	return []Any{t._1, t._2, t._3}
 }

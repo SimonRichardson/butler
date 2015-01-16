@@ -99,7 +99,7 @@ func (c ContentDecoder) Build() g.WriterT {
 			serialiseTags = func(a g.List) g.Any {
 				var (
 					x = a.Map(func(x g.Any) g.Any {
-						a := g.AsTuple2(x)
+						a := g.AsTuple3(x)
 						return fmt.Sprintf("%s[%s]", a.Snd(), a.Fst())
 					})
 					y = x.ReduceLeft(func(x, y g.Any) g.Any {
