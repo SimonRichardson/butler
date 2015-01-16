@@ -63,10 +63,10 @@ func (s String) Build() g.WriterT {
 					func(x g.Any) g.Any {
 						sum := func(y g.Any) g.Any {
 							var (
-								aa = y.(byte)
-								bb = []byte(x.(string))
+								a = y.(byte)
+								b = []byte(x.(string))
 							)
-							return string(append(bb, aa))
+							return string(append(b, a))
 						}
 						return g.AsEither(b).Bimap(sum, sum)
 					},
