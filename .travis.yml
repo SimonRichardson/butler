@@ -1,0 +1,7 @@
+language: go
+
+go:
+  - 1.3
+
+script:
+  - go test -p 1 `find . -name '_vendor' -prune -o -mindepth 1 -type d -exec sh -c 'ls -1 "{}"|egrep -i -q "_test\.go$"' ';' -print`
