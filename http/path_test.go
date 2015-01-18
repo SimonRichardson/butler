@@ -42,19 +42,15 @@ func makeRouteTestWithArgs(x string, y string) g.Any {
 
 func Test_RouteNamedPath_WithOneLeaf_WhenTestingMatchValue(t *testing.T) {
 	var (
-		f = func(x alphaLowerString) string {
-			return fmt.Sprintf("/%s", x.String())
+		f = func(x alphaLowerString) g.Set {
+			return g.Set_.Empty()
 		}
-		g = func(x alphaLowerString) string {
-			a := makeRouteTest(fmt.Sprintf("/%s", x.String()))
-			return g.AsList(a).FoldLeft("", func(a, b g.Any) g.Any {
-				return fmt.Sprintf("%s/%s", a, g.AsOption(b).Fold(
-					func(a g.Any) g.Any {
-						return a.(named).name
-					},
-					g.Constant("???"),
-				))
-			}).(string)
+		g = func(x alphaLowerString) g.Set {
+			var (
+				path = fmt.Sprintf("/%s", x.String())
+				a    = makeRouteTestWithArgs(path, path)
+			)
+			return g.AsSet(a)
 		}
 	)
 	if err := quick.CheckEqual(f, g, nil); err != nil {
@@ -64,19 +60,15 @@ func Test_RouteNamedPath_WithOneLeaf_WhenTestingMatchValue(t *testing.T) {
 
 func Test_RouteNamedPath_WithTwoLeaves_WhenTestingMatchValue(t *testing.T) {
 	var (
-		f = func(x, y alphaLowerString) string {
-			return fmt.Sprintf("/%s/%s", x.String(), y.String())
+		f = func(x, y alphaLowerString) g.Set {
+			return g.Set_.Empty()
 		}
-		g = func(x, y alphaLowerString) string {
-			a := makeRouteTest(fmt.Sprintf("/%s/%s", x.String(), y.String()))
-			return g.AsList(a).FoldRight("", func(a, b g.Any) g.Any {
-				return fmt.Sprintf("%s/%s", a, g.AsOption(b).Fold(
-					func(a g.Any) g.Any {
-						return a.(named).name
-					},
-					g.Constant("???"),
-				))
-			}).(string)
+		g = func(x, y alphaLowerString) g.Set {
+			var (
+				path = fmt.Sprintf("/%s/%s", x.String(), y.String())
+				a    = makeRouteTestWithArgs(path, path)
+			)
+			return g.AsSet(a)
 		}
 	)
 	if err := quick.CheckEqual(f, g, nil); err != nil {
@@ -86,25 +78,18 @@ func Test_RouteNamedPath_WithTwoLeaves_WhenTestingMatchValue(t *testing.T) {
 
 func Test_RouteVariablePath_WithOneVariable_WhenTestingMatchValue(t *testing.T) {
 	var (
-		f = func(x, y alphaLowerString) string {
-			return fmt.Sprintf("/%s/:id", x.String())
+		f = func(x, y alphaLowerString) g.Set {
+			return g.Set_.FromMap(map[g.Any]g.Any{
+				"id": y.String(),
+			})
 		}
-		g = func(x, y alphaLowerString) string {
-			a := makeRouteTestWithArgs(fmt.Sprintf("/%s/:id", x.String()), fmt.Sprintf("/%s/%s", x.String(), y.String()))
-			return g.AsList(a).FoldRight("", func(a, b g.Any) g.Any {
-				return fmt.Sprintf("%s/%s", a, g.AsOption(b).Fold(
-					func(a g.Any) g.Any {
-						switch AsPathNode(a).Type() {
-						case Named:
-							return a.(named).name
-						case Variable:
-							return fmt.Sprintf(":%s", a.(variable).name)
-						}
-						return fail(a)
-					},
-					g.Constant("???"),
-				))
-			}).(string)
+		g = func(x, y alphaLowerString) g.Set {
+			var (
+				route = fmt.Sprintf("/%s/:id", x.String())
+				path  = fmt.Sprintf("/%s/%s", x.String(), y.String())
+				a     = makeRouteTestWithArgs(route, path)
+			)
+			return g.AsSet(a)
 		}
 	)
 	if err := quick.CheckEqual(f, g, nil); err != nil {
@@ -114,25 +99,19 @@ func Test_RouteVariablePath_WithOneVariable_WhenTestingMatchValue(t *testing.T) 
 
 func Test_RouteVariablePath_WithTwoVariables_WhenTestingMatchValue(t *testing.T) {
 	var (
-		f = func(x, y, z alphaLowerString) string {
-			return fmt.Sprintf("/%s/:a/:b", x.String())
+		f = func(x, y, z alphaLowerString) g.Set {
+			return g.Set_.FromMap(map[g.Any]g.Any{
+				"a": y.String(),
+				"b": z.String(),
+			})
 		}
-		g = func(x, y, z alphaLowerString) string {
-			a := makeRouteTestWithArgs(fmt.Sprintf("/%s/:a/:b", x.String()), fmt.Sprintf("/%s/%s/%s", x.String(), y.String(), z.String()))
-			return g.AsList(a).FoldRight("", func(a, b g.Any) g.Any {
-				return fmt.Sprintf("%s/%s", a, g.AsOption(b).Fold(
-					func(a g.Any) g.Any {
-						switch AsPathNode(a).Type() {
-						case Named:
-							return a.(named).name
-						case Variable:
-							return fmt.Sprintf(":%s", a.(variable).name)
-						}
-						return fail(a)
-					},
-					g.Constant("???"),
-				))
-			}).(string)
+		g = func(x, y, z alphaLowerString) g.Set {
+			var (
+				route = fmt.Sprintf("/%s/:a/:b", x.String())
+				path  = fmt.Sprintf("/%s/%s/%s", x.String(), y.String(), z.String())
+				a     = makeRouteTestWithArgs(route, path)
+			)
+			return g.AsSet(a)
 		}
 	)
 	if err := quick.CheckEqual(f, g, nil); err != nil {

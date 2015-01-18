@@ -20,8 +20,8 @@ func (b res) List() g.List {
 	return b.list
 }
 
-func (b req) add(x g.Any) req {
-	return b.Extend(func(y req) g.List {
+func (b res) add(x g.Any) res {
+	return b.Extend(func(y res) g.List {
 		return g.NewCons(x, y.Extract())
 	})
 }
@@ -32,7 +32,7 @@ func (b res) Extract() g.List {
 
 func (b res) Extend(f func(res) g.List) res {
 	return res{
-		list: f(b.list),
+		list: f(b),
 	}
 }
 

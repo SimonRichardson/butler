@@ -18,6 +18,7 @@ var (
 
 type PathNode interface {
 	Match(string) bool
+	Fold(func(g.Any) g.Any, func(g.Any) g.Any, func(g.Any) g.Any) g.Any
 	Type() nodeType
 	String() string
 }
@@ -30,6 +31,10 @@ func newNamed(name string) named {
 	return named{
 		name: name,
 	}
+}
+
+func (n named) Fold(f, g, h func(g.Any) g.Any) g.Any {
+	return f(n)
 }
 
 func (n named) Match(x string) bool {
@@ -54,6 +59,10 @@ func newVariable(name string) variable {
 	}
 }
 
+func (n variable) Fold(f, g, h func(g.Any) g.Any) g.Any {
+	return g(n)
+}
+
 func (n variable) Match(x string) bool {
 	return true
 }
@@ -70,6 +79,10 @@ type wildcard struct{}
 
 func newWildcard() wildcard {
 	return wildcard{}
+}
+
+func (n wildcard) Fold(f, g, h func(g.Any) g.Any) g.Any {
+	return h(n)
 }
 
 func (n wildcard) Match(x string) bool {

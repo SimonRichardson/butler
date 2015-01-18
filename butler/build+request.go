@@ -32,7 +32,7 @@ func (b req) Extract() g.List {
 
 func (b req) Extend(f func(req) g.List) req {
 	return req{
-		list: f(b.list),
+		list: f(b),
 	}
 }
 

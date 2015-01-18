@@ -108,9 +108,54 @@ func (r Route) Build() g.WriterT {
 										b = len(a.Fst().([]string))
 										c = g.AsList(a.Snd())
 									)
-									return g.Either_.FromBool(b == c.Size(), c)
+									return g.Either_.FromBool(b == c.Size(), a)
 								},
 							)).Bimap(put, put)
+						}
+					}
+					extract = func(x g.Any) func(g.Any) g.Any {
+						return func(y g.Any) g.Any {
+							var (
+								over = func(x func(g.Any) g.Any, f func(g.Any) g.Any) func(g.Any) g.Any {
+									return func(a g.Any) g.Any {
+										return x(g.AsTuple2(a).MapSnd(func(b g.Any) g.Any {
+											return g.AsTuple3(b).MapTrd(f)
+										}))
+									}
+								}
+							)
+							return g.AsEither(y).Fold(
+								over(g.Either_.Left, func(a g.Any) g.Any {
+									return g.Set_.Empty()
+								}),
+								over(g.Either_.Right, func(a g.Any) g.Any {
+									var (
+										tup   = g.AsTuple2(a)
+										parts = tup.Fst().([]string)
+										list  = g.AsList(tup.Snd())
+									)
+									return list.ZipWithIndex().FoldLeft(g.Set_.Empty(), func(x, y g.Any) g.Any {
+										var (
+											tup = g.AsTuple2(y)
+											opt = g.AsOption(tup.Fst())
+											num = tup.Snd().(int)
+										)
+										return opt.Fold(
+											func(z g.Any) g.Any {
+												return AsPathNode(z).Fold(
+													g.Constant1(x),
+													func(a g.Any) g.Any {
+														name := AsVariablePathNode(a).name
+														return g.AsSet(x).Set(name, parts[num])
+													},
+													g.Constant1(x),
+												)
+											},
+											g.Constant(x),
+										)
+									})
+								}),
+							)
 						}
 					}
 					program = g.StateT_.Of(a).
@@ -121,6 +166,8 @@ func (r Route) Build() g.WriterT {
 						Chain(modify(match)).
 						Chain(g.Get()).
 						Chain(modify(correct)).
+						Chain(g.Get()).
+						Chain(modify(extract)).
 						Chain(g.Get()).
 						Chain(matchFlatten)
 				)

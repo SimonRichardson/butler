@@ -10,6 +10,12 @@ type Set struct {
 	set map[Any]Any
 }
 
+func NewSet(k, v Any) Set {
+	m := map[Any]Any{}
+	m[k] = v
+	return Set_.FromMap(m)
+}
+
 func (s Set) Get(x Any) Option {
 	if val, ok := s.set[x]; ok {
 		return Option_.Of(val)
@@ -21,7 +27,9 @@ func (s Set) Set(x, y Any) Set {
 	add := func() Any {
 		c := copy(s)
 		c[x] = y
-		return c
+		return Set{
+			set: c,
+		}
 	}
 	return AsSet(s.Get(x).Fold(
 		func(a Any) Any {
@@ -47,6 +55,18 @@ var (
 )
 
 type set struct{}
+
+func (s set) Of(a Any) Set {
+	m := map[Any]Any{}
+	m[a] = a
+	return s.FromMap(m)
+}
+
+func (s set) Empty() Set {
+	return Set{
+		set: map[Any]Any{},
+	}
+}
 
 func (s set) FromMap(m map[Any]Any) Set {
 	return Set{

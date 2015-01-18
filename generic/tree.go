@@ -151,7 +151,7 @@ func (w walker) Match(a Tree, f func(List, Any, int) bool) List {
 			Constant(a),
 		))
 	}
-	return rec(NewNil(), a, 0)
+	return rec(NewNil(), a, 0).Reverse()
 }
 
 func (w walker) Map(a Tree, f func(Any, int, bool) Any) Tree {

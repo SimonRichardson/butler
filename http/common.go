@@ -113,6 +113,10 @@ func AsString(x g.Any) String {
 	return x.(String)
 }
 
+func AsVariablePathNode(x g.Any) variable {
+	return x.(variable)
+}
+
 func modify(a func(g.Any) func(g.Any) g.Any) func(g.Any) g.StateT {
 	return compose(g.StateT_.Modify)(a)
 }

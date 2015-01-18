@@ -20,6 +20,7 @@ type List interface {
 	Reverse() List
 	Size() int
 	Zip(List) List
+	ZipWithIndex() List
 	String() string
 }
 
@@ -254,6 +255,20 @@ func (x Cons) Zip(y List) List {
 	return AsList(rec(x, y, NewNil()).Run())
 }
 
+func (x Cons) ZipWithIndex() List {
+	var rec func(a List, b int, c List) Free
+	rec = func(a List, b int, c List) Free {
+		if _, ok := a.(Nil); ok {
+			return NewReturn(c)
+		}
+		return NewSuspend(Functor_.LiftFuncAny(func() Any {
+			x := a.(Cons)
+			return rec(x.tail, b+1, NewCons(NewTuple2(x.head, b), c))
+		}))
+	}
+	return AsList(rec(x, 0, NewNil()).Run())
+}
+
 func (x Cons) String() string {
 	res := x.ReduceLeft(func(a, b Any) Any {
 		return fmt.Sprintf("%v, %v", a, b)
@@ -332,6 +347,10 @@ func (x Nil) Size() int {
 }
 
 func (x Nil) Zip(a List) List {
+	return List_.Empty()
+}
+
+func (x Nil) ZipWithIndex() List {
 	return List_.Empty()
 }
 
