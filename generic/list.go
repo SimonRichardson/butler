@@ -405,6 +405,21 @@ func (x list) FromBool(a bool, b Any) List {
 	return List_.Empty()
 }
 
+func (x list) FromArgs(s ...Any) List {
+	var rec func(List, []Any) List
+	rec = func(l List, v []Any) List {
+		num := len(v)
+		if num < 1 {
+			return l
+		}
+		return rec(Cons{
+			head: v[num-1],
+			tail: l,
+		}, v[:num-1])
+	}
+	return rec(Nil{}, s)
+}
+
 func (x list) FromSlice(s []Any) List {
 	var rec func(List, []Any) List
 	rec = func(l List, v []Any) List {
