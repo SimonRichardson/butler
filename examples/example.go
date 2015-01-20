@@ -52,10 +52,10 @@ func main() {
 
 	fmt.Println(md.Render(doc))
 
-	ul := md.List(md.Ordered())
-	list := ul(
+	olist := md.List(md.Ordered())
+	list := olist(
 		g.List_.FromArgs(
-			md.Content("Sub Sub List Item 1"),
+			md.Link("google.com", "Sub Sub List Item 1"),
 			md.Content("Sub Sub List Item 2"),
 		),
 	)

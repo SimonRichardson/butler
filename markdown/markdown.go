@@ -72,6 +72,16 @@ func Bold() func(Markup) Markup {
 	return Parent("bold", "*", "*", None)
 }
 
+func Link(src, content string) Markup {
+	return Parent("link-src", "[", "]", None)(Content(src)).
+		Concat(Parent("link-content", "(", ")", None)(Content(content)))
+}
+
+func Image(src, alt string) Markup {
+	return Parent("image-alt", "![", "]", None)(Content(alt)).
+		Concat(Parent("image-src", "(", ")", None)(Content(src)))
+}
+
 func List(kind func(Markup) Markup) func(g.List) Markup {
 	return func(x g.List) Markup {
 		var rec func(Markup, g.List) Markup
