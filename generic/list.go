@@ -17,6 +17,7 @@ type List interface {
 	Index(uint) Option
 	Partition(func(Any) bool) Tuple2
 	ReduceLeft(func(Any, Any) Any) Option
+	ReduceRight(func(Any, Any) Any) Option
 	Reverse() List
 	Size() int
 	Zip(List) List
@@ -223,6 +224,10 @@ func (x Cons) ReduceLeft(f func(Any, Any) Any) Option {
 	return Option_.Of(x.tail.FoldLeft(x.head, f))
 }
 
+func (x Cons) ReduceRight(f func(Any, Any) Any) Option {
+	return x.Reverse().ReduceLeft(f)
+}
+
 func (x Cons) Reverse() List {
 	return AsList(x.FoldLeft(NewNil(), func(a, b Any) Any {
 		return NewCons(b, AsList(a))
@@ -270,7 +275,7 @@ func (x Cons) ZipWithIndex() List {
 }
 
 func (x Cons) String() string {
-	res := x.ReduceLeft(func(a, b Any) Any {
+	res := x.ReduceRight(func(a, b Any) Any {
 		return fmt.Sprintf("%v, %v", a, b)
 	})
 	return fmt.Sprintf("List(%s)", res.GetOrElse(Constant("")))
@@ -335,6 +340,10 @@ func (x Nil) Partition(f func(Any) bool) Tuple2 {
 }
 
 func (x Nil) ReduceLeft(f func(Any, Any) Any) Option {
+	return Option_.Empty()
+}
+
+func (x Nil) ReduceRight(f func(Any, Any) Any) Option {
 	return Option_.Empty()
 }
 

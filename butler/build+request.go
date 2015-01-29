@@ -36,6 +36,10 @@ func (b req) Extend(f func(req) g.List) req {
 	}
 }
 
+func (b req) String() string {
+	return b.list.String()
+}
+
 // Body
 
 func (b req) Body(decoder io.Decoder) req {

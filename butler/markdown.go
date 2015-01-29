@@ -7,6 +7,7 @@ import (
 
 var (
 	h1     = md.H1()
+	h2     = md.H2()
 	h3     = md.H3()
 	h4     = md.H4()
 	ul     = md.List(md.Unordered())

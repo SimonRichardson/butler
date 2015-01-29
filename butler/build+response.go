@@ -36,6 +36,10 @@ func (b res) Extend(f func(res) g.List) res {
 	}
 }
 
+func (b res) String() string {
+	return b.list.String()
+}
+
 // Content
 
 func (b res) Content(encoder io.Encoder, hint func() g.Any) res {

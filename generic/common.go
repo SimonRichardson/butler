@@ -20,6 +20,14 @@ func AsOption(x Any) Option {
 	return x.(Option)
 }
 
+func AsReader(x Any) Reader {
+	return x.(Reader)
+}
+
+func AsReaderT(x Any) ReaderT {
+	return x.(ReaderT)
+}
+
 func AsSet(x Any) Set {
 	return x.(Set)
 }
