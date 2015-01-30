@@ -48,34 +48,32 @@ func main() {
 		ContentType("application/json").
 		Content(io.JsonEncoder{}, g.Constant(hint))
 
-	fmt.Println(request, response)
+	listEmployees := b.Service(request, response, func() g.Any {
+		loadAllEmployees := func() g.Any {
+			return []g.Any{}
+		}
+		return loadAllEmployees()
+	})
+
+	fmt.Println(listEmployees.Compile())
 
 	/*
-		listEmployees := Service(request, response).Then(func() g.Any {
-			loadAllEmployees := func() g.Any {
-				return []g.Any{}
-			}
-			return loadAllEmployees()
-		})
+		server := Compile(listEmployees).AndThen(listEmployees).Run()
 
-		fmt.Println(listEmployees)
+		// You can also render the server to markdown, for up to
+		// date documentation
+		markdown.Output(server).Fold(
+			func(err g.Any) g.Any {
+				fmt.Println(err)
+				return err
+			},
+			func(doc g.Any) g.Any {
+				// fmt.Println(doc)
+				return doc
+			},
+		)
 
-			server := Compile(listEmployees).AndThen(listEmployees).Run()
-
-			// You can also render the server to markdown, for up to
-			// date documentation
-			markdown.Output(server).Fold(
-				func(err g.Any) g.Any {
-					fmt.Println(err)
-					return err
-				},
-				func(doc g.Any) g.Any {
-					// fmt.Println(doc)
-					return doc
-				},
-			)
-
-			// Run the documentation
-			Remotely(server)("localhost", "8080")
+		// Run the documentation
+		Remotely(server)("localhost", "8080")
 	*/
 }

@@ -90,3 +90,15 @@ func (w writerT) Of(x Any) WriterT {
 func (w writerT) Tell(x Any) WriterT {
 	return NewWriterT(Either_.Of(Empty{}), []Any{x})
 }
+
+func (w writerT) Sequence(list List) WriterT {
+	var (
+		orgin   = WriterT_.Of(Empty{})
+		reduced = list.FoldLeft(orgin, func(x, y Any) Any {
+			return AsWriterT(x).Chain(func(z Any) WriterT {
+				return AsWriterT(y)
+			})
+		})
+	)
+	return AsWriterT(reduced)
+}

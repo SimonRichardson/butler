@@ -7,27 +7,20 @@ import (
 )
 
 type service struct {
-	request  request
-	response response
+	request  list
+	response list
 	callable func() g.Any
 }
 
-func Service(request, response Builder) service {
+func Service(request, response Builder, callable func() g.Any) service {
 	return service{
-		request:  ServiceRequest(request.List()),
-		response: ServiceResponse(response.List()),
-	}
-}
-
-func (s service) Then(f func() g.Any) service {
-	return service{
-		request:  s.request,
-		response: s.response,
-		callable: f,
+		request:  newList(request.List()),
+		response: newList(response.List()),
 	}
 }
 
 func (s service) Compile() g.Either {
+	fmt.Println(s.request.Build().Run())
 	return g.Either_.Of(g.Empty{})
 }
 
@@ -38,4 +31,20 @@ func (s service) String() string {
 		},
 		g.Constant("Service()"),
 	).(string)
+}
+
+type list struct {
+	list g.List
+}
+
+func newList(x g.List) list {
+	return list{
+		list: x,
+	}
+}
+
+func (r list) Build() g.WriterT {
+	return g.WriterT_.Sequence(r.list.Map(func(x g.Any) g.Any {
+		return AsBuild(x).Build()
+	}))
 }
