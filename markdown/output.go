@@ -1,52 +1,77 @@
 package markdown
 
-import (
-	"github.com/SimonRichardson/butler/butler"
-	g "github.com/SimonRichardson/butler/generic"
-)
+import "fmt"
 
-const (
-	DefaultString string = ""
-
-	DefaultMethod      string = "GET"
-	DefaultPath        string = "/"
-	DefaultContentType string = ""
-)
-
-type mark interface {
-	IsBlockStart() bool
-	IsBlockFinish() bool
-	Children() g.Option
-	String() string
+func Render(md Markup) string {
+	return renderMarkup(md, "")
 }
 
-func Output(server g.Either) g.Either {
-	// Build the service and output it as markdown!
-	return server.Bimap(
-		func(x g.Any) g.Any {
+func renderMarkup(md Markup, buf string) string {
+	var rec func(Markup, int, string) string
+	rec = func(md Markup, indent int, buf string) string {
+		if x, ok := md.(parent); ok {
 			var (
-				list     = g.AsTuple2(x).Snd()
-				failures = templateFailures(g.List_.To(list.([]g.Any)...))
-				doc      = document(append(templateError(), append(failures, templateFooter()...)...)...)
+				y = renderBlock(x.kind)
+				z = updateIndent(y.indent, indent)
+				p = renderPad(indent)
 			)
-			return doc.String()
-		},
-		func(x g.Any) g.Any {
+			return fmt.Sprintf("%s%s%s%s%s%s%s%s%s", buf, y.start, p, x.start, y.before, rec(x.value, z, buf), y.after, x.finish, y.finish)
+		} else if x, ok := md.(leaf); ok {
 			var (
-				server = butler.AsServer(x)
-				list   = server.RouteList()
-				folded = list.FoldLeft([]mark{}, func(a, b g.Any) g.Any {
-					var (
-						tuple     = g.AsTuple2(b)
-						requests  = g.AsList(tuple.Fst())
-						responses = g.AsList(tuple.Snd())
-					)
+				y = renderBlock(x.kind)
+				p = renderPad(indent)
+			)
+			return fmt.Sprintf("%s%s%s%s%s%s%s%s", buf, y.start, p, x.start, y.before, y.after, x.finish, y.finish)
+		} else if x, ok := md.(content); ok {
+			return fmt.Sprintf("%s%s", buf, x.value)
+		} else if x, ok := md.(concat); ok {
+			return fmt.Sprintf("%s%s", rec(x.left, indent, buf), rec(x.right, indent, buf))
+		}
+		return buf
+	}
+	return rec(md, 0, buf)
+}
 
-					return append(asMarks(a), templateRoute(requests, responses)...)
-				})
-				doc = document(append(templateHeader(), append(asMarks(folded), templateFooter()...)...)...)
-			)
-			return doc.String()
-		},
-	)
+type bloc struct {
+	start  string
+	finish string
+	before string
+	after  string
+	indent bool
+}
+
+func renderBlock(kind BlockKind) bloc {
+	b := bloc{}
+	if (kind & Start) == Start {
+		b.start = "\n"
+	}
+	if (kind & Finish) == Finish {
+		b.finish = "\n"
+	}
+	if (kind & Before) == Before {
+		b.before = "\n"
+	}
+	if (kind & After) == After {
+		b.after = "\n"
+	}
+	if (kind & Pad) == Pad {
+		b.indent = true
+		b.before = "\n"
+	}
+	return b
+}
+
+func updateIndent(a bool, b int) int {
+	if a {
+		return b + 1
+	}
+	return b
+}
+
+func renderPad(a int) string {
+	res := ""
+	for i := 0; i < a; i++ {
+		res += "\t"
+	}
+	return res
 }

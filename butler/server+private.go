@@ -15,7 +15,7 @@ var (
 				request  = Request()
 				response = Response().ContentType(r.Header.Get("content-type"))
 			)
-			return Service(request, response).Then(func() g.Any {
+			return Service(request, response, func() g.Any {
 				return error404()
 			})
 		}
@@ -27,7 +27,7 @@ var (
 				request  = Request()
 				response = Response().ContentType(r.Header.Get("content-type"))
 			)
-			return Service(request, response).Then(func() g.Any {
+			return Service(request, response, func() g.Any {
 				return noContent
 			})
 		}

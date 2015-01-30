@@ -9,8 +9,10 @@ import (
 var (
 	headerNameChar  *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z0-9\-!"#$%&'^*+| ]$`)
 	headerValueChar *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z0-9\-!"#$%&'^*+| /]$`)
-	pathChar        *regexp.Regexp = regexp.MustCompile(`^[a-z0-9/:]$`)
+	pathChar        *regexp.Regexp = regexp.MustCompile(`^[a-z0-9/:*]$`)
 	urlChar         *regexp.Regexp = regexp.MustCompile(`^[a-z0-9]$`)
+	queryChar       *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z0-9_]$`)
+	methodChar      *regexp.Regexp = regexp.MustCompile(`^[a-z]$`)
 )
 
 func AnyChar() func(byte) g.Either {
@@ -40,5 +42,17 @@ func PathChar() func(byte) g.Either {
 func UrlChar() func(byte) g.Either {
 	return func(b byte) g.Either {
 		return g.Either_.FromBool(urlChar.MatchString(string(b)), b)
+	}
+}
+
+func QueryChar() func(byte) g.Either {
+	return func(b byte) g.Either {
+		return g.Either_.FromBool(queryChar.MatchString(string(b)), b)
+	}
+}
+
+func MethodChar() func(byte) g.Either {
+	return func(b byte) g.Either {
+		return g.Either_.FromBool(methodChar.MatchString(string(b)), b)
 	}
 }

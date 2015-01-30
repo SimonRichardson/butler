@@ -5,7 +5,7 @@ import (
 )
 
 type Build interface {
-	Build() g.StateT
+	Build() g.WriterT
 }
 
 type Builder interface {

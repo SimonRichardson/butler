@@ -38,3 +38,7 @@ func (x io) Of(v Any) IO {
 		return v
 	})
 }
+
+func (x io) IO(v Any) Any {
+	return x.Of(v)
+}

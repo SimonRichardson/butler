@@ -3,16 +3,15 @@ package main
 import (
 	"fmt"
 
-	. "github.com/SimonRichardson/butler/butler"
+	b "github.com/SimonRichardson/butler/butler"
 	g "github.com/SimonRichardson/butler/generic"
 	"github.com/SimonRichardson/butler/io"
-	"github.com/SimonRichardson/butler/markdown"
 )
 
 type User struct {
 	FirstName string `json:"first-name"`
 	LastName  string `json:"last-name"`
-	Age       int    `json:"age"`
+	Age       uint   `json:"age"`
 }
 
 func main() {
@@ -22,43 +21,59 @@ func main() {
 		create = func() g.Any {
 			return User{}
 		}
+		accessor = func(x g.Any, prop string, val g.Any) g.Any {
+			u := x.(User)
+			switch prop {
+			case "first-name":
+				u.FirstName = val.(string)
+			case "last-name":
+				u.LastName = val.(string)
+			case "age":
+				u.Age = val.(uint)
+			}
+			return u
+		}
 	)
 
-	request := Request().
+	request := b.Request().
 		Post().
 		Path("/name/:id").
 		ContentType("application/json").
 		AcceptLanguage("en").
 		QueryUint("offset").
 		QueryUint("limit").
-		Body(io.JsonDecoder(create))
+		Body(io.JsonDecoder(create, accessor))
 
-	response := Response().
+	response := b.Response().
 		ContentType("application/json").
 		Content(io.JsonEncoder{}, g.Constant(hint))
 
-	listEmployees := Service(request, response).Then(func() g.Any {
+	listEmployees := b.Service(request, response, func() g.Any {
 		loadAllEmployees := func() g.Any {
 			return []g.Any{}
 		}
 		return loadAllEmployees()
 	})
 
-	server := Compile(listEmployees).AndThen(listEmployees).Run()
+	fmt.Println(listEmployees.Compile())
 
-	// You can also render the server to markdown, for up to
-	// date documentation
-	markdown.Output(server).Fold(
-		func(err g.Any) g.Any {
-			fmt.Println(err)
-			return err
-		},
-		func(doc g.Any) g.Any {
-			// fmt.Println(doc)
-			return doc
-		},
-	)
+	/*
+		server := Compile(listEmployees).AndThen(listEmployees).Run()
 
-	// Run the documentation
-	Remotely(server)("localhost", "8080")
+		// You can also render the server to markdown, for up to
+		// date documentation
+		markdown.Output(server).Fold(
+			func(err g.Any) g.Any {
+				fmt.Println(err)
+				return err
+			},
+			func(doc g.Any) g.Any {
+				// fmt.Println(doc)
+				return doc
+			},
+		)
+
+		// Run the documentation
+		Remotely(server)("localhost", "8080")
+	*/
 }

@@ -1,6 +1,8 @@
 package http
 
 import (
+	"fmt"
+
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
 )
@@ -22,85 +24,124 @@ func NewString(value string, validator func(byte) g.Either) String {
 	}
 }
 
-func (s String) Build() g.StateT {
+func (s String) Build() g.WriterT {
 	var (
-		split = func(g.Any) func(g.Any) g.Any {
-			return func(b g.Any) g.Any {
-				return g.List_.FromString(b.(String).value)
-			}
+		split = func(x g.Any) g.WriterT {
+			var (
+				a = AsString(x).String()
+				b = g.List_.FromString(a)
+			)
+			return g.WriterT_.Of(b).
+				Tell(fmt.Sprintf("Split `%v`", x))
 		}
-		first = func(a g.Any) func(g.Any) g.Any {
-			return func(b g.Any) g.Any {
-				return g.AsList(b).Map(func(a g.Any) g.Any {
-					return []byte(a.(string))[0]
+		first = func(x g.Any) g.WriterT {
+			var (
+				a = g.AsList(x).Map(func(y g.Any) g.Any {
+					return []byte(y.(string))[0]
 				})
-			}
+			)
+			return g.WriterT_.Of(a).
+				Tell(fmt.Sprintf("Select first %v", x))
 		}
-		validate = func(f func(byte) g.Either) func(g.Any) func(g.Any) g.Any {
-			return func(x g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					return g.AsList(b).Map(func(a g.Any) g.Any {
+		validate = func(f func(byte) g.Either) func(g.Any) g.WriterT {
+			return func(x g.Any) g.WriterT {
+				var (
+					a = g.AsList(x).Map(func(a g.Any) g.Any {
 						return f(a.(byte))
 					})
-				}
+				)
+				return g.WriterT_.Of(a).
+					Tell(fmt.Sprintf("Validate each %v", x))
 			}
 		}
-		fold = func(a g.Any) func(g.Any) g.Any {
-			return func(b g.Any) g.Any {
-				return g.AsList(b).FoldLeft(g.Either_.Of(""), func(a, b g.Any) g.Any {
-					return g.AsEither(a).Fold(
-						func(x g.Any) g.Any {
-							return g.NewLeft(x)
-						},
-						func(x g.Any) g.Any {
-							sum := func(y g.Any) g.Any {
-								var (
-									aa = y.(byte)
-									bb = []byte(x.(string))
-								)
-								return string(append(bb, aa))
-							}
-							return g.AsEither(b).Bimap(sum, sum)
-						},
-					)
-				})
-			}
-		}
-		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
-			return func(g.Any) func(g.Any) g.Any {
-				return func(a g.Any) g.Any {
-					sum := func(a g.Any) g.Any {
-						return singleton(a)
-					}
-					return api.Run(g.AsEither(a).Bimap(sum, sum))
-				}
-			}
-		}
-		finalise = func(s String) func(g.Any) g.StateT {
-			return func(g.Any) g.StateT {
-				return g.StateT{
-					Run: func(a g.Any) g.Either {
-						cast := func(b g.Any) g.Any {
-							x := g.NewWriter(s, singleton(a))
-							return g.NewTuple2(g.Empty{}, x)
-						}
-						return g.AsEither(a).Bimap(cast, cast)
+		flatten = func(x g.Any) g.WriterT {
+			a := g.AsEither(g.AsList(x).FoldLeft(g.Either_.Of(""), func(a, b g.Any) g.Any {
+				return g.AsEither(a).Fold(
+					func(x g.Any) g.Any {
+						return g.NewLeft(x)
 					},
-				}
+					func(x g.Any) g.Any {
+						sum := func(y g.Any) g.Any {
+							var (
+								a = y.(byte)
+								b = []byte(x.(string))
+							)
+							return string(append(b, a))
+						}
+						return g.AsEither(b).Bimap(sum, sum)
+					},
+				)
+			}))
+			return g.WriterT_.Lift(a).
+				Tell(fmt.Sprintf("Flatten %v", x))
+		}
+		api = func(x doc.Api) func(g.Either) g.WriterT {
+			return func(y g.Either) g.WriterT {
+				return g.WriterT_.Lift(x.Run(y)).
+					Tell(fmt.Sprintf("Api `%v`", y))
 			}
 		}
+		finalize = func(a String) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.NewTuple2(a, b)
+			}
+		}
+		matcher = func(a g.Any) g.Any {
+			var (
+				match = func(a g.Any) func(g.Any) g.Any {
+					var (
+						x = g.AsTuple2(a)
+						y = AsString(x.Fst())
+					)
+					return func(b g.Any) g.Any {
+						var (
+							c = y.String() == b
+							d = g.NewTuple2(g.Empty{}, x.Append(b))
+						)
+						return g.Either_.FromBool(c, d)
+					}
+				}
+				program = g.StateT_.Of(a).
+					Chain(modify(match)).
+					Chain(g.Get()).
+					Chain(matchFlatten)
+			)
+			return Result_.FromTuple3(g.AsTuple2(a).Append(program))
+		}
+		program = g.WriterT_.Of(s).
+			Chain(split).
+			Chain(first).
+			Chain(validate(s.validator)).
+			Chain(flatten)
 	)
 
-	return g.StateT_.Of(s).
-		Chain(modify(g.Constant1)).
-		Chain(modify(split)).
-		Chain(modify(first)).
-		Chain(modify(validate(s.validator))).
-		Chain(modify(fold)).
-		Chain(modify(api(s.Api))).
-		Chain(finalise(s))
+	return join(program, api(s.Api), func(x g.Any) []g.Any {
+		return singleton(x)
+	}).Bimap(
+		finalize(s),
+		finalize(s),
+	).Bimap(
+		matcher,
+		matcher,
+	)
 }
 
 func (s String) String() string {
 	return s.value
+}
+
+// Static methods
+
+var (
+	String_ = string_{}
+)
+
+type string_ struct{}
+
+func (x string_) Of(v g.Any) String {
+	return NewString(v.(string), AnyChar())
+}
+
+func (x string_) Empty() String {
+	return NewString("", AnyChar())
 }

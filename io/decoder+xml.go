@@ -27,3 +27,7 @@ func (e xmlDecoder) Decode(a []byte) g.Either {
 	}
 	return g.NewRight(b)
 }
+
+func (e xmlDecoder) String() string {
+	return "XmlDecoder"
+}

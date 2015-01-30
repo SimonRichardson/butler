@@ -1,17 +1,13 @@
 package http
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
 )
 
 type MethodType string
-
-func (m MethodType) String() string {
-	return strings.ToUpper(string(m))
-}
 
 const (
 	DELETE  MethodType = "delete"
@@ -24,22 +20,9 @@ const (
 	TRACE   MethodType = "trace"
 )
 
-var (
-	methodTypes = []MethodType{
-		DELETE,
-		GET,
-		HEAD,
-		OPTIONS,
-		PATCH,
-		POST,
-		PUT,
-		TRACE,
-	}
-)
-
 type Method struct {
 	doc.Api
-	method MethodType
+	method String
 }
 
 func NewMethod(method MethodType) Method {
@@ -48,58 +31,83 @@ func NewMethod(method MethodType) Method {
 			doc.NewInlineText("Expected method `%s`"),
 			doc.NewInlineText("Unexpected method `%s`"),
 		)),
-		method: method,
+		method: NewString(string(method), MethodChar()),
 	}
 }
 
-func (m Method) Build() g.StateT {
+func (m Method) Build() g.WriterT {
 	var (
-		contains = func(types []MethodType) func(t MethodType) g.Either {
-			return func(t MethodType) g.Either {
-				for _, v := range types {
-					if t == v {
-						return g.NewRight(t)
-					}
-				}
-				return g.NewLeft(t)
+		extract = func(a g.Any) g.WriterT {
+			var (
+				x = AsResult(a)
+				y = AsString(x.Builder())
+			)
+			return g.WriterT_.Of(y.String()).
+				Tell(fmt.Sprintf("Extract `%v`", y))
+		}
+		api = func(x doc.Api) func(g.Either) g.WriterT {
+			return func(y g.Either) g.WriterT {
+				return g.WriterT_.Lift(x.Run(y)).
+					Tell(fmt.Sprintf("Api `%v`", y))
 			}
 		}
-		validate = func(f func(t MethodType) g.Either) func(g.Any) func(g.Any) g.Any {
-			return func(x g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					return f(asMethod(b).method)
-				}
+		finalize = func(a Method) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.NewTuple2(a, b)
 			}
 		}
-		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
-			return func(g.Any) func(g.Any) g.Any {
-				return func(a g.Any) g.Any {
-					sum := func(a g.Any) g.Any {
-						return singleton(a)
-					}
-					return api.Run(g.AsEither(a).Bimap(sum, sum))
-				}
-			}
-		}
-		finalise = func(m Method) func(g.Any) g.StateT {
-			return func(g.Any) g.StateT {
-				return g.StateT{
-					Run: func(a g.Any) g.Either {
-						cast := func(b g.Any) g.Any {
-							x := g.NewWriter(m, singleton(a))
-							return g.NewTuple2(g.Empty{}, x)
+		matcher = func(method g.WriterT) func(g.Any) g.Any {
+			return func(a g.Any) g.Any {
+				var (
+					match = func(a g.Any) func(g.Any) g.Any {
+						return func(b g.Any) g.Any {
+							var (
+								x       = method.Run().Fst()
+								y       = g.AsTuple2(b).Snd()
+								part    = y.(string)
+								include = func(g.Any) g.Any {
+									return y
+								}
+							)
+							return x.Chain(func(x g.Any) g.Either {
+								var (
+									c = AsResult(x).Matcher()
+									d = g.Either_.Of(c)
+								)
+								return d.Chain(func(a g.Any) g.Either {
+									s := g.AsStateT(a)
+									return s.EvalState(part)
+								})
+							}).
+								Map(include).
+								Bimap(matchPut(a), matchPut(a))
 						}
-						return g.AsEither(a).Bimap(cast, cast)
-					},
-				}
+					}
+					program = g.StateT_.Of(a).
+						Chain(modify(matchGet)).
+						Chain(g.Get()).
+						Chain(modify(match)).
+						Chain(g.Get()).
+						Chain(matchFlatten)
+				)
+				return Result_.FromTuple3(g.AsTuple2(a).Append(program))
 			}
 		}
+
+		method = m.method.Build()
+
+		program = method.
+			Chain(extract)
 	)
-	return g.StateT_.Of(m).
-		Chain(modify(g.Constant1)).
-		Chain(modify(validate(contains(methodTypes)))).
-		Chain(modify(api(m.Api))).
-		Chain(finalise(m))
+	return join(program, api(m.Api), func(x g.Any) []g.Any {
+		return singleton(x)
+	}).Bimap(
+		finalize(m),
+		finalize(m),
+	).Bimap(
+		matcher(method),
+		matcher(method),
+	)
 }
 
 func (m Method) String() string {

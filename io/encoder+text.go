@@ -29,3 +29,7 @@ func (e TextEncoder) Keys(a g.Any) g.Either {
 func (e TextEncoder) Generate(x g.Any) g.Either {
 	return generate(e)(x)
 }
+
+func (e TextEncoder) String() string {
+	return "TextEncoder"
+}

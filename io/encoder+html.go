@@ -32,3 +32,7 @@ func (e HtmlEncoder) Keys(a g.Any) g.Either {
 func (e HtmlEncoder) Generate(x g.Any) g.Either {
 	return generate(e)(x)
 }
+
+func (e HtmlEncoder) String() string {
+	return "HtmlEncoder"
+}

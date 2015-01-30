@@ -1,10 +1,13 @@
 package generic
 
+import "fmt"
+
 type Tree interface {
 	Children() Option
 	Chain(func(Any) Tree) Tree
 	Map(func(Any) Any) Tree
 	FoldLeft(Any, func(Any, Any) Any) Any
+	String() string
 }
 
 type TreeNode struct {
@@ -47,6 +50,10 @@ func (t TreeNode) FoldLeft(x Any, f func(Any, Any) Any) Any {
 	})
 }
 
+func (t TreeNode) String() string {
+	return fmt.Sprintf("Tree(%v, %v)", t.value, t.nodes.String())
+}
+
 type TreeNil struct {
 }
 
@@ -70,6 +77,10 @@ func (t TreeNil) FoldLeft(x Any, f func(Any, Any) Any) Any {
 	return x
 }
 
+func (t TreeNil) String() string {
+	return "Nil"
+}
+
 // Static methods
 
 var (
@@ -88,8 +99,11 @@ func (x tree) Empty() Tree {
 
 func (x tree) FromList(l List) Tree {
 	return AsTree(l.FoldLeft(NewTreeNil(), func(a, b Any) Any {
-		node := AsTree(a)
-		return NewTreeNode(b, List_.Of(node))
+		var (
+			node  = AsTree(a)
+			_, ok = node.(TreeNode)
+		)
+		return NewTreeNode(b, List_.FromBool(ok, node))
 	}))
 }
 
@@ -137,7 +151,7 @@ func (w walker) Match(a Tree, f func(List, Any, int) bool) List {
 			Constant(a),
 		))
 	}
-	return rec(NewNil(), a, 0)
+	return rec(NewNil(), a, 0).Reverse()
 }
 
 func (w walker) Map(a Tree, f func(Any, int, bool) Any) Tree {

@@ -51,43 +51,87 @@ func NewQuery(name string, queryType QueryType, build func(g.Any) g.Any) Query {
 			doc.NewInlineText("Expected query `%s` with type `%s`"),
 			doc.NewInlineText("Unexpected query `%s` with type `%s`"),
 		)),
-		name:      NewString(name, UrlChar()),
+		name:      NewString(name, QueryChar()),
 		queryType: queryType,
 		build:     build,
 	}
 }
 
-func (q Query) Build() g.StateT {
+func (q Query) Build() g.WriterT {
 	var (
-		query = func(t QueryType) func(g.Any) func(g.Any) g.Any {
-			return func(g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					return g.NewTuple2(b, t.Type())
-				}
+		extract = func(a g.Any) g.WriterT {
+			var (
+				x = AsResult(a)
+				y = AsString(x.Builder())
+			)
+			return g.WriterT_.Of(y.String()).
+				Tell(fmt.Sprintf("Extract `%v`", y))
+		}
+		api = func(x doc.Api) func(g.Either) g.WriterT {
+			return func(y g.Either) g.WriterT {
+				return g.WriterT_.Lift(x.Run(y)).
+					Tell(fmt.Sprintf("Api `%v`", y))
 			}
 		}
-		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
-			return func(a g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					tuple := g.AsTuple2(b)
-					return g.AsWriter(tuple.Fst()).Chain(func(a g.Any) g.Writer {
-						var (
-							name  = singleton(a.(String).value)
-							value = tuple.Snd()
-							str   = g.Either_.Of(append(name, value))
-						)
-						return g.NewWriter(q, singleton(api.Run(str)))
-					})
-				}
+		finalize = func(a Query) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.NewTuple2(a, b)
 			}
 		}
-	)
+		matcher = func(name g.WriterT) func(g.Any) g.Any {
+			return func(a g.Any) g.Any {
+				var (
+					match = func(a g.Any) func(g.Any) g.Any {
+						return func(b g.Any) g.Any {
+							var (
+								x          = name.Run().Fst()
+								y          = g.AsTuple2(b).Snd()
+								parts      = y.([]string)
+								paramName  = parts[0]
+								paramValue = parts[1]
+								build      = func(a g.Any) g.Any {
+									return q.build(paramValue)
+								}
+							)
+							return x.Chain(func(x g.Any) g.Either {
+								var (
+									c = AsResult(x).Matcher()
+									d = g.Either_.FromBool(len(paramName) > 0, c)
+								)
+								return d.Chain(func(a g.Any) g.Either {
+									s := g.AsStateT(a)
+									return s.EvalState(paramName)
+								})
+							}).
+								Map(build).
+								Bimap(matchPut(a), matchPut(a))
+						}
+					}
+					program = g.StateT_.Of(a).
+						Chain(modify(matchSplit("="))).
+						Chain(g.Get()).
+						Chain(modify(match)).
+						Chain(g.Get()).
+						Chain(matchFlatten)
+				)
+				return Result_.FromTuple3(g.AsTuple2(a).Append(program))
+			}
+		}
 
-	return q.name.Build().
-		Chain(g.Get()).
-		Chain(modify(query(q.queryType))).
-		Chain(constant(g.StateT_.Of(q))).
-		Chain(modify(api(q.Api)))
+		name = q.name.Build()
+
+		program = name.
+			Chain(extract)
+	)
+	return join(program, api(q.Api), func(x g.Any) []g.Any {
+		return append(singleton(x), q.Type())
+	}).Bimap(
+		finalize(q),
+		finalize(q),
+	).Bimap(
+		matcher(name),
+		matcher(name),
+	)
 }
 
 func (q Query) Name() string {
@@ -99,5 +143,5 @@ func (q Query) Type() string {
 }
 
 func (q Query) String() string {
-	return fmt.Sprintf("%s [%s]", q.name, q.queryType.Type())
+	return fmt.Sprintf("%s[%s]", q.name, q.Type())
 }

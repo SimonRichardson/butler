@@ -65,3 +65,7 @@ func (e CsvEncoder) Keys(a g.Any) g.Either {
 func (e CsvEncoder) Generate(x g.Any) g.Either {
 	return generate(e)(x)
 }
+
+func (e CsvEncoder) String() string {
+	return "CsvEncoder"
+}

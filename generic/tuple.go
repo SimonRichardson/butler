@@ -1,5 +1,7 @@
 package generic
 
+import "fmt"
+
 type Tuple2 struct {
 	_1 Any
 	_2 Any
@@ -20,8 +22,28 @@ func (t Tuple2) Snd() Any {
 	return t._2
 }
 
+func (t Tuple2) MapFst(f func(Any) Any) Tuple2 {
+	return NewTuple2(f(t._1), t._2)
+}
+
+func (t Tuple2) MapSnd(f func(Any) Any) Tuple2 {
+	return NewTuple2(t._1, f(t._2))
+}
+
+func (t Tuple2) Bimap(f func(Any) Any, g func(Any) Any) Tuple2 {
+	return NewTuple2(f(t._1), g(t._2))
+}
+
+func (t Tuple2) Append(x Any) Tuple3 {
+	return NewTuple3(t._1, t._2, x)
+}
+
 func (t Tuple2) Slice() []Any {
 	return []Any{t._1, t._2}
+}
+
+func (t Tuple2) String() string {
+	return fmt.Sprintf("Tuple2(%s, %s)", t._1, t._2)
 }
 
 type Tuple3 struct {
@@ -50,6 +72,22 @@ func (t Tuple3) Trd() Any {
 	return t._3
 }
 
+func (t Tuple3) MapFst(f func(Any) Any) Tuple3 {
+	return NewTuple3(f(t._1), t._2, t._3)
+}
+
+func (t Tuple3) MapSnd(f func(Any) Any) Tuple3 {
+	return NewTuple3(t._1, f(t._2), t._3)
+}
+
+func (t Tuple3) MapTrd(f func(Any) Any) Tuple3 {
+	return NewTuple3(t._1, t._2, f(t._3))
+}
+
 func (t Tuple3) Slice() []Any {
 	return []Any{t._1, t._2, t._3}
+}
+
+func (t Tuple3) String() string {
+	return fmt.Sprintf("Tuple3(%s, %s, %s)", t._1, t._2, t._3)
 }

@@ -14,7 +14,7 @@ func getAllTags(a g.Any) g.Either {
 		}
 		var (
 			field = t.Field(i)
-			tuple = g.NewTuple2(field.Type, field.Tag)
+			tuple = g.NewTuple3(field.Type, field.Tag, field.Name)
 		)
 		return rec(g.NewCons(tuple, l), t, i+1)
 	}
@@ -28,26 +28,21 @@ func getAllTags(a g.Any) g.Either {
 func getAllTagsByName(a g.Any, b string) g.Either {
 	var (
 		get = func(x g.Any) g.Any {
-			var (
-				tuple = g.AsTuple2(x)
-				tag   = tuple.Snd().(reflect.StructTag)
-			)
-			return g.NewTuple2(tuple.Fst(), tag.Get(b))
+			return g.AsTuple3(x).MapSnd(func(y g.Any) g.Any {
+				return y.(reflect.StructTag).Get(b)
+			})
 		}
 		isEmpty = func(x g.Any) bool {
 			var (
-				tuple = g.AsTuple2(x)
+				tuple = g.AsTuple3(x)
 				str   = tuple.Snd().(string)
 			)
 			return str != ""
 		}
 		stringify = func(x g.Any) g.Any {
-			var (
-				tuple = g.AsTuple2(x)
-				a     = tuple.Fst().(reflect.Type)
-				b     = tuple.Snd().(string)
-			)
-			return g.NewTuple2(a.String(), b)
+			return g.AsTuple3(x).MapFst(func(y g.Any) g.Any {
+				return y.(reflect.Type).String()
+			})
 		}
 		filter = func(x g.Any) g.Any {
 			return g.AsList(x).

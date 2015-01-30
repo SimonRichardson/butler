@@ -21,9 +21,23 @@ func (b res) List() g.List {
 }
 
 func (b res) add(x g.Any) res {
+	return b.Extend(func(y res) g.List {
+		return g.NewCons(x, y.Extract())
+	})
+}
+
+func (b res) Extract() g.List {
+	return b.list
+}
+
+func (b res) Extend(f func(res) g.List) res {
 	return res{
-		list: g.NewCons(x, b.list),
+		list: f(b),
 	}
+}
+
+func (b res) String() string {
+	return b.list.String()
 }
 
 // Content
@@ -33,6 +47,7 @@ func (b res) Content(encoder io.Encoder, hint func() g.Any) res {
 }
 
 // Headers
+
 func (b res) Accept(value string) res {
 	return b.add(http.Accept(value))
 }

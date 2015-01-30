@@ -4,6 +4,10 @@ func AsEither(x Any) Either {
 	return x.(Either)
 }
 
+func AsFree(x Any) Free {
+	return x.(Free)
+}
+
 func AsIO(x Any) IO {
 	return x.(IO)
 }
@@ -14,6 +18,18 @@ func AsList(x Any) List {
 
 func AsOption(x Any) Option {
 	return x.(Option)
+}
+
+func AsReader(x Any) Reader {
+	return x.(Reader)
+}
+
+func AsReaderT(x Any) ReaderT {
+	return x.(ReaderT)
+}
+
+func AsSet(x Any) Set {
+	return x.(Set)
 }
 
 func AsStateT(x Any) StateT {
@@ -32,8 +48,20 @@ func AsTuple3(x Any) Tuple3 {
 	return x.(Tuple3)
 }
 
+func AsWriterTuple(x Any) WriterTuple {
+	return x.(WriterTuple)
+}
+
 func AsWriter(x Any) Writer {
 	return x.(Writer)
+}
+
+func AsWriterTTuple(x Any) WriterTTuple {
+	return x.(WriterTTuple)
+}
+
+func AsWriterT(x Any) WriterT {
+	return x.(WriterT)
 }
 
 func Get() func(Any) StateT {
@@ -49,7 +77,11 @@ func Merge(a StateT) func(Any) StateT {
 				Empty{},
 				AsWriter(b).Chain(
 					func(z Any) Writer {
-						x, y := AsWriter(c).Run()
+						var (
+							exe = AsWriter(c).Run()
+							x   = exe.Fst()
+							y   = exe.Snd()
+						)
 						return NewWriter(NewTuple2(z, x), y)
 					},
 				),

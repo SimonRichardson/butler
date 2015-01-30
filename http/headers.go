@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/SimonRichardson/butler/doc"
 	g "github.com/SimonRichardson/butler/generic"
@@ -17,40 +18,141 @@ func NewHeader(name, value string) Header {
 	return Header{
 		Api: doc.NewApi(doc.NewDocTypes(
 			doc.NewInlineText("Expected header `%s` with value `%s`"),
-			doc.NewInlineText("Unexpected header with `%s`"),
+			doc.NewInlineText("Unexpected header with `%s` with value `%s`"),
 		)),
 		name:  NewString(name, HeaderNameChar()),
 		value: NewString(value, HeaderValueChar()),
 	}
 }
 
-// Build up the state, so it runs this when required.
-// 1) Make sure the name is valid
-// 2) Make sure the value is valid
-func (h Header) Build() g.StateT {
+func (h Header) Build() g.WriterT {
 	var (
-		api = func(api doc.Api) func(g.Any) func(g.Any) g.Any {
-			return func(a g.Any) func(g.Any) g.Any {
-				return func(b g.Any) g.Any {
-					return g.AsWriter(b).Chain(func(a g.Any) g.Writer {
-						var (
-							t = g.AsTuple2(a)
-							x = t.Fst().(String).value
-							y = t.Snd().(String).value
-						)
-						str := g.Either_.Of(append(singleton(x), y))
-						return g.NewWriter(h, singleton(api.Run(str)))
-					})
-				}
+		wrap = func(a g.Any) g.Any {
+			b := String_.Empty()
+			return g.NewTuple2(a, g.NewTuple2(b, b))
+		}
+		combine = func(x g.WriterT) func(g.Any) g.WriterT {
+			return func(y g.Any) g.WriterT {
+				var (
+					a   = x.Run()
+					b   = a.Fst()
+					c   = a.Snd()
+					d   = g.AsTuple2(y)
+					run = func(f func(g.Any) g.Either) func(g.Any) g.Any {
+						return func(a g.Any) g.Any {
+							x := d.MapSnd(func(b g.Any) g.Any {
+								return a
+							})
+							return g.NewWriterT(f(x), c).
+								Tell(fmt.Sprintf("Combine %v, %v", y, a))
+						}
+					}
+				)
+				return g.AsWriterT(b.Fold(
+					run(func(x g.Any) g.Either {
+						return g.NewLeft(x)
+					}),
+					run(func(x g.Any) g.Either {
+						return g.NewRight(x)
+					}),
+				))
 			}
 		}
+		api = func(x doc.Api) func(g.Either) g.WriterT {
+			return func(y g.Either) g.WriterT {
+				return g.WriterT_.Lift(x.Run(y)).
+					Tell(fmt.Sprintf("Api `%v`", y))
+			}
+		}
+		finalize = func(a Header) func(g.Any) g.Any {
+			return func(b g.Any) g.Any {
+				return g.NewTuple2(a, b)
+			}
+		}
+		matcher = func(name, value g.WriterT) func(g.Any) g.Any {
+			return func(a g.Any) g.Any {
+				var (
+					match = func(a g.Any) func(g.Any) g.Any {
+						return func(b g.Any) g.Any {
+							var (
+								x     = name.Run().Fst()
+								y     = g.AsTuple2(b).Snd()
+								parts = y.([]string)
+							)
+							return x.Chain(func(x g.Any) g.Either {
+								var (
+									c = AsResult(x).Matcher()
+									d = g.Either_.FromBool(len(parts) > 0, c)
+								)
+								return d.Chain(func(a g.Any) g.Either {
+									s := g.AsStateT(a)
+									return s.EvalState(parts[0]).Chain(func(a g.Any) g.Either {
+										return value.Run().Fst().Chain(func(x g.Any) g.Either {
+											var (
+												sec = strings.Split(parts[1], ",")
+												mat = AsResult(x).Matcher()
+												res = g.List_.StringSliceToList(sec).Map(func(y g.Any) g.Any {
+													return mat.EvalState(y)
+												})
+												success = func(x g.Any) bool {
+													return g.AsEither(x).Fold(
+														g.Constant1(false),
+														g.Constant1(true),
+													).(bool)
+												}
+												program = res.
+													Find(success).
+													Fold(
+													g.Constant1(g.Either_.Right(y)),
+													g.Constant(g.Either_.Left(y)),
+												)
+											)
+											return g.AsEither(program)
+										})
+									})
+								})
+							}).Bimap(matchPut(a), matchPut(a))
+						}
+					}
+					program = g.StateT_.Of(a).
+						Chain(modify(matchSplit(":"))).
+						Chain(g.Get()).
+						Chain(modify(match)).
+						Chain(g.Get()).
+						Chain(matchFlatten)
+				)
+				return Result_.FromTuple3(g.AsTuple2(a).Append(program))
+			}
+		}
+
+		name  = h.name.Build()
+		value = h.value.Build()
+
+		program = name.
+			Bimap(wrap, wrap).
+			Chain(combine(value))
 	)
 
-	return h.name.Build().
-		Chain(g.Get()).
-		Chain(g.Merge(h.value.Build())).
-		Chain(constant(g.StateT_.Of(h))).
-		Chain(modify(api(h.Api)))
+	return join(program, api(h.Api), func(x g.Any) []g.Any {
+		var (
+			unwrap = func(a g.Any) g.Any {
+				var (
+					x = AsResult(a).Builder()
+					y = AsString(x)
+				)
+				return y.String()
+			}
+		)
+		return g.AsTuple2(x).
+			Bimap(unwrap, unwrap).
+			Slice()
+	}).Bimap(
+		finalize(h),
+		finalize(h),
+	).Bimap(
+		matcher(name, value),
+		matcher(name, value),
+	)
 }
 
 func (h Header) Name() string {

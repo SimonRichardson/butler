@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"strings"
 
 	g "github.com/SimonRichardson/butler/generic"
@@ -17,7 +18,9 @@ var (
 
 type PathNode interface {
 	Match(string) bool
+	Fold(func(g.Any) g.Any, func(g.Any) g.Any, func(g.Any) g.Any) g.Any
 	Type() nodeType
+	String() string
 }
 
 type named struct {
@@ -30,12 +33,20 @@ func newNamed(name string) named {
 	}
 }
 
+func (n named) Fold(f, g, h func(g.Any) g.Any) g.Any {
+	return f(n)
+}
+
 func (n named) Match(x string) bool {
 	return n.name == x
 }
 
 func (n named) Type() nodeType {
 	return Named
+}
+
+func (n named) String() string {
+	return fmt.Sprintf("Named(%v)", n.name)
 }
 
 type variable struct {
@@ -48,6 +59,10 @@ func newVariable(name string) variable {
 	}
 }
 
+func (n variable) Fold(f, g, h func(g.Any) g.Any) g.Any {
+	return g(n)
+}
+
 func (n variable) Match(x string) bool {
 	return true
 }
@@ -56,10 +71,18 @@ func (n variable) Type() nodeType {
 	return Variable
 }
 
+func (n variable) String() string {
+	return fmt.Sprintf("Variable(%v)", n.name)
+}
+
 type wildcard struct{}
 
 func newWildcard() wildcard {
 	return wildcard{}
+}
+
+func (n wildcard) Fold(f, g, h func(g.Any) g.Any) g.Any {
+	return h(n)
 }
 
 func (n wildcard) Match(x string) bool {
@@ -68,6 +91,10 @@ func (n wildcard) Match(x string) bool {
 
 func (n wildcard) Type() nodeType {
 	return Wildcard
+}
+
+func (n wildcard) String() string {
+	return "Wildcard"
 }
 
 type empty struct{}
@@ -95,7 +122,7 @@ func toNode(a string) g.Either {
 	}
 }
 
-func compilePath(a string) g.List {
+func compilePath(a string) g.Either {
 	var (
 		x      = g.List_.StringSliceToList(strings.Split(a, "/")).Reverse()
 		option = func(a g.Any) g.Any {
@@ -119,19 +146,38 @@ func compilePath(a string) g.List {
 				},
 			).(bool)
 		}
-		extract = func(a g.Any) g.Any {
-			return g.AsEither(a).Fold(
-				g.Constant1(newEmpty()),
-				func(a g.Any) g.Any {
-					return g.AsOption(a).GetOrElse(g.Constant(newEmpty()))
-				},
-			).(PathNode)
+		traverse = func(a g.List) g.Either {
+			// TODO : If list & either implemented traverse, this would be easy!
+			var (
+				x = g.NewTuple2(g.Either_.Right, g.List_.Empty())
+				y = a.FoldLeft(x, func(a, b g.Any) g.Any {
+					return g.AsEither(b).Fold(
+						func(c g.Any) g.Any {
+							var (
+								x = g.AsTuple2(a)
+								y = g.AsList(x.Snd())
+							)
+							return g.NewTuple2(g.Either_.Left, g.NewCons(c, y))
+						},
+						func(c g.Any) g.Any {
+							var (
+								x = g.AsTuple2(a)
+								y = g.AsList(x.Snd())
+							)
+							return g.NewTuple2(x.Fst(), g.NewCons(c, y))
+						},
+					)
+				})
+				z = g.AsTuple2(y)
+				f = z.Fst().(func(g.Any) g.Any)
+			)
+			return g.AsEither(f(z.Snd()))
 		}
+		program = x.
+			Map(option).
+			Map(nodes).
+			Filter(nones)
 	)
 
-	return x.
-		Map(option).
-		Map(nodes).
-		Filter(nones).
-		Map(extract)
+	return traverse(program)
 }
